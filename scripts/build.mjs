@@ -3,7 +3,8 @@ import { dirname, join } from 'node:path';
 import { readJSON, writeJSON } from './lib/fsx.mjs';
 import { createResolver } from './lib/game.mjs';
 import { createDescriber, TICKS_PER_SECOND } from './lib/describe.mjs';
-import { skillValue, ROLE_NAMES } from './lib/skillvalue.mjs';
+import { ROLE_NAMES } from '../tool/skillvalue.js';
+import { analyzeCatalog, overlayFields } from '../tool/analyze.js';
 import { buildStrategy } from './lib/strategy.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -119,24 +120,11 @@ export function build({ raw, client, changelog = [] }) {
 
   for (const a of catalog.abilities) for (const e of a.effects ?? []) if (e.kind === 'summon' && e.species_id) tag(e.species_id, 'summon');
 
-  const abilityById = new Map(catalog.abilities.map(a => [a.id, a]));
-  const modifierById = new Map((catalog.modifiers ?? []).map(m => [m.id, m]));
-  const teamAuras = s => (s.abilities ?? []).flatMap(id => {
-    const a = abilityById.get(id);
-    if (a?.trigger?.kind !== 'aura' || a.targeting?.kind !== 'all_in_base' || a.targeting?.filter !== 'ally') return [];
-    let dmg = 1, spd = 1;
-    for (const e of a.effects ?? []) {
-      const m = e.kind === 'apply_modifier' ? modifierById.get(e.modifier_id) : null;
-      if (!m) continue;
-      dmg = Math.max(dmg, m.attack_damage_multiplier ?? 1);
-      spd = Math.max(spd, m.attack_speed_multiplier ?? 1);
-    }
-    return dmg > 1 || spd > 1 ? [[id.split('_')[1], round(dmg, 3), round(spd, 3)]] : [];
-  });
-
+  const analysis = analyzeCatalog(catalog);
   const abilities = {};
   const units = {};
   for (const s of catalog.species) {
+    const an = analysis.get(s.id);
     const { name, level } = splitName(s.id);
     const skills = D.visibleAbilities(s);
     for (const id of skills) abilities[id] ??= { icon: client.abilityIcon?.[id] ?? 'icon-ability', ...D.ability(id) };
@@ -167,8 +155,8 @@ export function build({ raw, client, changelog = [] }) {
       projSpeed: s.attack_projectile_speed ?? null,
       groundOnly: !!s.attack_ground_only,
       splash: s.attack_splash ?? null,
-      auras: teamAuras(s),
-      ...(sv => ({ eff: sv.eff, pctHit: sv.pct || null, roles: sv.roles, unsure: sv.uncertain }))(skillValue(s, { abilityById, modifierById })),
+      auras: an.auras, eff: an.eff, pctHit: an.pct || null, roles: an.roles, unsure: an.unsure,
+      mid: an.mid, strategic: an.strategic, unlocks: an.unlocks,
       bounce: s.attack_bounce ?? null,
       armor: s.armor ?? 0,
       armorType: s.armor_type ?? 'normal',
@@ -179,59 +167,11 @@ export function build({ raw, client, changelog = [] }) {
       leak: s.leak_free ? 0 : s.leak_lives ?? 0,
       skills,
       research: s.research_ids ?? [],
-      evo: (s.evolutions ?? []).map(e => ({ to: e.stage_id, cost: e.cost })),
+      evo: (s.evolutions ?? []).map(e => ({ to: e.stage_id, cost: e.cost, ...(an.traps[e.stage_id] ? { trap: an.traps[e.stage_id] } : {}) })),
       from: fromOf.get(s.id) ?? [],
       pool: poolOf.get(s.id) ?? null,
       notes: s.notes ?? [],
     };
-  }
-
-  for (const u of Object.values(units)) {
-    if (u.auras?.length) u.roles = [...new Set([...u.roles, 'aura'])].sort();
-    if ((u.level ?? 0) >= 20 && (u.armor >= 15 || u.hp / Math.max(1, u.eff) >= 18) && !u.roles.includes('tank')) u.roles = [...u.roles, 'tank'].sort();
-  }
-  const bestAhead = new Map();
-  const ahead = id => {
-    if (bestAhead.has(id)) return bestAhead.get(id);
-    bestAhead.set(id, units[id].eff);
-    const v = Math.max(units[id].eff, ...units[id].evo.filter(e => units[e.to]).map(e => ahead(e.to)));
-    bestAhead.set(id, v);
-    return v;
-  };
-  for (const u of Object.values(units)) {
-    for (const e of u.evo) {
-      const next = units[e.to];
-      if (next && next.eff < u.eff * 0.98) e.trap = ahead(e.to) <= u.eff * 1.02 ? 'trap' : 'dip';
-    }
-  }
-
-  const MID_GOLD = 1500;
-  const midOf = id => {
-    const cost = new Map([[id, 0]]), queue = [id];
-    let best = units[id].eff;
-    const unlocks = new Map();
-    while (queue.length) {
-      const cur = queue.shift();
-      for (const e of units[cur].evo) {
-        const c = cost.get(cur) + e.cost;
-        if (!units[e.to] || !Number.isFinite(c) || c > MID_GOLD || cost.get(e.to) <= c) continue;
-        cost.set(e.to, c); queue.push(e.to); best = Math.max(best, units[e.to].eff);
-        for (const r of units[e.to].roles) {
-          if (!units[id].roles.includes(r) && !(unlocks.get(r)?.[1] <= c)) unlocks.set(r, [e.to, c]);
-        }
-      }
-    }
-    return { best, unlocks };
-  };
-  const mids = Object.values(units).filter(u => u.catchable || u.pet).map(u => [u.id, midOf(u.id)]);
-  const ref = mids.map(([, v]) => v.best).sort((a, b) => a - b)[Math.floor(mids.length * 0.95)] || 1;
-  for (const [id, { best, unlocks }] of mids) {
-    const u = units[id];
-    const roles = new Set([...u.roles, ...unlocks.keys()]);
-    const roleBonus = (roles.has('aura') ? 0.35 : 0) + Math.min(0.2, 0.1 * [...roles].filter(r => ['cc', 'sustain', 'taunt', 'boss'].includes(r)).length);
-    u.mid = Math.round(best);
-    u.strategic = Math.round(Math.min(1, best / ref + roleBonus) * 100) / 100;
-    u.unlocks = [...unlocks].map(([r, [to, c]]) => [r, to, c]);
   }
 
   const OPTIONAL_ZERO = new Set(['regen', 'armor', 'catch', 'killGold', 'leak', 'book']);
@@ -343,14 +283,15 @@ export function buildOverlay(db) {
   for (const x of Object.values(db.units)) {
     u[x.id] = {
       n: x.name, l: x.level ?? undefined, m: x.model, el: x.el, hp: x.hp, dps: x.dps, a: x.atk, at: x.armorType,
-      au: x.auras?.length ? x.auras : undefined, ms: x.move || undefined, sp: x.splash || x.bounce ? 1 : undefined,
+      ms: x.move || undefined,
       ar: x.armor || undefined, c: x.catch || undefined, b: x.book || undefined, L: x.legendary ? 1 : undefined,
       k: x.catchable ? 1 : undefined, lk: x.leak || undefined, f: x.family, p: x.pet ? slugOf.get(x.pet) : undefined,
       s: x.skills?.length ? x.skills.map(id => db.abilities[id]?.name).filter(Boolean) : undefined,
       e: x.evo?.length ? x.evo.filter(e => Number.isFinite(e.cost) && e.cost >= 0).map(e => [e.to, e.cost]) : undefined,
-      ed: x.eff, pt: x.pctHit || undefined, r: x.roles?.length ? x.roles : undefined, sv: x.strategic || undefined, md: x.mid || undefined,
-      ul: x.unlocks?.length ? x.unlocks : undefined,
-      tp: x.evo?.some(e => e.trap) ? Object.fromEntries(x.evo.filter(e => e.trap).map(e => [e.to, e.trap === 'trap' ? 2 : 1])) : undefined,
+      ...overlayFields({
+        eff: x.eff, pct: x.pctHit, roles: x.roles ?? [], strategic: x.strategic, mid: x.mid, unlocks: x.unlocks ?? [], auras: x.auras ?? [],
+        splash: !!(x.splash || x.bounce), traps: Object.fromEntries((x.evo ?? []).filter(e => e.trap).map(e => [e.to, e.trap])),
+      }),
     };
   }
   return {

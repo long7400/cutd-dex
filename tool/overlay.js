@@ -5,6 +5,7 @@ import {
 import * as web from './web-input.js';
 import { findGame, findEntity, selectEntity, catchWild, evolveCreature, tradePet, probe, clientKind, armWebCapture, disarmWebCapture, webCaptured, forgetWebCapture } from './game-bridge.js';
 import { realm, gameDoc } from './realm.js';
+import { analyzeCatalog, overlayFields } from './analyze.js';
 
 const DATA_URL = __CUTD_DATA_URL__;
 const VERSION = '__CUTD_VERSION__';
@@ -507,6 +508,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const probeRows = [
       h('div', { class: 'sec', text: 'Kiểm tra nút' }),
       h('div', { class: 'kv' }, h('span', { text: 'Trang / bản game' }), h('b', { text: `${p.host} · ${p.client === 'web' ? 'bản web' : 'Cocos'}` })),
+      h('div', { class: 'kv' }, h('span', { text: 'Dữ liệu' }), h('b', { text: !live ? 'chỉ từ wiki' : wikiBehind() ? 'wiki cũ hơn game → đã tự tính từ /catalog của game' : 'khớp bản game (tính từ /catalog)' })),
       p.client === 'web' ? h('div', { class: 'kv' }, h('span', { text: 'Móc hàm game' }), h('b', { text: p.webHooked ? 'có (gọi thẳng)' : `chưa — đang chờ: ${p.webArmed.join(', ') || 'không (dán giữa trận → bấm Móc)'}` })) : null,
       h('div', { class: 'kv' }, h('span', { text: 'Tìm thấy game' }), h('b', { text: p.found ? 'có' : p.hasEngine ? 'không (chưa vào trận?)' : 'không thấy engine' })),
       p.found ? h('div', { class: 'kv' }, h('span', { text: 'Hàm có sẵn' }), h('b', { text: p.fns.join(', ') || 'không có' })) : null,
@@ -673,11 +675,14 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); })
     .then(t => { if (t.length > maxBytes) throw new Error('dữ liệu quá lớn'); return JSON.parse(t); });
 
+  let live = null, liveHash = null;
   function mergeGameCatalog() {
     if (!db || !gameCatReady) return;
+    for (const [id, a] of live ?? []) db.u[id] = { ...(db.u[id] ?? {}), ...a.stats, ...overlayFields(a) };
     for (const [id, g] of gameCat) db.u[id] = { ...(db.u[id] ?? {}), n: g.n, l: g.l, b: g.b, c: g.c, e: g.e };
     dirty = true; render(true);
   }
+  const wikiBehind = () => !!(db?.v && liveHash && !liveHash.startsWith(db.v));
   getJSON(`${DATA_URL}overlay.json`, 4 * 1024 * 1024)
     .then(d => {
       if (!d || typeof d.u !== 'object' || Array.isArray(d.u)) throw new Error('dữ liệu sai định dạng');
@@ -688,6 +693,11 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     })
     .catch(err => { panel.replaceChildren(h('p', { class: 'empty bad', text: `CUTD Helper: không tải được dữ liệu wiki (${err.message}).` })); });
   getJSON('/catalog', 32 * 1024 * 1024)
-    .then(raw => { gameCat = buildGameCatalog(raw); gameCatReady = true; mergeGameCatalog(); })
+    .then(raw => {
+      gameCat = buildGameCatalog(raw);
+      try { live = analyzeCatalog(raw.catalog); } catch { live = null; }
+      liveHash = typeof raw.catalog_hash === 'string' && /^[0-9a-f]{12,64}$/.test(raw.catalog_hash) ? raw.catalog_hash : null;
+      gameCatReady = true; mergeGameCatalog();
+    })
     .catch(() => { toast = 'Không tải được catalog của game — nút Bắt/Tiến hóa/Trade tạm khoá.'; dirty = true; render(true); });
 })();

@@ -3,7 +3,7 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: '7 */2 * * *'
+    - cron: '7 * * * *'
   workflow_dispatch:
     inputs:
       force:
@@ -55,6 +55,26 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "chore(data): game update $(date -u '+%F %H:%M') — ${HASH}"
           git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main
+
+  canary:
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24
+      - name: Kiểm tra client game còn khớp CUTD Helper
+        run: |
+          STOP="$(openssl rand -hex 16)"
+          echo "::stop-commands::${STOP}"
+          node scripts/check-clients.mjs
+          echo "::${STOP}::"
 
   build:
     needs: sync

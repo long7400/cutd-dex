@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { skillValue } from '../lib/skillvalue.mjs';
+import { skillValue } from '../../tool/skillvalue.js';
 import { build, buildOverlay, PATHS } from '../build.mjs';
 import { readJSON } from '../lib/fsx.mjs';
 

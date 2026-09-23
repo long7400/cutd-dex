@@ -528,3 +528,28 @@ test('bookmarklet: phím F bấm nút chính của game (bản web) — chỉ ph
   key();
   assert.equal(clicks, 1, 'tắt tool → hết phím tắt');
 });
+
+test('bookmarklet: wiki cũ hơn game → tool tự tính DPS thật / vai trò / hạng từ /catalog của game', async t => {
+  const saved = overlay;
+  overlay = JSON.parse(JSON.stringify(saved));
+  overlay.v = 'stalestale00';
+  for (const u of Object.values(overlay.u)) for (const k of ['ed', 'r', 'sv', 'md', 'ul', 'tp', 'au', 'hp', 'dps']) delete u[k];
+  t.after(() => { overlay = saved; });
+  const { w, log, code, FakeWS } = setupDom();
+  t.after(() => w.close());
+  w.eval(code);
+  const ws = new FakeWS();
+  ws.addEventListener('message', e => e.data);
+  const emit = m => ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
+  emit(summary);
+  await tick(0);
+  emit(keyframe([{ id: 1, stage_id: scenario.c, owner_id: 11, health: 5, max_health: 10, active: true }]));
+  await tick(1200);
+  const root = log.roots[0];
+  [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith('Wild')).click();
+  const tier = root.querySelector('.tier');
+  assert.ok(tier, 'vẫn có hạng dù overlay thiếu số liệu');
+  assert.match(tier.title, /\d+\/100/);
+  [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith('Đo tải')).click();
+  assert.match(root.querySelector('.panel').textContent, /wiki cũ hơn game/);
+});

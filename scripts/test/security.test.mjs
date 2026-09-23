@@ -132,3 +132,13 @@ test('bookmarklet: bản web — chỉ bấm nút chính của game, móc hàm c
   };
   for (const [name, run] of Object.entries(attacks)) assert.ok(run().length > 0, `không chặn được: ${name}`);
 });
+
+import { missingSignatures, unknownShapes } from '../check-clients.mjs';
+
+test('canary: nhận ra khi game đổi tên hàm tool dựa vào, và dạng kỹ năng lạ', () => {
+  const web = 'e.onmessage=e=>{let t=sL(typeof e.data==`string`?e.data:``) this.nextSequence=1,this._selectedEntityId=null catchWild(e){return this.dispatch( evolveCreature(e,t){ tradePet(e,t){return this.dispatch( selectEntity(e,t){e.entities.has(t) {Unit:`u`,Creep:`c`,Wild:`w`,TradeOffer:`t` this.el.dataset.node=t.name `Primary`';
+  assert.deepEqual(missingSignatures('web', web), []);
+  assert.deepEqual(missingSignatures('web', web.replace('this.nextSequence=1', 'this.seq=1')), ['session.nextSequence (móc hàm game)']);
+  const shapes = unknownShapes({ abilities: [{ id: 'x', status: 'executable', trigger: { kind: 'on_moon' }, effects: [{ kind: 'damage', magnitude: { basis: 'attack_damage' } }] }] });
+  assert.deepEqual(shapes, ['trigger "on_moon" (vd x)']);
+});
