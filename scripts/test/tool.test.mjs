@@ -338,3 +338,18 @@ test('bookmarklet: giữ chuột rồi kéo = kéo bản đồ (giữ W/A/S/D), 
   assert.ok(seen.every(k => ['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(k)), 'chỉ được giữ phím camera');
   assert.equal(log.sent, 0);
 });
+
+test('bookmarklet: dán bản mới khi bản cũ còn chạy → thay bản cũ, không chỉ ẩn/hiện', t => {
+  const { w, log, code } = setupDom();
+  t.after(() => w.close());
+  let oldDestroyed = false;
+  w.__cutdHelper = { toggle() { throw new Error('không được chỉ toggle bản cũ'); }, destroy() { oldDestroyed = true; } };
+  w.eval(code);
+  assert.ok(oldDestroyed, 'phải tắt bản cũ');
+  assert.equal(w.__cutdHelper.version, tool.version);
+  assert.equal(log.roots.length, 1, 'bản mới phải dựng panel');
+  // Dán lại đúng bản đang chạy → chỉ ẩn/hiện.
+  w.eval(code);
+  assert.equal(log.roots.length, 1);
+  assert.ok(log.roots[0].querySelector('.panel').hidden);
+});

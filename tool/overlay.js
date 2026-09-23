@@ -90,7 +90,13 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     alert('CUTD Helper: mở trang game (cutd.site) rồi bấm bookmark này.');
     return;
   }
-  if (window[NS]) { window[NS].toggle(); return; }
+  // Đang có panel: cùng phiên bản → ẩn/hiện; khác phiên bản (bản cũ) → tắt bản cũ rồi chạy bản mới.
+  const old = window[NS];
+  if (old) {
+    if (old.version === VERSION) { old.toggle?.(); return; }
+    try { old.destroy?.(); } catch { /* bản cũ lỗi khi tắt → vẫn chạy bản mới */ }
+    delete window[NS];
+  }
   if (!/^(https:\/\/|http:\/\/localhost[:/])/.test(DATA_URL)) return;
 
   const SAFE_ID = /^[a-z0-9_-]+$/i;
@@ -576,7 +582,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     delete window[NS];
   }
 
-  window[NS] = { toggle, destroy };
+  window[NS] = { toggle, destroy, version: VERSION };
   patch();
   render(true);
 
