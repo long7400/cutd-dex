@@ -25,6 +25,7 @@ export function checkGlb(buf) {
   const json = JSON.parse(buf.toString('utf8', 20, 20 + len));
   const external = [...(json.buffers ?? []), ...(json.images ?? [])].filter(x => typeof x?.uri === 'string');
   if (external.length) throw new Error('GLB trỏ tới file ngoài');
+  if ((json.images?.length ?? 0) > 64 || (json.meshes?.length ?? 0) > 2048 || (json.accessors?.length ?? 0) > 50000) throw new Error('GLB quá nhiều ảnh / lưới');
   return json;
 }
 
@@ -34,7 +35,7 @@ async function optimize(buf, size) {
   checkGlb(buf);
   const doc = await io.readBinary(new Uint8Array(buf));
   doc.setLogger(new Logger(Logger.Verbosity.ERROR));
-  await doc.transform(dedup(), prune({ keepLeaves: true }), quantize(), textureCompress({ encoder: sharp, targetFormat: 'webp', resize: [size, size], quality: 82 }));
+  await doc.transform(dedup(), prune({ keepLeaves: true }), quantize(), textureCompress({ encoder: (input, opts) => sharp(input, { ...opts, limitInputPixels: 4096 * 4096 }), targetFormat: 'webp', resize: [size, size], quality: 82 }));
   const out = Buffer.from(await io.writeBinary(doc));
   checkGlb(out);
   return out;

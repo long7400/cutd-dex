@@ -4,3 +4,4 @@ dist
 src/data/
 *.tmp
 public/overlay.json
+build/

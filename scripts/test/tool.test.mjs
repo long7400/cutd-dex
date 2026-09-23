@@ -101,7 +101,7 @@ function setupDom(url = 'https://cutd.site/?room=TEST') {
   w.alert = m => log.alerts.push(m);
   w.fetch = async (u, opts) => {
     log.fetches.push({ u, opts });
-    const body = JSON.stringify(u === '/catalog' ? readJSON(PATHS.catalog) : overlay);
+    const body = JSON.stringify(u.endsWith('.site/catalog') ? readJSON(PATHS.catalog) : overlay);
     return { ok: true, text: async () => body };
   };
   const attach = w.Element.prototype.attachShadow;
@@ -123,7 +123,7 @@ test('bookmarklet: chỉ đọc, bắt socket rồi trả getter, hiển thị t
   const emit = m => ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
 
   w.eval(code);
-  assert.deepEqual(log.fetches.map(f => f.u).sort(), ['/catalog', `${DATA_URL}overlay.json`]);
+  assert.deepEqual(log.fetches.map(f => f.u).sort(), ['https://cutd.site/catalog', `${DATA_URL}overlay.json`]);
   assert.ok(log.fetches.every(f => f.opts.credentials === 'omit'));
   assert.notEqual(Object.getOwnPropertyDescriptor(w.MessageEvent.prototype, 'data').get, original.get, 'phải bọc getter để bắt socket');
 
@@ -317,10 +317,11 @@ test('bookmarklet: camera — Option/Alt+kéo trái (chặn trọn cú bấm) v�
   canvas.addEventListener('keyup', e => keys.delete(e.code));
   for (const type of ['mousedown', 'mousemove', 'mouseup', 'click']) canvas.addEventListener(type, () => gameGot.push(type));
   w.eval(code);
-  const fire = (type, x, y, { button = 0, alt = false } = {}) => canvas.dispatchEvent(new w.MouseEvent(type, {
-    clientX: x, clientY: y, button, altKey: alt, bubbles: true, cancelable: true,
-    buttons: type === 'mouseup' || type === 'click' ? 0 : button === 1 ? 4 : 1,
-  }));
+  const fire = (type, x, y, { button = 0, alt = false } = {}) => {
+    const ev = new w.MouseEvent(type, { clientX: x, clientY: y, button, altKey: alt, bubbles: true, cancelable: true, buttons: type === 'mouseup' || type === 'click' ? 0 : button === 1 ? 4 : 1 });
+    jsdomUtils.implForWrapper(ev).isTrusted = true;
+    return jsdomUtils.implForWrapper(canvas)._dispatch(jsdomUtils.implForWrapper(ev));
+  };
 
   fire('mousedown', 500, 400); fire('mousemove', 460, 400); fire('mouseup', 460, 400); fire('click', 460, 400);
   assert.equal(keys.size, 0);

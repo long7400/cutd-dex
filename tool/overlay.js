@@ -231,9 +231,9 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       if (v == null || v === false) continue;
       if (k === 'class') el.className = v;
       else if (k === 'text') el.textContent = String(v);
-      else if (k === 'style') el.style.cssText = v;
+      else if (k === 'style') { if (!/url\s*\(|@import|expression|javascript:/i.test(String(v))) el.style.cssText = v; }
       else if (k === 'onClick') el.addEventListener('click', v);
-      else if (k === 'href') { if (/^https?:\/\//.test(v)) { el.href = v; el.target = '_blank'; el.rel = 'noopener noreferrer'; } }
+      else if (k === 'href') { if (String(v).startsWith(DATA_URL)) { el.href = v; el.target = '_blank'; el.rel = 'noopener noreferrer'; } }
       else if (k === 'src') { if (String(v).startsWith(DATA_URL)) el.src = v; }
       else if (/^(title|tabindex|disabled|alt|width|height)$/.test(k)) el.setAttribute(k, String(v));
     }
@@ -326,13 +326,15 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     return el;
   };
 
-  let lastAction = 0;
+  let lastAction = 0, downAt = 0;
+  const SHIFT_MS = 350;
   function runAction(e, kind, key, arg, expect) {
     e.stopPropagation();
     e.currentTarget.blur();
     if (!realClick(e)) return;
     const t = performance.now();
     if (t - lastAction < 600) return;
+    if (downAt > 0 && t - downAt < 1500 && downAt - lastRender < SHIFT_MS) { toast = 'Danh sách vừa đổi chỗ — nhìn lại rồi bấm lần nữa.'; dirty = true; render(true); return; }
     lastAction = t;
     e.currentTarget.disabled = true;
     setTimeout(() => { dirty = true; render(true); }, 600);
@@ -445,7 +447,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     for (const [d, target] of [...held]) {
       if (dirs.has(d)) continue;
       held.delete(d);
-      camKey(d, false, target.isConnected ? target : window);
+      camKey(d, false, target.isConnected ? target : realm.win);
     }
     const target = camTarget();
     if (!target) return;
@@ -455,14 +457,14 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   function endPan() { pan = null; clearTimeout(stopTimer); releaseAll(); }
   const swallow = e => { e.stopImmediatePropagation(); e.preventDefault(); };
   const onMouseDown = e => {
-    if (!camTarget() || e.target !== camTarget()) return;
+    if (!e.isTrusted || !camTarget() || e.target !== camTarget()) return;
     const alt = e.button === 0 && e.altKey;
     if (e.button !== 1 && !alt) return;
     if (alt) swallow(e); else e.preventDefault();
     pan = { btn: e.button, alt, x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, moved: false };
   };
   const onMouseMove = e => {
-    if (!pan) return;
+    if (!pan || !e.isTrusted) return;
     if (pan.alt) swallow(e);
     if (!(e.buttons & (pan.btn === 0 ? 1 : 4))) { endPan(); return; }
     if (!pan.moved && Math.hypot(e.clientX - pan.x, e.clientY - pan.y) < DRAG_START) return;
@@ -478,7 +480,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   };
   let swallowClick = false;
   const onMouseUp = e => {
-    if (!pan || e.button !== pan.btn) return;
+    if (!pan || !e.isTrusted || e.button !== pan.btn) return;
     if (pan.alt) { swallow(e); swallowClick = true; setTimeout(() => { swallowClick = false; }, 0); }
     endPan();
   };
@@ -487,7 +489,10 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 
   const onHotkey = e => {
     if (!e.isTrusted || e.repeat || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey || e.code !== 'KeyF') return;
-    if (e.target?.isContentEditable || e.target?.closest?.('input,textarea,select,[contenteditable]')) return;
+    const typing = n => n?.isContentEditable || !!n?.closest?.('input,textarea,select,[contenteditable]');
+    let active = document.activeElement;
+    while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+    if (typing(e.composedPath?.()[0] ?? e.target) || typing(active)) return;
     if (!web.primaryReady()) return;
     e.preventDefault();
     web.clickPrimary();
@@ -716,6 +721,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   root.append(h('style', { text: CSS }));
   const panel = h('div', { class: 'panel' });
   root.append(panel);
+  panel.addEventListener('pointerdown', e => { if (e.isTrusted) downAt = performance.now(); }, true);
   document.documentElement.append(host);
 
   let drag = null;
@@ -861,13 +867,37 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   patch();
   render(true);
 
-  const getJSON = (url, maxBytes) => fetch(url, { credentials: 'omit', cache: 'no-cache', signal: AbortSignal.timeout(20000) })
-    .then(r => {
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      if (Number(r.headers?.get('content-length')) > maxBytes) throw new Error('dữ liệu quá lớn');
-      return r.text();
-    })
-    .then(t => { if (t.length > maxBytes) throw new Error('dữ liệu quá lớn'); return JSON.parse(t); });
+  const SOURCES = new Set([`${DATA_URL}overlay.json`, '/catalog']);
+  async function readCapped(r, maxBytes) {
+    if (Number(r.headers?.get('content-length')) > maxBytes) throw new Error('dữ liệu quá lớn');
+    if (!r.body?.getReader) { const t = await r.text(); if (t.length > maxBytes) throw new Error('dữ liệu quá lớn'); return t; }
+    const reader = r.body.getReader(), parts = [];
+    let size = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > maxBytes) { reader.cancel().catch(() => { }); throw new Error('dữ liệu quá lớn'); }
+      parts.push(value);
+    }
+    const all = new Uint8Array(size);
+    let at = 0;
+    for (const p of parts) { all.set(p, at); at += p.byteLength; }
+    return new TextDecoder().decode(all);
+  }
+  const getJSON = (url, maxBytes) => {
+    if (!SOURCES.has(url)) return Promise.reject(new Error('nguồn dữ liệu không cho phép'));
+    const target = url === '/catalog' ? `${location.origin}/catalog` : url;
+    return fetch(target, { credentials: 'omit', cache: 'no-cache', redirect: 'error', referrerPolicy: 'no-referrer', signal: AbortSignal.timeout(20000) })
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        if (r.url && r.url !== target) throw new Error('bị chuyển hướng');
+        const type = r.headers?.get('content-type');
+        if (type && !/json|text\/plain/i.test(type)) throw new Error('không phải JSON');
+        return readCapped(r, maxBytes);
+      })
+      .then(t => JSON.parse(t));
+  };
 
   let live = null, liveHash = null;
   function mergeGameCatalog() {
@@ -877,21 +907,50 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     dirty = true; render(true);
   }
   const wikiBehind = () => !!(db?.v && liveHash && !liveHash.startsWith(db.v));
+  const S = (v, max = 80) => (typeof v === 'string' ? v.slice(0, max) : undefined);
+  const N = v => (typeof v === 'number' && Number.isFinite(v) ? v : undefined);
+  const ID = v => (typeof v === 'string' && v.length <= 64 && SAFE_ID.test(v) ? v : undefined);
+  const TIER = v => (['S+', 'S', 'A', 'B', 'C'].includes(v) ? v : undefined);
+  const list = (v, f, max = 64) => (Array.isArray(v) ? v.slice(0, max).map(f).filter(x => x !== undefined) : undefined);
+  const tuple = (v, fs) => (Array.isArray(v) && fs.every((f, i) => f(v[i]) !== undefined) ? fs.map((f, i) => f(v[i])) : undefined);
+  const dict = (v, f, max = 256) => {
+    const o = Object.create(null);
+    if (v && typeof v === 'object' && !Array.isArray(v)) {
+      for (const [k, x] of Object.entries(v).slice(0, max)) {
+        const y = ID(k) ? f(x) : undefined;
+        if (y !== undefined) o[k] = y;
+      }
+    }
+    return o;
+  };
+  const byte = v => (N(v) === undefined ? undefined : Math.max(0, Math.min(255, Math.round(v))));
+  const cleanUnit = x => ({
+    n: S(x.n), m: ID(x.m), hp: N(x.hp), dps: N(x.dps), a: ID(x.a), at: ID(x.at), ar: N(x.ar), rg: N(x.rg), b: N(x.b), lk: N(x.lk),
+    f: ID(x.f), ed: N(x.ed), l: N(x.l), el: ID(x.el), c: N(x.c), k: N(x.k), p: ID(x.p), pw: N(x.pw), st: TIER(x.st), L: N(x.L),
+    e: list(x.e, v => tuple(v, [ID, N]), 8), pk: tuple(x.pk, [ID, N, N]), ul: list(x.ul, v => tuple(v, [ID, ID, N])),
+    pg: list(x.pg, ID), kt: list(x.kt, ID), r: list(x.r, ID), s: list(x.s, v => S(v, 60)), tp: dict(x.tp, v => (v === 1 || v === 2 ? v : undefined), 16),
+  });
   getJSON(`${DATA_URL}overlay.json`, 4 * 1024 * 1024)
     .then(d => {
       if (!d || typeof d.u !== 'object' || Array.isArray(d.u)) throw new Error('dữ liệu sai định dạng');
-      const arr = (v, max = 64) => (Array.isArray(v) ? v.slice(0, max) : undefined);
       const u = Object.create(null);
-      for (const [id, x] of Object.entries(d.u)) {
-        if (!SAFE_ID.test(id) || !x || typeof x !== 'object' || Array.isArray(x)) continue;
-        u[id] = { ...x, r: arr(x.r), s: arr(x.s), kt: arr(x.kt), pk: arr(x.pk, 3), ul: arr(x.ul), pg: arr(x.pg),
-          e: arr(x.e, 8)?.filter(v => Array.isArray(v) && typeof v[0] === 'string' && Number.isFinite(v[1])) };
+      for (const [id, x] of Object.entries(d.u).slice(0, 5000)) {
+        if (!ID(id) || !x || typeof x !== 'object' || Array.isArray(x)) continue;
+        u[id] = cleanUnit(x);
       }
-      db = { ...d, u };
+      db = {
+        v: typeof d.v === 'string' && /^[\w-]{1,64}$/.test(d.v) ? d.v : null,
+        sell: N(d.sell) !== undefined ? Math.max(0, Math.min(1, d.sell)) : 0,
+        el: dict(d.el, x => (x && typeof x === 'object' ? { n: S(x.n, 24), c: tuple(x.c, [byte, byte, byte]) } : undefined), 16),
+        lb: dict(d.lb, v => S(v, 40), 64),
+        rn: dict(d.rn, v => S(v, 40), 64),
+        dmg: dict(d.dmg, row => dict(row, v => (N(v) !== undefined ? Math.max(0, Math.min(10, v)) : undefined), 16), 16),
+        u,
+      };
       mergeGameCatalog();
       dirty = true; render(true);
     })
-    .catch(err => { panel.replaceChildren(h('p', { class: 'empty bad', text: `CUTD Helper: không tải được dữ liệu wiki (${err.message}).` })); });
+    .catch(err => { if (dead) return; try { panel.replaceChildren(h('p', { class: 'empty bad', text: `CUTD Helper: không tải được dữ liệu wiki (${err.message}).` })); } catch { } });
   getJSON('/catalog', 32 * 1024 * 1024)
     .then(raw => {
       gameCat = buildGameCatalog(raw);
@@ -901,5 +960,5 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       liveHash = typeof raw.catalog_hash === 'string' && /^[0-9a-f]{12,64}$/.test(raw.catalog_hash) ? raw.catalog_hash : null;
       gameCatReady = true; mergeGameCatalog();
     })
-    .catch(() => { toast = 'Không tải được catalog của game — nút Bắt/Tiến hóa/Trade tạm khoá.'; dirty = true; render(true); });
+    .catch(() => { if (dead) return; toast = 'Không tải được catalog của game — nút Bắt/Tiến hóa/Trade tạm khoá.'; dirty = true; try { render(true); } catch { } });
 })();

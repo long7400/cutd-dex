@@ -23,9 +23,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      contents: write
+      contents: read
     outputs:
-      changed: ${{ steps.sync.outputs.changed }}
+      changed: ${{ steps.pack.outputs.changed }}
+      hash: ${{ steps.sync.outputs.hash }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -39,24 +40,67 @@ jobs:
         env:
           FORCE: ${{ inputs.force && '--force' || '' }}
         run: |
-          find .git -maxdepth 2 \( -name config -o -path '.git/hooks*' -o -name info \) -exec ls -la {} + | sha256sum > "$RUNNER_TEMP/git.sum"
           STOP="$(openssl rand -hex 16)"
           echo "::stop-commands::${STOP}"
           node scripts/sync.mjs ${FORCE:+"$FORCE"}
           echo "::${STOP}::"
-      - name: Commit nếu có thay đổi
-        env:
-          HASH: ${{ steps.sync.outputs.hash }}
-          GH_TOKEN: ${{ github.token }}
+      - id: pack
         run: |
-          G="git -c core.hooksPath=/dev/null -c core.fsmonitor=false -c credential.helper="
-          find .git -maxdepth 2 \( -name config -o -path '.git/hooks*' -o -name info \) -exec ls -la {} + | sha256sum | cmp -s - "$RUNNER_TEMP/git.sum" || { echo "::error::.git bị đổi trong lúc sync — dừng"; exit 1; }
-          test -z "$($G status --porcelain -- . ':!data' ':!public')" || { echo "::error::sync ghi ra ngoài data/ public/ — dừng"; exit 1; }
-          $G add -A data public
-          if $G diff --cached --quiet; then echo "Không có gì mới."; exit 0; fi
+          if [ -z "$(git status --porcelain -- data public/portraits public/research public/skills)" ]; then echo "changed=false" >> "$GITHUB_OUTPUT"; exit 0; fi
+          mkdir -p "$RUNNER_TEMP/out/public"
+          cp -R data "$RUNNER_TEMP/out/data"
+          cp -R public/portraits public/research public/skills "$RUNNER_TEMP/out/public/"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+      - if: steps.pack.outputs.changed == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: synced
+          path: ${{ runner.temp }}/out
+          retention-days: 1
+          if-no-files-found: error
+
+  publish:
+    needs: sync
+    if: needs.sync.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: main
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: synced
+          path: ${{ runner.temp }}/in
+      - name: Kiểm file đồng bộ rồi commit (không chạy code của repo)
+        env:
+          HASH: ${{ needs.sync.outputs.hash }}
+        run: |
+          set -euo pipefail
+          IN="$RUNNER_TEMP/in"
+          fail() { echo "::error::$1"; exit 1; }
+          stray="$(cd "$IN" && find . -mindepth 1 -regextype posix-extended \( -type l -o \( -type f ! -regex '\./data/(catalog|client|changelog|state|art-state)\.json' ! -regex '\./public/(portraits|research|skills)/[A-Za-z0-9_-]{1,80}\.webp' \) -o \( -type d ! -regex '\./(public/portraits|public/research|public/skills|public|data)' \) \) -print | head -3)"
+          [ -z "$stray" ] || fail "artifact có file/thư mục lạ: $stray"
+          [ -z "$(find "$IN/data" -type f -size +16M)" ] || fail "file dữ liệu quá lớn"
+          for f in "$IN"/data/*.json; do jq -e 'type == "object" or type == "array"' "$f" > /dev/null || fail "JSON hỏng: $f"; done
+          for f in "$IN"/public/*/*.webp; do
+            [ "$(head -c 4 "$f")" = RIFF ] && [ "$(dd if="$f" bs=1 skip=8 count=4 2> /dev/null)" = WEBP ] || fail "không phải webp: $f"
+            [ "$(stat -c %s "$f")" -le 2097152 ] || fail "ảnh quá lớn: $f"
+          done
+          for d in portraits research skills; do
+            total="$(find "public/$d" -type f | wc -l)"
+            gone="$(rsync -a --delete --dry-run --itemize-changes "$IN/public/$d/" "public/$d/" | grep -c '^\*deleting' || true)"
+            [ "$gone" -le 5 ] || [ "$((gone * 4))" -le "$total" ] || fail "$d: xoá $gone/$total ảnh — quá nhiều"
+            rsync -a --delete "$IN/public/$d/" "public/$d/"
+          done
+          cp "$IN"/data/*.json data/
+          git add -A data public/portraits public/research public/skills
+          if git diff --cached --quiet; then echo "Không có gì mới."; exit 0; fi
           case "$HASH" in *[!0-9a-f]*|'') HASH=unknown ;; esac
-          $G -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit --no-verify -m "chore(data): game update $(date -u '+%F %H:%M') — ${HASH}"
-          $G push --no-verify "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit --no-verify -m "chore(data): game update $(date -u '+%F %H:%M') — ${HASH}"
+          git push --no-verify origin HEAD:main
 
   canary:
     if: github.event_name != 'push'
@@ -79,8 +123,8 @@ jobs:
           echo "::${STOP}::"
 
   build:
-    needs: sync
-    if: always() && needs.sync.result != 'failure' && (github.event_name == 'push' || needs.sync.outputs.changed == 'true' || inputs.force)
+    needs: [sync, publish]
+    if: always() && needs.sync.result != 'failure' && needs.publish.result != 'failure' && (github.event_name == 'push' || needs.sync.outputs.changed == 'true' || inputs.force)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -96,7 +140,7 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npm audit --audit-level=high
-      - run: npm run build
+      - run: CUTD_COMMIT="$(git rev-parse HEAD)" npm run build
       - run: npm test
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9

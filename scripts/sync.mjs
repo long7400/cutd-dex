@@ -37,7 +37,7 @@ let client = readJSON(PATHS.client);
 info(`① Kiểm tra ${BASE} …`);
 const [htmlRes, catRes] = await Promise.all([
   request(`${BASE}/`, { validator: client && !FORCE ? state.html : undefined, maxBytes: 1024 * 1024 }),
-  request(`${BASE}/catalog`, { validator: oldRaw && !FORCE && state.catalogHash === oldRaw.catalog_hash ? state.catalog : undefined, maxBytes: 32 * 1024 * 1024 }),
+  request(`${BASE}/catalog`, { validator: oldRaw && !FORCE && state.catalogHash === oldRaw.catalog_hash ? state.catalog : undefined, maxBytes: 12 * 1024 * 1024 }),
 ]);
 
 let raw = oldRaw, catalogChanged = false;
@@ -45,7 +45,7 @@ if (catRes.notModified) {
   console.log('   catalog: 304 Not Modified');
 } else {
   const fresh = catRes.json();
-  const bad = validateCatalog(fresh);
+  const bad = validateCatalog(fresh, oldRaw);
   if (bad.length) throw new Error(`Catalog mới không hợp lệ (${bad.join(', ')}) — giữ nguyên bản cũ.`);
   catalogChanged = fresh.catalog_hash !== oldRaw?.catalog_hash;
   log(`   catalog: ${fresh.catalog_hash.slice(0, 16)}… ${catalogChanged ? '(MỚI)' : '(không đổi)'}`);
@@ -153,14 +153,15 @@ if (catalogChanged && oldRaw) {
     log(`   ${it.kind === 'unit+' ? '+' : '−'} ${it.name}`);
   }
 }
+const db = build({ raw, client, changelog });
+const overlay = buildOverlay(db);
 if (catalogChanged || FORCE || !existsSync(PATHS.catalog)) writeJSON(PATHS.catalog, raw, { pretty: true });
 if (clientChanged || FORCE || !existsSync(PATHS.client)) writeJSON(PATHS.client, client, { pretty: true });
 writeJSON(PATHS.changelog, changelog.slice(0, 200), { pretty: true });
 writeJSON(STATE, sortKeys(state), { pretty: true });
 
-const db = build({ raw, client, changelog });
 writeJSON(PATHS.db, db);
-writeJSON(PATHS.overlay, buildOverlay(db));
+writeJSON(PATHS.overlay, overlay);
 ok(`✓ Xong — ${db.meta.counts.pets} pet · ${db.meta.counts.units} unit · ${stats.requests} request (${stats.notModified}×304, ${stats.retries} retry) · ${(stats.bytes / 1024 / 1024).toFixed(2)}MB · ${((performance.now() - t0) / 1000).toFixed(1)}s`);
 output(catalogChanged || clientChanged || fetched > 0 || migrated > 0);
 

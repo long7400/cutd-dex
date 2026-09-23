@@ -1,6 +1,6 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { JSDOM, VirtualConsole } from 'jsdom';
 import { createServer } from 'vite';
 import { PATHS } from '../build.mjs';
@@ -111,6 +111,24 @@ test('nav gộp mục: 6 mục chính, tab con đúng mục, trang pet có hạn
   assert.match($('.install .bm').getAttribute('href'), /^javascript:/);
   assert.ok($('.tool-demo .h-video'), 'có video demo');
   assert.ok(!$('.codebox'), 'bỏ phần chữ thừa');
+});
+
+test('Công cụ: kiểm bookmark nhận đúng bản chính thức (mọi dạng dán), bắt bản bị sửa', async () => {
+  await go('#/tool');
+  const code = JSON.parse(readFileSync(join(ROOT, 'src/data/tool.json'), 'utf8')).code;
+  const input = $('[data-verify-in]'), out = $('[data-verify-out]');
+  const check = async text => { input.value = text; $('[data-verify]').click(); await sleep(60); return out.className; };
+  const url = `javascript:${encodeURIComponent(code)}`;
+  assert.match(await check(url), /ok/);
+  assert.match(await check(`  ${code}\n`), /ok/);
+  assert.match(await check(url.replace(/%20/g, ' ').replace(/%3D/g, '=')), /ok/, 'trình duyệt hiện URL giải mã một phần');
+  assert.match(await check(url.replace('https%3A%2F%2Flong7400.github.io', 'https%3A%2F%2Fevil.example')), /bad/);
+  assert.match(await check(url + '%3Bfetch(1)'), /bad/);
+  assert.match(await check(url.slice(0, -40)), /bad/);
+  assert.equal(out.querySelector('*'), null, 'không render nội dung dán vào');
+  input.value = '<img src=x onerror=alert(1)>';
+  $('[data-verify]').click(); await sleep(60);
+  assert.ok(!$('.tool-page img[src="x"]'));
 });
 
 test('trang Sinh vật: tìm theo mã unit', async () => {

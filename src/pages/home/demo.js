@@ -4,6 +4,7 @@ const easeInOut = t => { t = clamp(t); return t < 0.5 ? 4 * t * t * t : 1 - Math
 const back = t => { t = clamp(t); const c = 1.7; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); };
 const win = (t, a, b) => clamp((t - a) / (b - a));
 const TIER = { 'S+': 't-sp', S: 't-s', A: 't-a', B: 't-b', C: 't-c' };
+const E = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
 export function mountDemo(root, { img, evo, trade }) {
   const stage = root.querySelector('.vstage');
@@ -42,14 +43,14 @@ export function mountDemo(root, { img, evo, trade }) {
     if (k.tier !== p.t) { k.tg.textContent = p.t; k.tg.className = `tg ${TIER[p.t]}`; k.tier = p.t; }
   };
 
-  const row = (p, sub, right, id = '') => `<div class="r"><img src="${img(p.m)}" alt=""><span>${p.n}<small>${sub}</small></span><span class="tg ${TIER[p.t]}">${p.t}</span>${right.replace('<span class="act"', `<span class="act"${id ? ` data-id="${id}"` : ''}`)}</div>`;
+  const row = (p, sub, right, id = '') => `<div class="r"><img src="${E(img(p.m))}" alt=""><span>${E(p.n)}<small>${E(sub)}</small></span><span class="tg ${TIER[p.t] ?? ''}">${E(p.t)}</span>${right.replace('<span class="act"', `<span class="act"${id ? ` data-id="${id}"` : ''}`)}</div>`;
   const PANELS = {
     xep: s => `<span class="xep" data-id="btn">${s.xep}</span>${TEAM.slice(0, 4).map(p => row(p, 'Lv100', '<span class="act">↑</span>')).join('')}`,
-    nang: s => (s.evolved ? row(TY, `Lv${TY.lv} · DPS ${fmt(TY.dps)}`, `<span class="act">${TY.next ? `↑ ${fmt(TY.next)}g` : 'Max'}</span>`) : row(TEAM[3], `Lv${evo.from.lv} · DPS ${fmt(evo.from.dps)}`, `<span class="act">↑ ${TY.n} ${fmt(evo.cost)}g</span>`, 'btn'))
+    nang: s => (s.evolved ? row(TY, `Lv${TY.lv} · DPS ${fmt(TY.dps)}`, `<span class="act">${TY.next ? `↑ ${fmt(TY.next)}g` : 'Max'}</span>`) : row(TEAM[3], `Lv${evo.from.lv} · DPS ${fmt(evo.from.dps)}`, `<span class="act">↑ ${E(TY.n)} ${fmt(evo.cost)}g</span>`, 'btn'))
       + row(TEAM[4], 'Lv100', '<span class="act">Max</span>') + row(TEAM[1], 'Lv55', '<span class="act">↑ 900g</span>'),
-    trade: s => `<div class="r ${s.traded ? 'dim' : ''}"><img src="${img(TEAM[4].m)}"><span>S${trade.slot} · đưa ${TEAM[4].n}<small>hạng ${TEAM[4].t} · có trong đội</small></span><span class="tg ${TIER[TEAM[4].t]}">${TEAM[4].t}</span><span class="act" data-id="btn">${s.traded ? 'Đã đổi' : '⇄ Trade'}</span></div>`
-      + `<div class="r"><img src="${img(MB.m)}"><span>nhận ${MB.n}<small>Lv${MB.lv}</small></span><span class="tg ${TIER[MB.t]}">${MB.t}</span><span></span></div>`
-      + trade.others.map(o => `<div class="r dim"><img src="${img(o.m)}"><span>S${o.slot} · đưa ${o.n}<small>chưa có</small></span><span class="tg ${TIER[o.t]}">${o.t}</span><span class="act">Chưa có</span></div>`).join(''),
+    trade: s => `<div class="r ${s.traded ? 'dim' : ''}"><img src="${E(img(TEAM[4].m))}"><span>S${E(trade.slot)} · đưa ${E(TEAM[4].n)}<small>hạng ${E(TEAM[4].t)} · có trong đội</small></span><span class="tg ${TIER[TEAM[4].t] ?? ''}">${E(TEAM[4].t)}</span><span class="act" data-id="btn">${s.traded ? 'Đã đổi' : '⇄ Trade'}</span></div>`
+      + `<div class="r"><img src="${E(img(MB.m))}"><span>nhận ${E(MB.n)}<small>Lv${E(MB.lv)}</small></span><span class="tg ${TIER[MB.t] ?? ''}">${E(MB.t)}</span><span></span></div>`
+      + trade.others.map(o => `<div class="r dim"><img src="${E(img(o.m))}"><span>S${E(o.slot)} · đưa ${E(o.n)}<small>chưa có</small></span><span class="tg ${TIER[o.t] ?? ''}">${E(o.t)}</span><span class="act">Chưa có</span></div>`).join(''),
     bat: s => [EV, { m: 'pet_piqiu', n: 'Pichu', t: 'S' }, { m: 'pet_guisi', n: 'Gastly', t: 'A' }, { m: 'download_magnemite', n: 'Magnemite', t: 'B' }]
       .map((w, i) => row(w, `Lv1 · dòng hạng ${w.t}`, `<span class="act">${i === 0 && s.caught ? 'Đã bắt' : `Bắt ${[20, 20, 30, 10][i]}g`}</span>`, i === 0 ? 'btn' : '')).join('')
       + `<div class="gold"><span>VÀNG</span><b>${s.gold}</b></div>`,

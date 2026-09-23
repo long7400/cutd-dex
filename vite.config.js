@@ -1,8 +1,12 @@
 import { defineConfig } from 'vite';
+import { readFileSync } from 'node:fs';
 
+const HOME = process.env.CSP_BASE || JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')).homepage;
+if (!/^(https:\/\/[a-z0-9.-]+|http:\/\/localhost:\d+)\/([\w.-]+\/)*$/.test(HOME)) throw new Error(`CSP_BASE / homepage không hợp lệ: ${HOME}`);
 const CSP = [
-  "default-src 'self'", "script-src 'self'", "style-src 'self' 'unsafe-inline'", "img-src 'self' data: blob:",
-  "connect-src 'self' blob:", "font-src 'self'", "object-src 'none'", "base-uri 'self'", "form-action 'none'",
+  "default-src 'none'", `script-src ${HOME}assets/`, `style-src ${HOME}assets/ 'unsafe-inline'`, `img-src ${HOME} data: blob:`,
+  `connect-src ${HOME} blob:`, `font-src ${HOME}assets/`, "object-src 'none'", "frame-src 'none'", "child-src 'none'", "worker-src 'none'",
+  "media-src 'none'", "manifest-src 'none'", "base-uri 'none'", "form-action 'none'",
 ].join('; ');
 
 export default defineConfig(({ command }) => ({

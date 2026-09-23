@@ -7,7 +7,7 @@ trade, wild pool, nghiên cứu, luật chơi, bảng sát thương và lịch s
 ## Chạy
 
 ```bash
-npm install
+npm ci --ignore-scripts
 npm run dev          # dev server (tự build src/data/db.json trước)
 npm run build        # build production → dist/
 npm test             # unit test + kiểm tra toàn vẹn data + test UI (jsdom) crawl mọi link

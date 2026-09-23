@@ -25,12 +25,12 @@ const BASIS = {
 
 export function createDescriber(catalog, i18n = {}) {
   const nf = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 });
-  const names = new Map(catalog.display_names.map(d => [d.id, d.value]));
+  const names = new Map(catalog.display_names.filter(d => typeof d?.value === 'string').map(d => [d.id, d.value.replace(/[<>]/g, '')]));
   const abilities = new Map(catalog.abilities.map(a => [a.id, a]));
   const modifiers = new Map(catalog.modifiers.map(m => [m.id, m]));
   const species = new Map(catalog.species.map(s => [s.id, s]));
 
-  const has = k => Object.prototype.hasOwnProperty.call(i18n, k);
+  const has = k => Object.prototype.hasOwnProperty.call(i18n, k) && typeof i18n[k] === 'string';
   const u = (tpl, ...args) => (has(tpl) ? i18n[tpl] : tpl).replace(/\{(\d+)\}/g, (m, n) => String(args[+n] ?? m));
   const d = k => (k == null ? '' : has(k) ? i18n[k] : GLOSSARY[k] ?? k);
   const M = n => (Number.isFinite(n) ? nf.format(n) : '—');

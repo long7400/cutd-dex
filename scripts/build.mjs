@@ -100,7 +100,7 @@ export function build({ raw, client, changelog = [] }) {
   }));
 
   const trade = (catalog.trade?.slots ?? []).map(slot => ({
-    slot: slot.slot,
+    slot: Number.isInteger(slot.slot) ? slot.slot : 0,
     recipes: slot.recipes.map(r => {
       tag(r.required_stage_id, 'trade-give');
       tag(r.offered_stage_id, 'trade');

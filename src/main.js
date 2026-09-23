@@ -35,6 +35,7 @@ const SECTIONS = [
 const OWNER = { pet: 'pets', unit: 'pets', units: 'pets', trade: 'pools', research: 'rules', changelog: 'rules' };
 
 const app = document.getElementById('app');
+const framed = (() => { try { return window.top !== window.self; } catch { return true; } })();
 const scrolls = new Map();
 let navByClick = false;
 let current = null;
@@ -82,6 +83,10 @@ async function render() {
   document.title = title ? `${title} · CUTD Dex` : 'CUTD Dex — Moonlit Court';
   app.innerHTML = toString(html`${page.chrome === false ? '' : topbar(route.name)}${page.render(route)}`);
   current = page;
+  if (framed) {
+    app.querySelectorAll('.bm, .install, .verify').forEach(el => el.remove());
+    app.insertAdjacentHTML('afterbegin', toString(html`<div class="framed">Trang này đang bị nhúng trong trang khác. Muốn cài CUTD Helper, mở thẳng <b>long7400.github.io/cutd-dex</b> trên thanh địa chỉ.</div>`));
+  }
   page.mount?.(app.querySelector('main') ?? app, route);
   app.dataset.route = key;
 

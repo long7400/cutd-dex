@@ -33,16 +33,16 @@ export function analyzeCatalog(catalog) {
     return m ? Number(m[1]) : null;
   };
 
-  const parent = new Map();
+  const link = new Map();
   const find = x => {
     let r = x;
-    while (parent.has(r) && parent.get(r) !== r) r = parent.get(r);
+    while (link.has(r) && link.get(r) !== r) r = link.get(r);
     return r;
   };
   for (const s of species) {
     for (const e of s.evolutions ?? []) {
       const a = find(s.id), b = find(e.stage_id);
-      if (a !== b) parent.set(a < b ? b : a, a < b ? a : b);
+      if (a !== b) link.set(a < b ? b : a, a < b ? a : b);
     }
   }
   const affinity = new Map();
@@ -131,8 +131,8 @@ export function analyzeCatalog(catalog) {
   const ref = peaks[Math.floor(peaks.length * 0.9)] || 1;
   for (const id of inPool) out.get(id).power = round(Math.min(1, out.get(id).peak[2] / ref));
   for (const id of inPool) {
-    const u = out.get(id), top = out.get(u.peak[0]);
-    const tank = top.armor >= 15 || top.hp / Math.max(1, top.eff) >= 12;
+    const u = out.get(id), peakUnit = out.get(u.peak[0]);
+    const tank = peakUnit.armor >= 15 || peakUnit.hp / Math.max(1, peakUnit.eff) >= 12;
     const extra = new Set(u.path.flatMap(st => out.get(st)?.roles ?? []).map(r => KIT_OF_ROLE[r]).filter(Boolean));
     u.kit = [tank ? 'tank' : 'atk', ...KIT_ORDER.filter(k => extra.has(k))];
   }
