@@ -55,6 +55,7 @@ export default {
           <li><b>Đợt tới:</b> quái sắp tới căn cứ — tổng máu, số mạng mất nếu lọt, loại đòn khắc chế giáp của nó.</li>
           <li><b>Phòng:</b> mạng, vàng, tinh thể, số quái của từng nhà.</li>
           <li><b>Đo tải:</b> bấm bookmark ở sảnh rồi mới vào phòng — tool đo vào trận bao lâu mới có pet và chậm ở khâu nào (server, tải file hay máy), có nút chép báo cáo.</li>
+          <li><b>Camera bằng chuột:</b> đưa chuột sát mép màn hình để camera trôi (nút <b>Mép</b> bật/tắt), hoặc giữ <b>chuột giữa</b> rồi kéo theo hướng muốn đi. Tool chỉ "giữ" phím W/A/S/D thay mày.</li>
           <li>Nút <b>▭ / ▯</b> trên thanh tiêu đề: đổi panel dọc ↔ thanh ngang dưới đáy màn hình. Rê chuột vào dòng để xem chi tiết.</li>
         </ul>
       </section>
@@ -66,6 +67,7 @@ export default {
           <li>Chỉ tải 1 file <b>dữ liệu</b> <code>overlay.json</code> từ wiki. File này chỉ được đọc như dữ liệu và hiển thị dạng chữ, không bao giờ bị chạy như code.</li>
           <li><b>Chỉ hành động khi mày bấm:</b> nút Bắt / Tiến hóa / Trade gọi đúng hàm của game (như bấm nút trong game) — 1 cú bấm = 1 lệnh, khoá 0,6s chống bấm đúp, không có vòng lặp hay tự mua. Click do script khác tạo ra bị bỏ qua.</li>
           <li>Bấm vào 1 dòng = chọn con đó trong game (chỉ đổi lựa chọn trên máy, không gửi gì).</li>
+          <li>Camera chuột chỉ giả lập đúng 4 phím W/A/S/D (build kiểm tra), luôn nhả phím khi dừng, rời cửa sổ hoặc tắt tool.</li>
           <li>Không đọc/ghi cookie hay localStorage.</li>
           <li>Build tự fail nếu code có <code>eval</code>, <code>innerHTML</code>, <code>socket.send</code>, nạp script ngoài, hoặc gọi hàm game nào khác ngoài 4 hàm trên (bán, thả, di chuyển, chat… đều bị chặn).</li>
           <li>Phiên bản <code>${tool.version}</code> · SHA-256 <code class="hash">${tool.sha256}</code></li>

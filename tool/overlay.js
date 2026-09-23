@@ -28,6 +28,7 @@ const CSS = `
 .grow{flex:1}
 .x{all:unset;cursor:pointer;width:22px;height:22px;display:grid;place-items:center;border-radius:6px;color:#8fb7e8;font-size:15px}
 .x:hover{background:#243552;color:#fff}
+.x.wide{width:auto;padding:0 7px;font-size:11.5px;font-weight:700}.x.on{color:#9fd6a8}
 .tabs{display:flex;border-bottom:1px solid #243552}
 .tab{all:unset;cursor:pointer;flex:1;text-align:center;padding:7px 0;color:#8fb7e8;font-weight:600;border-bottom:2px solid transparent}
 .tab small{color:#6f8fb8;font-size:10.5px}
@@ -294,6 +295,50 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     class: `act ${cls}`, text: label, title: tip, onClick: e => runAction(e, kind, key, arg),
   });
 
+  // ───────────── camera bằng chuột ─────────────
+  // Game trên máy tính chỉ cho WASD + lăn chuột. Tool "giữ phím" W/A/S/D thay người dùng:
+  //  • chuột sát mép màn hình → camera trôi theo hướng đó (bật/tắt bằng nút "Mép")
+  //  • giữ chuột GIỮA rồi kéo → camera chạy theo hướng kéo, thả ra là dừng
+  // Chỉ phát đúng 4 phím di chuyển camera, luôn nhả phím khi dừng/rời cửa sổ/tắt tool. Camera chạy trên máy,
+  // không gửi gì lên server.
+  const CAM_KEYS = { up: ['KeyW', 'w'], down: ['KeyS', 's'], left: ['KeyA', 'a'], right: ['KeyD', 'd'] };
+  const held = new Set();
+  let edgeOn = true, drag3 = null, lastPointer = null;
+  const EDGE = 24, DEAD = 14;
+  const camTarget = () => document.getElementById('GameCanvas') ?? document.querySelector('canvas') ?? window;
+  function camKey(dir, down) {
+    const k = CAM_KEYS[dir];
+    if (!k) return;
+    camTarget().dispatchEvent(new KeyboardEvent(down ? 'keydown' : 'keyup', { code: k[0], key: k[1], bubbles: true, cancelable: true }));
+  }
+  function setHeld(dirs) {
+    for (const d of [...held]) if (!dirs.has(d)) { held.delete(d); camKey(d, false); }
+    for (const d of dirs) if (!held.has(d)) { held.add(d); camKey(d, true); }
+  }
+  const releaseAll = () => setHeld(new Set());
+  function camUpdate() {
+    const dirs = new Set();
+    if (drag3 && lastPointer) {
+      const dx = lastPointer.x - drag3.x, dy = lastPointer.y - drag3.y;
+      if (dy < -DEAD) dirs.add('up'); if (dy > DEAD) dirs.add('down');
+      if (dx < -DEAD) dirs.add('left'); if (dx > DEAD) dirs.add('right');
+    } else if (edgeOn && lastPointer && !lastPointer.overPanel && document.hasFocus()) {
+      const { x, y } = lastPointer, W = window.innerWidth, H = window.innerHeight;
+      if (y <= EDGE) dirs.add('up'); if (y >= H - EDGE) dirs.add('down');
+      if (x <= EDGE) dirs.add('left'); if (x >= W - EDGE) dirs.add('right');
+    }
+    setHeld(dirs);
+  }
+  const onPointerMove = e => { lastPointer = { x: e.clientX, y: e.clientY, overPanel: e.composedPath?.().includes(host) }; camUpdate(); };
+  const onMouseDown = e => {
+    if (e.button !== 1 || e.composedPath?.().includes(host)) return;
+    e.preventDefault(); // tắt tự cuộn trang của chuột giữa
+    drag3 = { x: e.clientX, y: e.clientY }; lastPointer = { x: e.clientX, y: e.clientY }; camUpdate();
+  };
+  const onMouseUp = e => { if (e.button === 1 && drag3) { drag3 = null; camUpdate(); } };
+  const onLeave = e => { if (!e.relatedTarget) { lastPointer = null; drag3 = null; releaseAll(); } };
+  const onBlur = () => { lastPointer = null; drag3 = null; releaseAll(); };
+
   // ───────────── các tab ─────────────
   function viewTrade() {
     const list = tradeOptions(state, db);
@@ -468,6 +513,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const header = h('div', { class: 'top', title: `CUTD Helper v${VERSION} — chỉ gửi lệnh khi mày bấm nút Bắt/Tiến hóa/Trade` },
       h('b', { text: 'CUTD Helper' }),
       h('span', { class: 'grow' }),
+      h('button', { class: `x wide ${edgeOn ? 'on' : ''}`, text: 'Mép', title: edgeOn ? 'Tắt camera trôi khi đưa chuột ra mép màn hình' : 'Bật camera trôi khi đưa chuột ra mép màn hình (giữ chuột giữa + kéo luôn dùng được)',
+        onClick: () => { edgeOn = !edgeOn; if (!edgeOn) releaseAll(); dirty = true; render(true); } }),
       h('button', { class: 'x', text: layout === 'h' ? '▯' : '▭', title: layout === 'h' ? 'Chuyển sang dọc' : 'Chuyển sang ngang', onClick: () => setLayout(layout === 'h' ? 'v' : 'h') }),
       h('button', { class: 'x', text: '–', title: 'Thu nhỏ', onClick: () => toggle() }),
       h('button', { class: 'x', text: '×', title: 'Tắt tool', onClick: () => destroy() }));
@@ -497,6 +544,11 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const onUp = () => { drag = null; };
   window.addEventListener('pointermove', onMove);
   window.addEventListener('pointerup', onUp);
+  window.addEventListener('pointermove', onPointerMove, { passive: true });
+  window.addEventListener('mousedown', onMouseDown, true);
+  window.addEventListener('mouseup', onMouseUp, true);
+  document.addEventListener('mouseout', onLeave);
+  window.addEventListener('blur', onBlur);
 
   function toggle() { panel.hidden = !panel.hidden; mini.hidden = !panel.hidden; dirty = true; render(true); }
   const mini = h('button', { class: 'mini', text: 'CUTD Helper', onClick: () => toggle() });
@@ -511,6 +563,12 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     observers.forEach(o => o.disconnect());
     window.removeEventListener('pointermove', onMove);
     window.removeEventListener('pointerup', onUp);
+    window.removeEventListener('pointermove', onPointerMove);
+    window.removeEventListener('mousedown', onMouseDown, true);
+    window.removeEventListener('mouseup', onMouseUp, true);
+    document.removeEventListener('mouseout', onLeave);
+    window.removeEventListener('blur', onBlur);
+    releaseAll();
     host.remove();
     delete window[NS];
   }

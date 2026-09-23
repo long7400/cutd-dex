@@ -32,6 +32,10 @@ export async function buildTool() {
   const used = [...src.matchAll(/interaction\??\.(\w+)/g)].map(m => m[1]);
   const extra = [...new Set(used)].filter(n => n !== 'selectEntity');
   if (extra.length) throw new Error(`Bookmarklet dùng hàm game ngoài selectEntity: ${extra.join(', ')}`);
+  // Phím giả lập: chỉ đúng 1 chỗ tạo KeyboardEvent và chỉ 4 phím camera W/A/S/D.
+  if ((src.match(/new KeyboardEvent\(/g) ?? []).length !== 1) throw new Error('Bookmarklet chỉ được tạo KeyboardEvent ở đúng 1 chỗ (camKey)');
+  const keyCodes = [...src.matchAll(/\['(Key\w+)'/g)].map(m => m[1]);
+  if (keyCodes.some(k => !['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(k))) throw new Error(`Phím ngoài W/A/S/D: ${keyCodes}`);
   const ALLOWED_SESSION = new Set(['catchWild', 'evolveCreature', 'tradePet']);
   const sessionUsed = [...src.matchAll(/session\??\.(\w+)/g)].map(m => m[1]);
   const extraSession = [...new Set(sessionUsed)].filter(n => !ALLOWED_SESSION.has(n));

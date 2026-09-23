@@ -281,3 +281,46 @@ test('bookmarklet: nút Bắt/Tiến hóa/Trade gọi đúng hàm game, chỉ kh
   assert.deepEqual([...touched].filter(k => !['catchWild', 'evolveCreature', 'tradePet'].includes(k)), []);
   assert.equal(log.sent, 0, 'không tự gửi gì qua socket');
 });
+
+test('bookmarklet: camera bằng chuột = giữ W/A/S/D trên canvas, luôn nhả phím', async t => {
+  const { w, log, code } = setupDom();
+  t.after(() => w.close());
+  w.document.hasFocus = () => true;
+  const canvas = w.document.getElementById('GameCanvas');
+  const keys = new Set(), seen = [];
+  canvas.addEventListener('keydown', e => { keys.add(e.code); seen.push(e.code); });
+  canvas.addEventListener('keyup', e => keys.delete(e.code));
+  w.eval(code);
+  const move = (x, y) => w.document.dispatchEvent(new w.MouseEvent('pointermove', { clientX: x, clientY: y, bubbles: true }));
+  const mouse = (type, x, y) => w.document.dispatchEvent(new w.MouseEvent(type, { clientX: x, clientY: y, button: 1, bubbles: true, cancelable: true }));
+
+  // Mép phải → D; mép trên-trái → W + A; về giữa → nhả hết.
+  move(w.innerWidth - 5, 400);
+  assert.deepEqual([...keys], ['KeyD']);
+  move(3, 3);
+  assert.deepEqual([...keys].sort(), ['KeyA', 'KeyW']);
+  move(500, 400);
+  assert.equal(keys.size, 0);
+
+  // Giữ chuột giữa + kéo lên → W; thả → nhả.
+  mouse('mousedown', 500, 400);
+  move(500, 300);
+  assert.deepEqual([...keys], ['KeyW']);
+  mouse('mouseup', 500, 300);
+  assert.equal(keys.size, 0);
+
+  // Tắt "Mép" → đưa chuột ra mép không làm gì.
+  const root = log.roots[0];
+  [...root.querySelectorAll('button')].find(b => b.textContent === 'Mép').click();
+  move(w.innerWidth - 5, 400);
+  assert.equal(keys.size, 0);
+
+  // Đang giữ phím mà tắt tool → phải nhả.
+  mouse('mousedown', 500, 400);
+  move(620, 400);
+  assert.deepEqual([...keys], ['KeyD']);
+  w.__cutdHelper.destroy();
+  assert.equal(keys.size, 0, 'tắt tool phải nhả mọi phím');
+  assert.ok(seen.every(k => ['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(k)), 'chỉ được giữ phím camera');
+  assert.equal(log.sent, 0);
+});
