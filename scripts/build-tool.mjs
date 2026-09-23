@@ -10,9 +10,9 @@ import { readJSON, writeJSON } from './lib/fsx.mjs';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const BRIDGE = 'game-bridge.js';
 const WEB = 'web-input.js';
-const KEY_MAPS = { 'overlay.js': ['CAM_KEYS', ['KeyW', 'KeyA', 'KeyS', 'KeyD']], [WEB]: ['WEB_KEYS', ['Escape', 'Home', 'KeyM']] };
-const POINTER_KEYS = new Set(['bubbles', 'cancelable', 'composed', 'clientX', 'clientY', 'button', 'buttons', 'pointerId', 'pointerType', 'isPrimary']);
-const AUTHORED_SELECTORS = new Set(['button.authored-node[data-node="Primary"]', 'button.authored-node[data-node^="Row"]', '.authored-node[data-node]']);
+const CAM_FILE = 'overlay.js';
+const CAM_CODES = ['KeyW', 'KeyA', 'KeyS', 'KeyD'];
+const PRIMARY_SELECTOR = 'button.authored-node[data-node="Primary"]';
 const GAME_OBJECTS = new Set(['session', 'interaction', 'store', 'cc']);
 const ALLOWED = { session: new Set(['catchWild', 'evolveCreature', 'tradePet']), interaction: new Set(['selectEntity']) };
 const BANNED_IDENTIFIERS = new Set(['eval', 'Function', 'Reflect', 'XMLHttpRequest', 'importScripts', 'Worker', 'SharedWorker',
@@ -26,7 +26,7 @@ const src = (code, n) => code.slice(n.start, n.end);
 export function auditSource(files) {
   const errors = [];
   const err = (file, n, msg) => errors.push(`${file}:${n.loc?.start.line ?? '?'} ${msg}`);
-  const counts = { KeyboardEvent: 0, PointerEvent: 0, fetch: 0, click: 0 };
+  const counts = { KeyboardEvent: 0, fetch: 0, click: 0 };
 
   for (const [file, code] of files) {
     const ast = parse(code, { ecmaVersion: 'latest', sourceType: 'module', locations: true });
@@ -38,15 +38,6 @@ export function auditSource(files) {
         const isProp = parent?.type === 'MemberExpression' && parent.property === n && !parent.computed;
         const isKey = parent?.type === 'Property' && parent.key === n && !parent.computed;
         if (isProp || isKey) return;
-        if (isWeb && n.name === 'PointerEvent' && parent?.type === 'NewExpression' && parent.callee === n) return;
-        if (isWeb && n.name === 'localStorage') {
-          const call = anc[anc.length - 3];
-          const ok = parent?.type === 'MemberExpression' && parent.object === n && propName(parent) === 'getItem'
-            && call?.type === 'CallExpression' && call.callee === parent && call.arguments.length === 1
-            && call.arguments[0].type === 'Literal' && call.arguments[0].value === 'cutd.cameraView';
-          if (!ok) err(file, n, "localStorage chỉ được đọc getItem('cutd.cameraView')");
-          return;
-        }
         if (BANNED_IDENTIFIERS.has(n.name)) err(file, n, `cấm dùng ${n.name}`);
         if (n.name === 'WebSocket' && !(parent?.type === 'BinaryExpression' && parent.operator === 'instanceof' && parent.right === n)) {
           err(file, n, 'WebSocket chỉ được dùng cho instanceof');
@@ -70,28 +61,23 @@ export function auditSource(files) {
         if (objName && ALLOWED[objName] && isBridge && !ALLOWED[objName].has(name)) err(file, n, `${objName}.${name} không nằm trong danh sách cho phép`);
         if (name === 'dispatchEvent') {
           dispatches++;
-          if (!(n.object.type === 'Identifier' && ['target', 'canvas'].includes(n.object.name))) err(file, n, 'dispatchEvent chỉ được gửi tới target/canvas');
+          if (!(n.object.type === 'Identifier' && n.object.name === 'target')) err(file, n, 'dispatchEvent chỉ được gửi tới target (phím camera)');
         }
         if (name === 'click') {
           counts.click++;
-          if (!isWeb || !(n.object.type === 'Identifier' && ['primary', 'row'].includes(n.object.name))) err(file, n, `.click() chỉ được dùng trong ${WEB} cho nút của game (primary/row)`);
+          if (!isWeb || !(n.object.type === 'Identifier' && n.object.name === 'primary')) err(file, n, `.click() chỉ được dùng trong ${WEB} cho nút chính của game`);
         }
       },
       VariableDeclarator(n) {
         const init = n.init;
-        if (n.id.name === 'k') {
-          const map = KEY_MAPS[file]?.[0];
-          if (!map || !(init?.type === 'MemberExpression' && init.computed && init.object.name === map)) err(file, n, `phím giả lập phải lấy từ ${map ?? 'bảng phím được phép'}`);
+        if (n.id.name === 'k' && !(file === CAM_FILE && init?.type === 'MemberExpression' && init.computed && init.object.name === 'CAM_KEYS')) err(file, n, 'phím giả lập phải lấy từ CAM_KEYS');
+        if (n.id.name === 'CAM_KEYS') {
+          const codes = init?.type === 'ObjectExpression' ? init.properties.map(p => p.value?.elements?.[0]?.value) : [null];
+          if (file !== CAM_FILE || codes.some(c => !CAM_CODES.includes(c))) err(file, n, `CAM_KEYS chỉ được chứa phím ${CAM_CODES.join('/')}`);
         }
         if (n.id.name === 'TRAPS') {
           const keys = init?.type === 'ObjectExpression' ? init.properties.map(p => p.key?.name) : [null];
           if (!isBridge || keys.some(k => !['nextSequence', '_selectedEntityId'].includes(k))) err(file, n, 'móc hàm game chỉ được bẫy nextSequence/_selectedEntityId trong game-bridge.js');
-        }
-        const keyMap = Object.entries(KEY_MAPS).find(([, [name]]) => name === n.id.name);
-        if (keyMap) {
-          const [owner, [, allowed]] = keyMap;
-          const codes = init?.type === 'ObjectExpression' ? init.properties.map(p => p.value?.elements?.[0]?.value) : [null];
-          if (owner !== file || codes.some(c => !allowed.includes(c))) err(file, n, `${n.id.name} chỉ được chứa phím ${allowed.join('/')}`);
         }
         if (init?.type === 'MemberExpression' && ['session', 'interaction'].includes(propName(init))) err(file, n, 'không được gán session/interaction sang biến khác');
         if (n.id.type === 'ObjectPattern' && n.id.properties.some(p => p.key && GAME_OBJECTS.has(p.key.name))) err(file, n, 'không được destructuring đối tượng game');
@@ -102,20 +88,11 @@ export function auditSource(files) {
           const init = n.arguments[1];
           const code0 = init?.properties?.find(p => p.key?.name === 'code');
           const key0 = init?.properties?.find(p => p.key?.name === 'key');
-          if (!KEY_MAPS[file] || !code0 || src(code, code0.value) !== 'k[0]' || !key0 || src(code, key0.value) !== 'k[1]') err(file, n, 'KeyboardEvent phải lấy code/key từ bảng phím được phép (k[0]/k[1])');
-        }
-        if (n.callee.name === 'PointerEvent') {
-          counts.PointerEvent++;
-          const [type, init] = n.arguments;
-          const props = init?.type === 'ObjectExpression' ? init.properties : null;
-          const button = props?.find(p => p.key?.name === 'button');
-          if (!isWeb || type?.type !== 'Literal' || !['pointerdown', 'pointerup'].includes(type.value) || !props
-            || props.some(p => p.type !== 'Property' || p.computed || !POINTER_KEYS.has(p.key?.name))
-            || button?.value?.type !== 'Literal' || button.value.value !== 0) err(file, n, 'PointerEvent chỉ được là nhấn/nhả chuột trái, không phím bổ trợ');
+          if (file !== CAM_FILE || !code0 || src(code, code0.value) !== 'k[0]' || !key0 || src(code, key0.value) !== 'k[1]') err(file, n, 'KeyboardEvent phải lấy code/key từ CAM_KEYS (k[0]/k[1])');
         }
       },
       Literal(n) {
-        if (typeof n.value === 'string' && n.value.includes('authored-node') && (!isWeb || !AUTHORED_SELECTORS.has(n.value))) err(file, n, `bộ chọn nút game không được phép: ${n.value}`);
+        if (typeof n.value === 'string' && n.value.includes('authored-node') && (!isWeb || n.value !== PRIMARY_SELECTOR)) err(file, n, `bộ chọn nút game không được phép: ${n.value}`);
       },
       CallExpression(n) {
         if (n.callee.name === 'getJSON') {
@@ -126,17 +103,16 @@ export function auditSource(files) {
         }
       },
     });
-    const maxDispatch = file === 'overlay.js' ? 1 : isWeb ? 3 : 0;
+    const maxDispatch = file === CAM_FILE ? 1 : 0;
     if (dispatches > maxDispatch) errors.push(`${file}: dispatchEvent tối đa ${maxDispatch} chỗ (đang có ${dispatches})`);
   }
-  if (counts.KeyboardEvent > 2) errors.push(`KeyboardEvent tối đa 2 chỗ (camera + web-input) (đang có ${counts.KeyboardEvent})`);
-  if (counts.PointerEvent > 2) errors.push(`PointerEvent tối đa 2 chỗ (nhấn + nhả) (đang có ${counts.PointerEvent})`);
+  if (counts.KeyboardEvent > 1) errors.push(`KeyboardEvent chỉ được tạo ở 1 chỗ (phím camera) (đang có ${counts.KeyboardEvent})`);
   if (counts.fetch !== 1) errors.push(`fetch chỉ được gọi ở đúng 1 chỗ (getJSON) (đang có ${counts.fetch})`);
-  if (counts.click > 2) errors.push(`.click() tối đa 2 chỗ (nút chính + hàng tiến hóa) (đang có ${counts.click})`);
+  if (counts.click > 1) errors.push(`.click() chỉ được dùng ở 1 chỗ (nút chính) (đang có ${counts.click})`);
   return errors;
 }
 
-export function dataUrl() {
+function dataUrl() {
   const pkg = readJSON(join(ROOT, 'package.json'));
   const url = process.env.CUTD_DATA_URL || pkg.homepage;
   if (!/^https:\/\/[a-z0-9.-]+\/[\w./-]*\/$/.test(url ?? '') && !/^http:\/\/localhost:\d+\/$/.test(url ?? '')) {
@@ -162,13 +138,10 @@ export async function buildTool() {
   const version = `${pkg.version}-${createHash('sha256').update(code).digest('hex').slice(0, 7)}`;
   code = code.replace(/__CUTD_VERSION__/g, version);
   const banned = [/\beval\s*\(/, /new Function\s*\(/, /\.innerHTML\b/, /\.outerHTML\b/, /insertAdjacentHTML/, /document\.write/,
-    /\.send\s*\(/, /sendBeacon/, /createElement\(\s*["'`]script/i, /importScripts/, /\bimport\s*\(/, /document\.cookie/,
+    /\.send\s*\(/, /sendBeacon/, /createElement\(\s*["'`]script/i, /importScripts/, /\bimport\s*\(/, /localStorage/, /document\.cookie/,
     /XMLHttpRequest/, /\.dispatch\s*\(/];
   const hit = banned.filter(re => re.test(code));
   if (hit.length) throw new Error(`Bookmarklet chứa API bị cấm: ${hit.join(', ')}`);
-  const ls = code.match(/localStorage/g)?.length ?? 0;
-  const lsOk = code.match(/localStorage\.getItem\(["'`]cutd\.cameraView["'`]\)/g)?.length ?? 0;
-  if (ls !== lsOk) throw new Error('Bookmarklet dùng localStorage ngoài việc đọc cutd.cameraView');
   if (!code.includes(JSON.stringify(url))) throw new Error('Địa chỉ dữ liệu chưa được khoá vào code');
   const result = { code, sha256: createHash('sha256').update(code).digest('hex'), bytes: Buffer.byteLength(code), version, dataUrl: url };
   writeJSON(join(ROOT, 'src/data/tool.json'), result);

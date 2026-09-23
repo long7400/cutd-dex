@@ -21,7 +21,7 @@ const MODE_NAME = {
 const SPEED_NAME = { speed_slow: 'Chậm', speed_average: 'Trung bình', speed_fast: 'Nhanh', speed_super_fast: 'Siêu nhanh' };
 const RESEARCH_KIND = { armor: 'Giáp', move_speed: 'Tốc độ di chuyển', max_health: 'Máu tối đa', attack_speed: 'Tốc độ đánh' };
 
-export const slugify = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+const slugify = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
   .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const round = (n, d = 2) => Math.round(n * 10 ** d) / 10 ** d;
 const shortId = id => id.replace(/^unit_/, '');

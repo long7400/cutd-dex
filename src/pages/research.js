@@ -15,7 +15,7 @@ export default {
     return html`<main>
       <h1>Nghiên cứu</h1>
       <p class="sub">Tiêu Tinh thể (crystal) để nâng vĩnh viễn cho các gia phả theo hệ. Giá tăng dần theo cấp.</p>
-      ${[...byKind].filter(([, list]) => list.length).map(([kind, list]) => html`
+      ${[...byKind].filter(([, list]) => list.length).map(([, list]) => html`
         <h2>${list[0].kindVn}</h2>
         <div class="rs-grid">${list.map(r => html`<article class="rs-card">
           <div class="rs-head">

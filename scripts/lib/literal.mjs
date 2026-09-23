@@ -1,4 +1,4 @@
-export class LiteralError extends Error {}
+class LiteralError extends Error {}
 
 export function parseLiteral(src, start = 0) {
   let i = start;

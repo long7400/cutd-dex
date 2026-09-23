@@ -3,7 +3,7 @@ import { buildIndex } from '../lib/search.js';
 import { db } from '../db.js';
 import { img, elBadge, catchBadge, legBadge, footer } from '../ui.js';
 
-export const filters = { q: '', el: 'all', kind: 'all', sort: 'name' };
+const filters = { q: '', el: 'all', kind: 'all', sort: 'name' };
 
 let index = null, collator = null, groups = null;
 function prepare() {

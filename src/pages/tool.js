@@ -48,11 +48,10 @@ export default {
         <h2>Có gì</h2>
         <ul class="steps">
           <li><b>Trade:</b> 7 slot đang mở — nhận con gì, cần đưa con gì; có sẵn lính thì có nút <b>Trade</b>, chưa có thì hiện lính nào tiến hóa tới được và tốn bao nhiêu vàng.</li>
-          <li><b>Hai bản game — tool tự nhận biết</b> (góc trên panel ghi <i>Cocos</i> hoặc <i>m. · web</i>), không cần đổi site. Mọi tab, nút Bắt / Tiến hóa / Trade và bấm dòng để chọn đều chạy trên cả hai:
+          <li><b>Hai bản game — tool tự nhận biết</b> (góc trên panel ghi <i>Cocos</i> hoặc <i>m. · …</i>), không cần đổi site. Nút Bắt / Tiến hóa / Trade và bấm dòng để chọn đều gọi thẳng hàm của game, chọn con theo id (kể cả khi lính đứng chồng):
             <ul>
-              <li><code>cutd.site</code>: gọi thẳng hàm của nút trong game.</li>
-              <li><code>m.cutd.site</code> — <b>dán tool ở sảnh / phòng chờ, TRƯỚC khi bấm Start</b>: tool móc được hàm của game lúc trận bắt đầu (panel ghi <i>m. · móc</i>) → gọi thẳng như bản Cocos, chọn đúng con kể cả khi lính đứng chồng.</li>
-              <li><code>m.cutd.site</code> dán giữa trận (panel ghi <i>m. · chạm</i>): tool chạm hộ đúng chỗ con đó trên sàn, kiểm tra tên trên bảng thông tin rồi mới bấm nút của game. Lính mới bắt đứng chồng giữa sân thì phải kéo ra trước.</li>
+              <li><code>cutd.site</code>: dùng được ngay.</li>
+              <li><code>m.cutd.site</code>: dán tool ở sảnh trước khi vào trận thì tự móc (panel ghi <i>m. · móc</i>). Dán giữa trận thì bấm nút <b>Móc</b> trên panel — tool mở lại đúng trận trong khung để móc hàm game.</li>
             </ul></li>
           <li><b>Phím F (bản web m.cutd.site):</b> bấm con trên sàn rồi nhấn <b>F</b> = bấm nút chính của game ở dock (Bắt / Tiến hóa / Trade) — khỏi rê chuột. Chỉ nhận phím thật, bỏ qua khi đang gõ chat.</li>
           <li><b>Nút thao tác nhanh:</b> <b>Bắt</b> ở tab Wild, <b>↑ tiến hóa</b> (mỗi nhánh 1 nút) ở tab Đội, <b>Trade</b> ở tab Trade/Đội. Bấm vào dòng để chọn con đó trong game.</li>

@@ -1,7 +1,7 @@
 const UA = 'cutd-dex-sync/2 (+https://github.com/long7400/cutd-dex)';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-export class HttpError extends Error {
+class HttpError extends Error {
   constructor(url, status) {
     super(`${url} → HTTP ${status}`);
     this.status = status;

@@ -1,8 +1,7 @@
 import {
   createState, applyMessage, isGameMessage, myUnits, tradeOptions, offersForFamily,
-  bestAttacks, nextWaveForBase, buildGameCatalog, baseRulesOf,
+  bestAttacks, nextWaveForBase, buildGameCatalog,
 } from './logic.js';
-import { screenPoint, groundOf, tradeSlotPos } from './web-camera.js';
 import * as web from './web-input.js';
 import { findGame, findEntity, selectEntity, catchWild, evolveCreature, tradePet, probe, clientKind, armWebCapture, disarmWebCapture, webCaptured, forgetWebCapture } from './game-bridge.js';
 import { realm, gameDoc } from './realm.js';
@@ -95,7 +94,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   let db = null, socket = null, dirty = true, tab = 'trade', wildSort = 'value', lastRender = 0;
   const famMax = new Map();
   let gameCat = new Map(), gameCatReady = false, ownBase = null;
-  let baseRules = null;
 
   let savedDesc = null, patchedWin = null;
   const seen = new WeakSet();
@@ -238,106 +236,19 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     rule: 'Không hợp lệ (sai nhánh / sai slot / con đã đổi / chưa đủ vàng / đang trong đợt) — thử lại sau khi panel cập nhật.',
     data: 'Chưa tải xong dữ liệu của game — đợi 1–2 giây.',
     other: 'Đang xem căn cứ của người khác — về nhà mình để thao tác.',
-    aim: 'Chạm chưa trúng con này (game đổi camera?) — không bấm gì thêm. Thử lại, hoặc chọn tay rồi nhấn F.',
-    stack: 'Không tách được chồng (ngoài giờ chuẩn bị / sân hết chỗ trống / pet hoang dã chồng nhau). Kéo tay con trên cùng ra, hoặc F5 rồi dán tool NGAY lúc đang tải (panel "m. · móc").',
-    busy: 'Đang thao tác lệnh trước…',
+    hook: 'Bản web chưa móc được hàm game — bấm nút "Móc" trên panel (hoặc dán tool ở sảnh trước khi vào trận).',
   };
   const isWeb = () => clientKind() === 'web';
-  const tapMode = () => isWeb() && !findGame();
-  const blockReason = () => (!gameCatReady || (tapMode() && (!baseRules || !state.origin)) ? 'data'
+  const blockReason = () => (!gameCatReady ? 'data' : isWeb() && !findGame() ? 'hook'
     : ownBase != null && state.baseId !== ownBase ? 'other' : null);
   const realClick = e => e?.isTrusted && e.detail > 0;
 
-  let webBusy = false;
-  const STACK_R = 24;
-  const crowd = x => (x?.pos ? [...state.units.values(), ...state.wilds.values()].filter(o => o !== x && o.pos && o.stage !== x.stage
-    && Math.hypot(o.pos.x - x.pos.x, o.pos.y - x.pos.y) < STACK_R).length : 0);
-  function webTarget(key) {
-    const id = Number(key.slice(1));
-    if (key[0] === 't') {
-      const o = state.offers.get(id), g = groundOf(baseRules, state.origin);
-      return o && g ? { key, pos: tradeSlotPos(g, o.slot), stage: o.get, crowded: 0 } : null;
-    }
-    const wild = key[0] === 'w', x = (wild ? state.wilds : state.units).get(id);
-    if (!x?.pos) return null;
-    const pool = wild ? [...state.wilds.values()] : myUnits(state).filter(u => u.active);
-    const best = [x, ...pool.filter(o => o !== x && o.stage === x.stage && o.pos)].sort((a, b) => crowd(a) - crowd(b))[0];
-    return { key: `${key[0]}${best.id}`, pos: best.pos, stage: best.stage, crowded: crowd(best) };
-  }
-  const webPoint = pos => {
-    const canvas = web.canvasEl();
-    if (!canvas) return null;
-    const r = canvas.getBoundingClientRect();
-    const pt = screenPoint(baseRules, state.origin, web.cameraView(), r.width, r.height, pos);
-    return pt ? { x: r.left + pt.x, y: r.top + pt.y } : null;
-  };
-  async function webSelect(key, pointerId) {
-    if (!baseRules || !state.origin) return 'data';
-    const t = webTarget(key);
-    if (!t) return 'entity';
-    const expect = gameCat.get(t.stage)?.shown;
-    if (!expect) return 'data';
-    if (web.modalOpen()) { web.pressKey('escape'); await web.frames(1); }
-    web.pressKey('escape');
-    web.pressKey('home');
-    await web.frames(2);
-    const pt = webPoint(t.pos);
-    if (!pt || !web.tap(pt.x, pt.y, pointerId)) return 'aim';
-    if (await web.until(() => web.selectedName() === expect, 600)) return null;
-    if (!t.crowded) return 'aim';
-    return t.key[0] === 'u' ? unstackTo(t, expect, pointerId) : 'stack';
-  }
-
-  const near = (a, b, r) => Math.hypot(a.x - b.x, a.y - b.y) < r;
-  function freeSpot(p) {
-    const g = groundOf(baseRules, state.origin);
-    if (!g) return null;
-    const all = [...state.units.values(), ...state.wilds.values()].filter(o => o.pos);
-    for (const r of [110, 170, 230, 300]) {
-      for (let dir = 0; dir < 8; dir++) {
-        const q = { x: p.x + r * Math.cos((dir * Math.PI) / 4), y: p.y + r * Math.sin((dir * Math.PI) / 4) };
-        const inArena = q.x > g.arena.x + 48 && q.x < g.arena.x + g.arena.w - 48 && q.y > g.arena.y + 48 && q.y < g.arena.y + g.arena.h - 48;
-        if (inArena && !all.some(o => near(o.pos, q, 70))) return q;
-      }
-    }
-    return null;
-  }
-  async function unstackTo(t, expect, pointerId) {
-    for (let round = 0; round < 10; round++) {
-      const got = web.selectedName();
-      if (got === expect) return null;
-      const top = myUnits(state).filter(u => u.active && u.pos && near(u.pos, t.pos, STACK_R) && gameCat.get(u.stage)?.shown === got);
-      const dest = top.length ? freeSpot(t.pos) : null;
-      const pt = dest && webPoint(dest);
-      if (!pt) return 'stack';
-      web.pressKey('move');
-      await web.frames(1);
-      web.tap(pt.x, pt.y, pointerId);
-      const moved = await web.until(() => top.some(u => { const cur = state.units.get(u.id)?.pos; return cur && !near(cur, t.pos, STACK_R); }), 2500);
-      web.pressKey('escape');
-      if (!moved) return 'stack';
-      web.pressKey('home');
-      await web.frames(2);
-      const again = webPoint(t.pos);
-      if (!again) return 'aim';
-      web.tap(again.x, again.y, pointerId);
-      await web.until(() => web.selectedName() === expect, 600);
-    }
-    return web.selectedName() === expect ? null : 'stack';
-  }
-  async function webRun(job) {
-    if (webBusy) { toast = FAIL.busy; dirty = true; render(true); return; }
-    webBusy = true;
-    try { toast = FAIL[await job()] ?? ''; } catch { toast = FAIL.aim; } finally { webBusy = false; dirty = true; render(true); }
-  }
-
   function selectInGame(key, e) {
     if (!realClick(e)) return;
-    if (tapMode()) { webRun(() => webSelect(key, e.pointerId)); return; }
     const g = findGame();
     const found = g && findEntity(g, key);
     if (found) selectEntity(g, found.id);
-    toast = found ? '' : FAIL[g ? 'entity' : 'game'];
+    toast = found ? '' : FAIL[g ? 'entity' : isWeb() ? 'hook' : 'game'];
     dirty = true; render(true);
   }
   const pickable = (el, key) => {
@@ -356,7 +267,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     lastAction = t;
     e.currentTarget.disabled = true;
     setTimeout(() => { dirty = true; render(true); }, 600);
-    if (tapMode()) { webAction(e.pointerId, kind, key, arg, expect); return; }
     let fail = blockReason();
     const g = fail ? null : findGame();
     if (!fail && !g) fail = 'game';
@@ -371,54 +281,10 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     }
     toast = fail ? FAIL[fail] : '';
   }
-  function webAction(pointerId, kind, key, arg, expect) {
-    webRun(async () => {
-      const block = blockReason();
-      if (block) return block;
-      const cur = key[0] === 'w' ? state.wilds.get(Number(key.slice(1))) : state.units.get(Number(key.slice(1)));
-      if (!cur) return 'entity';
-      if (cur.stage !== expect.stage) return 'rule';
-      if (kind === 'catch' && key[0] === 'w') {
-        const fail = await webSelect(key, pointerId);
-        return fail ?? (web.clickPrimary() ? null : 'rule');
-      }
-      if (kind === 'evolve' && key[0] === 'u' && typeof arg === 'string') {
-        const row = (gameCat.get(cur.stage)?.ev ?? []).indexOf(arg), title = gameCat.get(arg)?.shown;
-        if (row < 0 || !title) return 'rule';
-        const fail = await webSelect(key, pointerId);
-        if (fail) return fail;
-        if (!web.clickPrimary()) return 'rule';
-        await web.until(() => web.modalOpen(), 600);
-        return web.clickRow(row, title) ? null : 'rule';
-      }
-      if (kind === 'trade' && key[0] === 'u' && Number.isInteger(arg)) {
-        const offer = state.offers.get(arg);
-        if (!offer || offer.give !== cur.stage || offer.get !== expect.get) return 'rule';
-        const fail = await webSelect(`t${arg}`, pointerId);
-        if (fail) return fail;
-        if (!web.clickPrimary()) return 'rule';
-        await web.frames(1);
-        let mine = webTarget(key);
-        if (mine?.crowded) {
-          const unstack = await webSelect(key, pointerId);
-          if (unstack) return unstack;
-          mine = webTarget(key);
-          const again = await webSelect(`t${arg}`, pointerId);
-          if (again) return again;
-          if (!web.clickPrimary()) return 'rule';
-          await web.frames(1);
-        }
-        const pt = mine && webPoint(mine.pos);
-        if (!pt || !web.tap(pt.x, pt.y, pointerId)) { web.pressKey('escape'); return 'aim'; }
-        return null;
-      }
-      return 'rule';
-    });
-  }
-  const act = (label, kind, key, arg, expect, cls = '', tip) => {
+  const act = (text, kind, key, arg, expect, cls = '', tip) => {
     const blocked = blockReason();
     return h('button', {
-      class: `act ${cls}`, text: label, tabindex: '-1', disabled: !!blocked, title: blocked ? FAIL[blocked] : tip,
+      class: `act ${cls}`, text, tabindex: '-1', disabled: !!blocked, title: blocked ? FAIL[blocked] : tip,
       onClick: e => runAction(e, kind, key, arg, expect),
     });
   };
@@ -539,7 +405,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       return pickable(row(u.stage,
         h('div', { class: 'hp', title: `${fmt(u.hp)} / ${fmt(u.maxHp)} HP` }, h('i', { style: `width:${Math.max(0, Math.min(100, pct))}%` })),
         [!u.active ? pill('Gục', 'bad') : null,
-          tapMode() && crowd(u) ? pill('Chồng', 'warn', 'Đang đứng chồng với con khác (mới bắt, chưa kéo ra sân). Bấm nút/dòng: tool tự dời con trên cùng ra ô trống (phím M của game) tới khi chọn được con này.') : null,
           trades.length ? act(`Trade S${trades[0].slot}`, 'trade', `u${u.id}`, trades[0].slot, { stage: u.stage, get: trades[0].get }, 'ok', `Đổi lấy ${nameOf(trades[0].get)}`) : null,
           evo.length ? evo.map(([to, cost]) => act(`↑${evo.length > 1 ? `${U(to)?.n ?? ''} ` : ''}${short(cost)}g`, 'evolve', `u${u.id}`, to, { stage: u.stage },
             cost <= state.gold ? 'ok' : 'bad', `Tiến hóa lên ${nameOf(to)}: ${fmt(cost)} vàng`)) : pill('Max', 'mute', 'Dạng cuối')],
@@ -612,10 +477,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const p = probe(firstWild ? `w${firstWild.id}` : null);
     const probeRows = [
       h('div', { class: 'sec', text: 'Kiểm tra nút' }),
-      h('div', { class: 'kv' }, h('span', { text: 'Trang / bản game' }), h('b', { text: `${p.host} · ${p.client === 'web' ? 'bản web (chạm hộ)' : 'Cocos'}` })),
-      p.client === 'web' ? h('div', { class: 'kv' }, h('span', { text: 'Móc hàm game' }), h('b', { text: p.webHooked ? 'có (gọi thẳng)' : `chưa — đang chờ: ${p.webArmed.join(', ') || 'không (dán giữa trận → dùng chạm)'}` })) : null,
-      p.client === 'web' ? h('div', { class: 'kv' }, h('span', { text: 'Chạm hộ' }),
-        h('b', { text: `canvas ${web.canvasEl() ? 'có' : 'không'} · khung sàn ${baseRules ? 'có' : 'chưa'} · gốc căn cứ ${state.origin ? 'có' : 'chưa'} · góc nhìn ${web.cameraView()} · đang chọn: ${web.selectedName().slice(0, 40) || '—'}` })) : null,
+      h('div', { class: 'kv' }, h('span', { text: 'Trang / bản game' }), h('b', { text: `${p.host} · ${p.client === 'web' ? 'bản web' : 'Cocos'}` })),
+      p.client === 'web' ? h('div', { class: 'kv' }, h('span', { text: 'Móc hàm game' }), h('b', { text: p.webHooked ? 'có (gọi thẳng)' : `chưa — đang chờ: ${p.webArmed.join(', ') || 'không (dán giữa trận → bấm Móc)'}` })) : null,
       h('div', { class: 'kv' }, h('span', { text: 'Tìm thấy game' }), h('b', { text: p.found ? 'có' : p.hasEngine ? 'không (chưa vào trận?)' : 'không thấy engine' })),
       p.found ? h('div', { class: 'kv' }, h('span', { text: 'Hàm có sẵn' }), h('b', { text: p.fns.join(', ') || 'không có' })) : null,
       p.found ? h('div', { class: 'kv' }, h('span', { text: 'Entity trong game' }), h('b', { text: `${p.entities} · ${p.keys.join(' ')}` })) : null,
@@ -672,10 +535,10 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const kind = clientKind();
     const header = h('div', { class: 'top', title: `CUTD Helper v${VERSION} — chỉ gửi lệnh khi mày bấm nút Bắt/Tiến hóa/Trade` },
       h('b', { text: 'CUTD Helper' }),
-      kind === 'web' && !webCaptured() && !frame ? h('button', { class: 'chip on', text: 'Móc', title: 'Mở lại đúng trận này trong khung (game tự vào lại) để tool móc hàm game → chọn đúng con theo id kể cả khi đứng chồng. Game ở trang cũ sẽ tự ngắt.', onClick: hookViaFrame }) : null,
-      h('span', { class: 'pill mute', text: kind === 'web' ? (webCaptured() ? 'm. · móc' : frame ? 'm. · đang móc…' : 'm. · chạm') : kind === 'cocos' ? 'Cocos' : 'đang tải', title: kind === 'web'
+      kind === 'web' && !webCaptured() && !frame ? h('button', { class: 'chip on', text: 'Móc', title: 'Mở lại đúng trận này trong khung (game tự vào lại) để tool móc hàm game → chọn đúng con theo id, Bắt / Tiến hóa / Trade gọi thẳng hàm game. Game ở trang cũ sẽ tự ngắt.', onClick: hookViaFrame }) : null,
+      h('span', { class: 'pill mute', text: kind === 'web' ? (webCaptured() ? 'm. · móc' : frame ? 'm. · đang móc…' : 'm. · chưa móc') : kind === 'cocos' ? 'Cocos' : 'đang tải', title: kind === 'web'
         ? (webCaptured() ? 'Bản web: đã móc được hàm của game (dán tool từ sảnh) → bấm dòng/nút gọi thẳng hàm game như bản Cocos.'
-          : 'Bản web: chưa móc được hàm game (tool dán lúc trận đã dựng xong) → bấm dòng/nút = chạm hộ trên sàn. Muốn gọi thẳng: nhấn F5 rồi dán tool NGAY lúc đang tải (game tự vào lại trận), hoặc dán ở sảnh trước khi Start.')
+          : 'Bản web: chưa móc được hàm game (tool dán lúc trận đã dựng xong) → bấm "Móc" để dùng nút.')
         : 'Bản Cocos (cutd.site): bấm dòng/nút → tool gọi thẳng hàm của game.' }),
       h('span', { class: 'grow' }),
       h('button', { class: 'x', text: layout === 'h' ? '▯' : '▭', title: layout === 'h' ? 'Chuyển sang dọc' : 'Chuyển sang ngang', onClick: () => setLayout(layout === 'h' ? 'v' : 'h') }),
@@ -728,7 +591,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     dirty = true; render(true);
   }
   function hookViaFrame(e) {
-    if (!realClick(e) || frame || !tapMode()) return;
+    if (!realClick(e) || frame || !isWeb() || findGame()) return;
     frame = document.createElement('iframe');
     frame.src = location.href;
     frame.allow = 'fullscreen; autoplay';
@@ -795,6 +658,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     })
     .catch(err => { panel.replaceChildren(h('p', { class: 'empty bad', text: `CUTD Helper: không tải được dữ liệu wiki (${err.message}).` })); });
   getJSON('/catalog', 32 * 1024 * 1024)
-    .then(raw => { gameCat = buildGameCatalog(raw); baseRules = baseRulesOf(raw); gameCatReady = true; mergeGameCatalog(); })
+    .then(raw => { gameCat = buildGameCatalog(raw); gameCatReady = true; mergeGameCatalog(); })
     .catch(() => { toast = 'Không tải được catalog của game — nút Bắt/Tiến hóa/Trade tạm khoá.'; dirty = true; render(true); });
 })();

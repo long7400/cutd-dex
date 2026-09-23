@@ -1,5 +1,5 @@
-import { html, num, pct, short } from './lib/html.js';
-import { db, ix, portrait, label, linkFor, elementName } from './db.js';
+import { html, num, pct } from './lib/html.js';
+import { db, ix, portrait, label, linkFor } from './db.js';
 
 const byte = v => (Number.isFinite(v) ? Math.max(0, Math.min(255, Math.round(v))) : 0);
 const rgb = a => `rgb(${[0, 1, 2].map(i => byte(a?.[i])).join(',')})`;
@@ -92,4 +92,3 @@ export function footer() {
 
 export const empty = (msg, back = '#/pets') => html`<main><div class="empty">${msg}<br><a class="backlink" href="${back}">← Quay lại</a></div></main>`;
 
-export { elementName, short };

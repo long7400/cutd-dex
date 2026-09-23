@@ -1,8 +1,7 @@
-import { existsSync, readdirSync, unlinkSync, appendFileSync } from 'node:fs';
+import { existsSync, readdirSync, unlinkSync, appendFileSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { request, mapLimit, stats } from './lib/http.mjs';
-import { readFileSync } from 'node:fs';
 import { readJSON, writeJSON, writeAtomic } from './lib/fsx.mjs';
 import { toWebp } from './lib/image.mjs';
 import { extractClient, validateClient, bundlePathFrom } from './lib/client.mjs';

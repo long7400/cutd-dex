@@ -1,8 +1,8 @@
 const RAW = Symbol('raw');
 
-export const raw = s => ({ [RAW]: String(s ?? '') });
+const raw = s => ({ [RAW]: String(s ?? '') });
 
-export const esc = s => String(s ?? '').replace(/[&<>"']/g, c => (
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => (
   { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
 ));
 

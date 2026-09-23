@@ -113,26 +113,22 @@ test('bookmarklet: bộ kiểm tra AST chặn các kiểu lách danh sách cho p
   assert.ok(auditSource([['overlay.js', overlay.replace("right: ['KeyD', 'd']", "right: ['Enter', 'Enter']")], ['game-bridge.js', base], ['logic.js', logic]]).length > 0);
 });
 
-test('bookmarklet: bản web — chạm/phím/bấm hộ chỉ trong web-input.js và đúng giới hạn', () => {
+test('bookmarklet: bản web — chỉ bấm nút chính của game, móc hàm chỉ trong game-bridge, không tạo sự kiện chuột', () => {
   const read = f => readFileSync(join(ROOT, 'tool', f), 'utf8');
-  const files = ['game-bridge.js', 'overlay.js', 'logic.js', 'web-camera.js', 'web-input.js'].map(f => [f, read(f)]);
+  const files = ['game-bridge.js', 'overlay.js', 'logic.js', 'realm.js', 'web-input.js'].map(f => [f, read(f)]);
   assert.deepEqual(auditSource(files), [], 'code hiện tại phải qua kiểm tra');
-  const webIn = read('web-input.js');
-  const withWeb = code => auditSource([...files.filter(([f]) => f !== 'web-input.js'), ['web-input.js', code]]);
-  const withOverlay = extra => auditSource([...files.filter(([f]) => f !== 'overlay.js'), ['overlay.js', `${read('overlay.js')}\n${extra}`]]);
-  const swap = (from, to) => { assert.ok(webIn.includes(from), from); return withWeb(webIn.replace(from, to)); };
+  const withFile = (name, code) => auditSource([...files.filter(([f]) => f !== name), [name, code]]);
+  const webIn = read('web-input.js'), overlay = read('overlay.js'), bridge = read('game-bridge.js');
   const attacks = {
-    'chuột phải': () => swap("button: 0, buttons: 1", "button: 2, buttons: 2"),
-    'kèm Shift (lệnh di chuyển)': () => swap("button: 0, buttons: 1,", "button: 0, shiftKey: true, buttons: 1,"),
-    'sự kiện khác (click)': () => swap("new PointerEvent('pointerdown'", "new PointerEvent('click'"),
-    'phím ngoài Esc/Home': () => swap("home: ['Home', 'Home']", "home: ['Delete', 'Delete']"),
-    'ghi localStorage': () => swap("localStorage.getItem('cutd.cameraView')", "localStorage.setItem('cutd.cameraView', '1')"),
-    'đọc localStorage khoá khác': () => swap("localStorage.getItem('cutd.cameraView')", "localStorage.getItem('cutd.token')"),
-    'bấm nút khác của game': () => swap("const PRIMARY = 'button.authored-node[data-node=\"Primary\"]'", "const PRIMARY = 'button.authored-node[data-node=\"Release\"]'"),
-    '.click() vào phần tử khác': () => withWeb(`${webIn}\nexport const z = el => el.click();`),
-    'PointerEvent ngoài web-input': () => withOverlay("const z = () => new PointerEvent('pointerdown', { button: 0 });"),
-    '.click() ngoài web-input': () => withOverlay('const z = primary => primary.click();'),
-    'dispatch thêm': () => withWeb(`${webIn}\nexport const z = canvas => { canvas.dispatchEvent(1); canvas.dispatchEvent(2); };`),
+    'bấm nút khác của game': () => withFile('web-input.js', webIn.replace('data-node="Primary"', 'data-node="Release"')),
+    '.click() vào phần tử khác': () => withFile('web-input.js', `${webIn}\nexport const z = el => el.click();`),
+    '.click() ngoài web-input': () => withFile('overlay.js', `${overlay}\nconst z = primary => primary.click();`),
+    'tạo PointerEvent': () => withFile('web-input.js', `${webIn}\nexport const z = () => new PointerEvent('pointerdown');`),
+    'đọc localStorage': () => withFile('web-input.js', `${webIn}\nexport const z = () => localStorage.getItem('x');`),
+    'phím ngoài W/A/S/D': () => withFile('overlay.js', overlay.replace("right: ['KeyD', 'd']", "right: ['KeyM', 'm']")),
+    'dispatchEvent ngoài phím camera': () => withFile('web-input.js', `${webIn}\nexport const z = target => target.dispatchEvent(1);`),
+    'bẫy khoá khác trên Object.prototype': () => withFile('game-bridge.js', bridge.replace('_selectedEntityId: o =>', 'toJSON: o =>')),
+    'Object.prototype ngoài game-bridge': () => withFile('overlay.js', `${overlay}\nObject.prototype.x = 1;`),
   };
   for (const [name, run] of Object.entries(attacks)) assert.ok(run().length > 0, `không chặn được: ${name}`);
 });

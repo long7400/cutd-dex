@@ -24,12 +24,10 @@ function index(d) {
   }
 }
 
-export const unit = id => db.units[id];
 export const unitUrl = id => `#/unit/${id.replace(/^unit_/, '')}`;
 export const unitFromParam = p => db.units[`unit_${p}`] ?? db.units[p];
 export const portrait = model => `portraits/${model ?? 'pet_xiaohuolong'}.webp`;
 export const label = k => db.labels[k] ?? k;
-export const elementName = el => db.elements[el]?.name ?? '—';
 
 export function linkFor(id) {
   const u = db.units[id];
