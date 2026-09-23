@@ -6,8 +6,11 @@
 //  • Trong bridge: session.* chỉ catchWild / evolveCreature / tradePet; interaction.* chỉ selectEntity;
 //    không truy cập bằng ngoặc vuông, không gán session/interaction sang biến khác, không destructuring.
 //  • Cả tool: cấm eval/Function/Reflect/XMLHttpRequest/sendBeacon/importScripts/document.cookie/storage/innerHTML…,
-//    cấm .call/.apply/.bind (trừ desc.get.call trong bộ bắt socket), cấm tạo sự kiện ngoài 1 KeyboardEvent W/A/S/D,
-//    fetch chỉ tới DATA_URL hoặc '/catalog' của chính game, WebSocket chỉ dùng cho `instanceof`.
+//    cấm .call/.apply/.bind (trừ desc.get.call trong bộ bắt socket), fetch chỉ tới DATA_URL hoặc '/catalog' của game,
+//    WebSocket chỉ dùng cho `instanceof`.
+//  • Sự kiện giả lập: overlay.js chỉ 1 KeyboardEvent phím camera W/A/S/D. Bản web (tool/web-input.js) thêm đúng:
+//    KeyboardEvent Esc/Home, 2 PointerEvent (nhấn/nhả CHUỘT TRÁI, không phím bổ trợ) lên canvas, .click() chỉ vào
+//    nút `primary`/`row` của game, chỉ đọc localStorage 'cutd.cameraView'. File khác không được làm những việc này.
 import { build } from 'esbuild';
 import { parse } from 'acorn';
 import { ancestor } from 'acorn-walk';
@@ -19,6 +22,10 @@ import { readJSON, writeJSON } from './lib/fsx.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const BRIDGE = 'game-bridge.js';
+const WEB = 'web-input.js';
+const KEY_MAPS = { 'overlay.js': ['CAM_KEYS', ['KeyW', 'KeyA', 'KeyS', 'KeyD']], [WEB]: ['WEB_KEYS', ['Escape', 'Home']] };
+const POINTER_KEYS = new Set(['bubbles', 'cancelable', 'composed', 'clientX', 'clientY', 'button', 'buttons', 'pointerId', 'pointerType', 'isPrimary']);
+const AUTHORED_SELECTORS = new Set(['button.authored-node[data-node="Primary"]', 'button.authored-node[data-node^="Row"]', '.authored-node[data-node]']);
 const GAME_OBJECTS = new Set(['session', 'interaction', 'store', 'cc']);
 const ALLOWED = { session: new Set(['catchWild', 'evolveCreature', 'tradePet']), interaction: new Set(['selectEntity']) };
 const BANNED_IDENTIFIERS = new Set(['eval', 'Function', 'Reflect', 'XMLHttpRequest', 'importScripts', 'Worker', 'SharedWorker',
@@ -32,17 +39,28 @@ const src = (code, n) => code.slice(n.start, n.end);
 export function auditSource(files) {
   const errors = [];
   const err = (file, n, msg) => errors.push(`${file}:${n.loc?.start.line ?? '?'} ${msg}`);
-  const counts = { KeyboardEvent: 0, dispatchEvent: 0, fetch: 0, click: 0 };
+  const counts = { KeyboardEvent: 0, PointerEvent: 0, fetch: 0, click: 0 };
 
   for (const [file, code] of files) {
     const ast = parse(code, { ecmaVersion: 'latest', sourceType: 'module', locations: true });
-    const isBridge = file === BRIDGE;
+    const isBridge = file === BRIDGE, isWeb = file === WEB;
+    let dispatches = 0;
     ancestor(ast, {
       Identifier(n, _s, anc) {
         const parent = anc[anc.length - 2];
         const isProp = parent?.type === 'MemberExpression' && parent.property === n && !parent.computed;
         const isKey = parent?.type === 'Property' && parent.key === n && !parent.computed;
         if (isProp || isKey) return;
+        // Bản web: PointerEvent (kiểm tra ở NewExpression) và đúng 1 kiểu đọc localStorage.
+        if (isWeb && n.name === 'PointerEvent' && parent?.type === 'NewExpression' && parent.callee === n) return;
+        if (isWeb && n.name === 'localStorage') {
+          const call = anc[anc.length - 3];
+          const ok = parent?.type === 'MemberExpression' && parent.object === n && propName(parent) === 'getItem'
+            && call?.type === 'CallExpression' && call.callee === parent && call.arguments.length === 1
+            && call.arguments[0].type === 'Literal' && call.arguments[0].value === 'cutd.cameraView';
+          if (!ok) err(file, n, "localStorage chỉ được đọc getItem('cutd.cameraView')");
+          return;
+        }
         if (BANNED_IDENTIFIERS.has(n.name)) err(file, n, `cấm dùng ${n.name}`);
         if (n.name === 'WebSocket' && !(parent?.type === 'BinaryExpression' && parent.operator === 'instanceof' && parent.right === n)) {
           err(file, n, 'WebSocket chỉ được dùng cho instanceof');
@@ -64,12 +82,28 @@ export function auditSource(files) {
         if (name && GAME_OBJECTS.has(name) && !isBridge) err(file, n, `.${name} của game chỉ được dùng trong ${BRIDGE}`);
         const objName = n.object.type === 'MemberExpression' ? propName(n.object) : null;
         if (objName && ALLOWED[objName] && isBridge && !ALLOWED[objName].has(name)) err(file, n, `${objName}.${name} không nằm trong danh sách cho phép`);
-        if (name === 'dispatchEvent') counts.dispatchEvent++;
-        if (name === 'click' && !(n.object.type === 'Identifier' && n.object.name === 'primary')) err(file, n, '.click() chỉ được dùng cho nút chính của game (primary)');
-        if (name === 'click') counts.click++;
+        if (name === 'dispatchEvent') {
+          dispatches++;
+          if (!(n.object.type === 'Identifier' && ['target', 'canvas'].includes(n.object.name))) err(file, n, 'dispatchEvent chỉ được gửi tới target/canvas');
+        }
+        if (name === 'click') {
+          counts.click++;
+          if (!isWeb || !(n.object.type === 'Identifier' && ['primary', 'row'].includes(n.object.name))) err(file, n, `.click() chỉ được dùng trong ${WEB} cho nút của game (primary/row)`);
+        }
       },
       VariableDeclarator(n) {
         const init = n.init;
+        // `k` (phím sắp giả lập) phải lấy từ bảng phím được phép của chính file đó.
+        if (n.id.name === 'k') {
+          const map = KEY_MAPS[file]?.[0];
+          if (!map || !(init?.type === 'MemberExpression' && init.computed && init.object.name === map)) err(file, n, `phím giả lập phải lấy từ ${map ?? 'bảng phím được phép'}`);
+        }
+        const keyMap = Object.entries(KEY_MAPS).find(([, [name]]) => name === n.id.name);
+        if (keyMap) {
+          const [owner, [, allowed]] = keyMap;
+          const codes = init?.type === 'ObjectExpression' ? init.properties.map(p => p.value?.elements?.[0]?.value) : [null];
+          if (owner !== file || codes.some(c => !allowed.includes(c))) err(file, n, `${n.id.name} chỉ được chứa phím ${allowed.join('/')}`);
+        }
         if (init?.type === 'MemberExpression' && ['session', 'interaction'].includes(propName(init))) err(file, n, 'không được gán session/interaction sang biến khác');
         if (n.id.type === 'ObjectPattern' && n.id.properties.some(p => p.key && GAME_OBJECTS.has(p.key.name))) err(file, n, 'không được destructuring đối tượng game');
       },
@@ -78,8 +112,21 @@ export function auditSource(files) {
           counts.KeyboardEvent++;
           const init = n.arguments[1];
           const code0 = init?.properties?.find(p => p.key?.name === 'code');
-          if (!code0 || src(code, code0.value) !== 'k[0]') err(file, n, 'KeyboardEvent phải lấy code từ CAM_KEYS (k[0])');
+          const key0 = init?.properties?.find(p => p.key?.name === 'key');
+          if (!KEY_MAPS[file] || !code0 || src(code, code0.value) !== 'k[0]' || !key0 || src(code, key0.value) !== 'k[1]') err(file, n, 'KeyboardEvent phải lấy code/key từ bảng phím được phép (k[0]/k[1])');
         }
+        if (n.callee.name === 'PointerEvent') {
+          counts.PointerEvent++;
+          const [type, init] = n.arguments;
+          const props = init?.type === 'ObjectExpression' ? init.properties : null;
+          const button = props?.find(p => p.key?.name === 'button');
+          if (!isWeb || type?.type !== 'Literal' || !['pointerdown', 'pointerup'].includes(type.value) || !props
+            || props.some(p => p.type !== 'Property' || p.computed || !POINTER_KEYS.has(p.key?.name))
+            || button?.value?.type !== 'Literal' || button.value.value !== 0) err(file, n, 'PointerEvent chỉ được là nhấn/nhả chuột trái, không phím bổ trợ');
+        }
+      },
+      Literal(n) {
+        if (typeof n.value === 'string' && n.value.includes('authored-node') && (!isWeb || !AUTHORED_SELECTORS.has(n.value))) err(file, n, `bộ chọn nút game không được phép: ${n.value}`);
       },
       CallExpression(n) {
         if (n.callee.name === 'getJSON') {
@@ -89,24 +136,14 @@ export function auditSource(files) {
           if (!ok) err(file, n, 'getJSON chỉ được tải DATA_URL/… hoặc /catalog');
         }
       },
-      ObjectExpression(n) {
-        // CAM_KEYS: chỉ 4 phím camera.
-        const isCam = n.properties.some(p => p.key?.name === 'up') && n.properties.every(p => p.value?.type === 'ArrayExpression');
-        if (!isCam) return;
-        const codes = n.properties.map(p => p.value.elements[0]?.value);
-        if (codes.some(c => !['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(c))) err(file, n, `phím camera ngoài W/A/S/D: ${codes}`);
-      },
     });
+    const maxDispatch = file === 'overlay.js' ? 1 : isWeb ? 3 : 0;
+    if (dispatches > maxDispatch) errors.push(`${file}: dispatchEvent tối đa ${maxDispatch} chỗ (đang có ${dispatches})`);
   }
-  if (counts.KeyboardEvent !== 1) errors.push(`KeyboardEvent phải được tạo ở đúng 1 chỗ (đang có ${counts.KeyboardEvent})`);
-  if (counts.dispatchEvent !== 1) errors.push(`dispatchEvent chỉ được gọi ở đúng 1 chỗ (camKey) (đang có ${counts.dispatchEvent})`);
+  if (counts.KeyboardEvent > 2) errors.push(`KeyboardEvent tối đa 2 chỗ (camera + web-input) (đang có ${counts.KeyboardEvent})`);
+  if (counts.PointerEvent > 2) errors.push(`PointerEvent tối đa 2 chỗ (nhấn + nhả) (đang có ${counts.PointerEvent})`);
   if (counts.fetch !== 1) errors.push(`fetch chỉ được gọi ở đúng 1 chỗ (getJSON) (đang có ${counts.fetch})`);
-  if (counts.click > 1) errors.push(`.click() chỉ được dùng ở đúng 1 chỗ (phím F) (đang có ${counts.click})`);
-  for (const [file, code] of files) {
-    // Phím tắt chỉ được bấm đúng nút chính của game.
-    const sel = [...code.matchAll(/querySelectorAll\('([^']*)'\)/g)].map(m => m[1]);
-    if (sel.some(s => s.includes('authored-node') && s !== 'button.authored-node[data-node="Primary"]')) errors.push(`${file}: chỉ được bấm nút Primary của game`);
-  }
+  if (counts.click > 2) errors.push(`.click() tối đa 2 chỗ (nút chính + hàng tiến hóa) (đang có ${counts.click})`);
   return errors;
 }
 
@@ -137,10 +174,14 @@ export async function buildTool() {
   code = code.replace(/__CUTD_VERSION__/g, version);
   // Lớp phòng thủ thứ 2 trên bản đã bundle.
   const banned = [/\beval\s*\(/, /new Function\s*\(/, /\.innerHTML\b/, /\.outerHTML\b/, /insertAdjacentHTML/, /document\.write/,
-    /\.send\s*\(/, /sendBeacon/, /createElement\(\s*["'`]script/i, /importScripts/, /\bimport\s*\(/, /localStorage/, /document\.cookie/,
+    /\.send\s*\(/, /sendBeacon/, /createElement\(\s*["'`]script/i, /importScripts/, /\bimport\s*\(/, /document\.cookie/,
     /XMLHttpRequest/, /\.dispatch\s*\(/];
   const hit = banned.filter(re => re.test(code));
   if (hit.length) throw new Error(`Bookmarklet chứa API bị cấm: ${hit.join(', ')}`);
+  // localStorage: chỉ đúng 1 kiểu đọc góc nhìn camera của game, không ghi.
+  const ls = code.match(/localStorage/g)?.length ?? 0;
+  const lsOk = code.match(/localStorage\.getItem\(["'`]cutd\.cameraView["'`]\)/g)?.length ?? 0;
+  if (ls !== lsOk) throw new Error('Bookmarklet dùng localStorage ngoài việc đọc cutd.cameraView');
   if (!code.includes(JSON.stringify(url))) throw new Error('Địa chỉ dữ liệu chưa được khoá vào code');
   const result = { code, sha256: createHash('sha256').update(code).digest('hex'), bytes: Buffer.byteLength(code), version, dataUrl: url };
   writeJSON(join(ROOT, 'src/data/tool.json'), result);

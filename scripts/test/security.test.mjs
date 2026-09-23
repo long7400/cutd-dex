@@ -114,3 +114,27 @@ test('bookmarklet: bộ kiểm tra AST chặn các kiểu lách danh sách cho p
   assert.ok(auditSource([['overlay.js', overlay.replace("getJSON('/catalog'", "getJSON('https://evil/'")], ['game-bridge.js', base], ['logic.js', logic]]).length > 0);
   assert.ok(auditSource([['overlay.js', overlay.replace("right: ['KeyD', 'd']", "right: ['Enter', 'Enter']")], ['game-bridge.js', base], ['logic.js', logic]]).length > 0);
 });
+
+test('bookmarklet: bản web — chạm/phím/bấm hộ chỉ trong web-input.js và đúng giới hạn', () => {
+  const read = f => readFileSync(join(ROOT, 'tool', f), 'utf8');
+  const files = ['game-bridge.js', 'overlay.js', 'logic.js', 'web-camera.js', 'web-input.js'].map(f => [f, read(f)]);
+  assert.deepEqual(auditSource(files), [], 'code hiện tại phải qua kiểm tra');
+  const webIn = read('web-input.js');
+  const withWeb = code => auditSource([...files.filter(([f]) => f !== 'web-input.js'), ['web-input.js', code]]);
+  const withOverlay = extra => auditSource([...files.filter(([f]) => f !== 'overlay.js'), ['overlay.js', `${read('overlay.js')}\n${extra}`]]);
+  const swap = (from, to) => { assert.ok(webIn.includes(from), from); return withWeb(webIn.replace(from, to)); };
+  const attacks = {
+    'chuột phải': () => swap("button: 0, buttons: 1", "button: 2, buttons: 2"),
+    'kèm Shift (lệnh di chuyển)': () => swap("button: 0, buttons: 1,", "button: 0, shiftKey: true, buttons: 1,"),
+    'sự kiện khác (click)': () => swap("new PointerEvent('pointerdown'", "new PointerEvent('click'"),
+    'phím ngoài Esc/Home': () => swap("home: ['Home', 'Home']", "home: ['Delete', 'Delete']"),
+    'ghi localStorage': () => swap("localStorage.getItem('cutd.cameraView')", "localStorage.setItem('cutd.cameraView', '1')"),
+    'đọc localStorage khoá khác': () => swap("localStorage.getItem('cutd.cameraView')", "localStorage.getItem('cutd.token')"),
+    'bấm nút khác của game': () => swap("const PRIMARY = 'button.authored-node[data-node=\"Primary\"]'", "const PRIMARY = 'button.authored-node[data-node=\"Release\"]'"),
+    '.click() vào phần tử khác': () => withWeb(`${webIn}\nexport const z = el => el.click();`),
+    'PointerEvent ngoài web-input': () => withOverlay("const z = () => new PointerEvent('pointerdown', { button: 0 });"),
+    '.click() ngoài web-input': () => withOverlay('const z = primary => primary.click();'),
+    'dispatch thêm': () => withWeb(`${webIn}\nexport const z = canvas => { canvas.dispatchEvent(1); canvas.dispatchEvent(2); };`),
+  };
+  for (const [name, run] of Object.entries(attacks)) assert.ok(run().length > 0, `không chặn được: ${name}`);
+});

@@ -3,17 +3,21 @@
 // Cam kết an toàn (kiểm chứng được bằng cách đọc file này):
 //  • Toàn bộ code nằm trong bookmark. KHÔNG nạp <script> từ đâu, KHÔNG eval / new Function / innerHTML.
 //  • Chỉ fetch 1 file DỮ LIỆU (overlay.json của wiki) → JSON.parse → hiển thị bằng textContent.
-//  • Không tự gửi gì qua socket (không socket.send). Chỉ khi NGƯỜI DÙNG BẤM nút Bắt / Tiến hóa / Trade,
-//    tool gọi đúng hàm tương ứng của client game (session.catchWild / evolveCreature / tradePet) —
-//    y như bấm nút trong game: game tự đánh số lệnh, server tự kiểm tra. 1 cú bấm = 1 lệnh, không tự động.
-//    Bấm vào dòng = interaction.selectEntity (chỉ đổi con đang chọn trên máy). Mọi hàm game khác bị cấm lúc build.
+//  • Không tự gửi gì qua socket (không socket.send). Chỉ khi NGƯỜI DÙNG BẤM nút Bắt / Tiến hóa / Trade, tool làm
+//    đúng việc nút của game làm — game tự đánh số lệnh, server tự kiểm tra. 1 cú bấm = 1 lệnh, không tự động.
+//    Tool tự nhận biết bản game:
+//      – cutd.site (Cocos): gọi hàm của client game (tool/game-bridge.js): selectEntity / catchWild / evolveCreature / tradePet.
+//      – m.cutd.site (web): thao tác như tay người (tool/web-input.js): Esc/Home, chạm chuột trái lên canvas đúng chỗ
+//        con đó (tool/web-camera.js tính điểm), kiểm tra tên trên dock của game, rồi bấm nút HTML của game.
 //  • Đọc dữ liệu: bọc getter MessageEvent.data ĐÚNG 1 lần để lấy tham chiếu WebSocket của game,
 //    gắn listener chỉ-đọc rồi trả getter về nguyên bản ngay.
 //  • UI nằm trong Shadow DOM đóng → không đụng CSS/DOM của game. Không ghi cookie/localStorage.
 import {
   createState, applyMessage, isGameMessage, myUnits, tradeOptions, offersForFamily,
-  bestAttacks, nextWaveForBase, buildGameCatalog,
+  bestAttacks, nextWaveForBase, buildGameCatalog, baseRulesOf,
 } from './logic.js';
+import { screenPoint, groundOf, tradeSlotPos } from './web-camera.js';
+import * as web from './web-input.js';
 import { findGame, findEntity, selectEntity, catchWild, evolveCreature, tradePet, probe, clientKind } from './game-bridge.js';
 
 // Địa chỉ dữ liệu wiki được KHOÁ lúc build (esbuild define) — bản sao wiki ở site khác không đổi được nơi lấy dữ liệu.
@@ -84,8 +88,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .act{all:unset;cursor:pointer;padding:2px 8px;border-radius:6px;font-size:11.5px;font-weight:700;background:#1b2a44;color:#8fb7e8;white-space:nowrap;border:1px solid transparent}
 .act.ok{background:#1d3a2a;color:#9fd6a8;border-color:#2f5c40}.act.bad{background:#3d2226;color:#ff9c9c;border-color:#5c2f35}
 .act:hover{filter:brightness(1.25)}.act:disabled{opacity:.5;cursor:wait}
-.webnote{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:6px 10px;padding:6px 10px;border-radius:8px;background:#1b2a44;color:#8fb7e8;font-size:12px}
-.webnote a{text-decoration:none}
 .toast{margin:6px 10px;padding:6px 10px;border-radius:8px;background:#3d2226;color:#ff9c9c;font-size:12px}
 [hidden]{display:none!important}
 `;
@@ -109,6 +111,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   let db = null, socket = null, dirty = true, tab = 'trade', wildSort = 'value', lastRender = 0;
   const famMax = new Map(); // gia phả → DPS cao nhất cả cây
   let gameCat = new Map(), gameCatReady = false, ownBase = null; // catalog của chính game + căn cứ của mình (server_hello)
+  let baseRules = null; // khung căn cứ trong catalog game (bản web cần để tính vị trí trên sàn)
 
   // ───────────── nghe dữ liệu (chỉ đọc) ─────────────
   const desc = Object.getOwnPropertyDescriptor(MessageEvent.prototype, 'data');
@@ -193,8 +196,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       else if (k === 'text') el.textContent = String(v);
       else if (k === 'style') el.style.cssText = v;
       else if (k === 'onClick') el.addEventListener('click', v);
-      else if (k === 'href') { if (/^https?:\/\//.test(v)) { el.href = v; if (!props.sameTab) el.target = '_blank'; el.rel = 'noopener noreferrer'; } }
-      else if (k === 'sameTab') { /* xử lý cùng href */ }
+      else if (k === 'href') { if (/^https?:\/\//.test(v)) { el.href = v; el.target = '_blank'; el.rel = 'noopener noreferrer'; } }
       else if (k === 'src') { if (String(v).startsWith(DATA_URL)) el.src = v; }
       else el.setAttribute(k, String(v));
     }
@@ -254,18 +256,62 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     game: 'Không thấy game — vào trận rồi thử lại (xem mục "Kiểm tra nút" ở tab Đo tải).',
     entity: 'Không thấy con này trong game (có thể vừa bị bắt/biến mất).',
     fn: 'Bản game này không có hàm cho nút đó (xem "Kiểm tra nút" ở tab Đo tải).',
-    rule: 'Không hợp lệ (sai nhánh / sai slot / con đã đổi) — thử lại sau khi panel cập nhật.',
+    rule: 'Không hợp lệ (sai nhánh / sai slot / con đã đổi / chưa đủ vàng / đang trong đợt) — thử lại sau khi panel cập nhật.',
     data: 'Chưa tải xong dữ liệu của game — đợi 1–2 giây.',
     other: 'Đang xem căn cứ của người khác — về nhà mình để thao tác.',
-    web: 'Bản m.cutd.site đóng kín code game nên tool không bấm hộ được — mở phòng này trên cutd.site để dùng nút.',
+    aim: 'Chạm chưa trúng con này (game đổi camera?) — không bấm gì thêm. Thử lại, hoặc chọn tay rồi nhấn F.',
+    busy: 'Đang thao tác lệnh trước…',
   };
+  const isWeb = () => clientKind() === 'web';
   // Nút chỉ chạy khi dữ liệu quyết định hành động lấy từ CHÍNH game (catalog /catalog) và đang ở nhà mình.
-  const blockReason = () => (clientKind() === 'web' ? 'web' : !gameCatReady ? 'data' : ownBase != null && state.baseId !== ownBase ? 'other' : null);
+  const blockReason = () => (!gameCatReady || (isWeb() && (!baseRules || !state.origin)) ? 'data'
+    : ownBase != null && state.baseId !== ownBase ? 'other' : null);
   // Chỉ nhận cú bấm chuột thật: isTrusted + detail>0 (Enter/Space trên nút có detail=0 → bỏ qua).
   const realClick = e => e?.isTrusted && e.detail > 0;
 
+  // ── bản web: chạm đúng chỗ con đó trên canvas rồi đọc lại tên trên dock của game ──
+  let webBusy = false;
+  function webTarget(key) {
+    const id = Number(key.slice(1));
+    if (key[0] === 't') {
+      const o = state.offers.get(id), g = groundOf(baseRules, state.origin);
+      return o && g ? { pos: tradeSlotPos(g, o.slot), stage: o.get } : null;
+    }
+    const x = (key[0] === 'w' ? state.wilds : state.units).get(id);
+    return x?.pos ? { pos: x.pos, stage: x.stage } : null;
+  }
+  const webPoint = pos => {
+    const canvas = web.canvasEl();
+    if (!canvas) return null;
+    const r = canvas.getBoundingClientRect();
+    const pt = screenPoint(baseRules, state.origin, web.cameraView(), r.width, r.height, pos);
+    return pt ? { x: r.left + pt.x, y: r.top + pt.y } : null;
+  };
+  // Trả null nếu game đã chọn đúng con (tên trên dock khớp catalog game), ngược lại mã lỗi.
+  async function webSelect(key, pointerId) {
+    if (!baseRules || !state.origin) return 'data';
+    const t = webTarget(key);
+    if (!t) return 'entity';
+    const expect = gameCat.get(t.stage)?.shown;
+    if (!expect) return 'data';
+    if (web.modalOpen()) { web.pressKey('escape'); await web.frames(1); } // đóng bảng đang mở
+    web.pressKey('escape'); // bỏ chọn + thoát chế độ nhắm (di chuyển / trade) → cú chạm chỉ để chọn
+    web.pressKey('home'); // camera về mặc định → biết chính xác điểm cần chạm
+    await web.frames(2);
+    const pt = webPoint(t.pos);
+    if (!pt || !web.tap(pt.x, pt.y, pointerId)) return 'aim';
+    await web.frames(2);
+    return web.selectedName() === expect ? null : 'aim';
+  }
+  async function webRun(job) {
+    if (webBusy) { toast = FAIL.busy; dirty = true; render(true); return; }
+    webBusy = true;
+    try { toast = FAIL[await job()] ?? ''; } catch { toast = FAIL.aim; } finally { webBusy = false; dirty = true; render(true); }
+  }
+
   function selectInGame(key, e) {
     if (!realClick(e)) return;
+    if (isWeb()) { webRun(() => webSelect(key, e.pointerId)); return; }
     const g = findGame();
     const found = g && findEntity(g, key);
     if (found) selectEntity(g, found.id);
@@ -291,6 +337,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     lastAction = t;
     e.currentTarget.disabled = true;
     setTimeout(() => { dirty = true; render(true); }, 600);
+    if (isWeb()) { webAction(e.pointerId, kind, key, arg, expect); return; }
     let fail = blockReason();
     const g = fail ? null : findGame();
     if (!fail && !g) fail = 'game';
@@ -304,6 +351,41 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       else fail = 'rule';
     }
     toast = fail ? FAIL[fail] : '';
+  }
+  // Bản web: chọn đúng con (có kiểm tra) → bấm nút của game. Cùng các điều kiện như bản Cocos.
+  function webAction(pointerId, kind, key, arg, expect) {
+    webRun(async () => {
+      const block = blockReason();
+      if (block) return block;
+      const cur = key[0] === 'w' ? state.wilds.get(Number(key.slice(1))) : state.units.get(Number(key.slice(1)));
+      if (!cur) return 'entity';
+      if (cur.stage !== expect.stage) return 'rule';
+      if (kind === 'catch' && key[0] === 'w') {
+        const fail = await webSelect(key, pointerId);
+        return fail ?? (web.clickPrimary() ? null : 'rule');
+      }
+      if (kind === 'evolve' && key[0] === 'u' && typeof arg === 'string') {
+        const row = (gameCat.get(cur.stage)?.ev ?? []).indexOf(arg), title = gameCat.get(arg)?.shown;
+        if (row < 0 || !title) return 'rule';
+        const fail = await webSelect(key, pointerId);
+        if (fail) return fail;
+        if (!web.clickPrimary()) return 'rule'; // mở bảng "Chọn tiến hóa" của game
+        await web.frames(2);
+        return web.clickRow(row, title) ? null : 'rule'; // hàng đúng nhánh (kiểm tra tên) → game gửi lệnh tiến hóa
+      }
+      if (kind === 'trade' && key[0] === 'u' && Number.isInteger(arg)) {
+        const offer = state.offers.get(arg);
+        if (!offer || offer.give !== cur.stage || offer.get !== expect.get) return 'rule';
+        const fail = await webSelect(`t${arg}`, pointerId); // chọn hàng trade…
+        if (fail) return fail;
+        if (!web.clickPrimary()) return 'rule'; // …bấm Trade (game chờ chọn con để đổi)…
+        await web.frames(1);
+        const pt = webPoint(cur.pos);
+        if (!pt || !web.tap(pt.x, pt.y, pointerId)) { web.pressKey('escape'); return 'aim'; } // …chạm con của mình
+        return null;
+      }
+      return 'rule';
+    });
   }
   const act = (label, kind, key, arg, expect, cls = '', tip) => {
     const blocked = blockReason();
@@ -382,11 +464,9 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const onHotkey = e => {
     if (!e.isTrusted || e.repeat || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey || e.code !== 'KeyF') return;
     if (e.target?.closest?.('input,textarea,select,[contenteditable="true"]')) return;
-    const primary = [...document.querySelectorAll('button.authored-node[data-node="Primary"]')]
-      .find(b => !b.disabled && b.getClientRects().length > 0);
-    if (!primary) return;
+    if (!web.primaryReady()) return;
     e.preventDefault();
-    primary.click();
+    web.clickPrimary();
   };
 
   // ───────────── các tab ─────────────
@@ -519,7 +599,9 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const p = probe(firstWild ? `w${firstWild.id}` : null);
     const probeRows = [
       h('div', { class: 'sec', text: 'Kiểm tra nút' }),
-      h('div', { class: 'kv' }, h('span', { text: 'Trang / bản game' }), h('b', { text: `${p.host} · ${p.client === 'web' ? 'bản web (không hỗ trợ nút)' : 'Cocos'}` })),
+      h('div', { class: 'kv' }, h('span', { text: 'Trang / bản game' }), h('b', { text: `${p.host} · ${p.client === 'web' ? 'bản web (chạm hộ)' : 'Cocos'}` })),
+      p.client === 'web' ? h('div', { class: 'kv' }, h('span', { text: 'Chạm hộ' }),
+        h('b', { text: `canvas ${web.canvasEl() ? 'có' : 'không'} · khung sàn ${baseRules ? 'có' : 'chưa'} · gốc căn cứ ${state.origin ? 'có' : 'chưa'} · góc nhìn ${web.cameraView()} · đang chọn: ${web.selectedName().slice(0, 40) || '—'}` })) : null,
       h('div', { class: 'kv' }, h('span', { text: 'Tìm thấy game' }), h('b', { text: p.found ? 'có' : p.hasEngine ? 'không (chưa vào trận?)' : 'không thấy engine' })),
       p.found ? h('div', { class: 'kv' }, h('span', { text: 'Hàm có sẵn' }), h('b', { text: p.fns.join(', ') || 'không có' })) : null,
       p.found ? h('div', { class: 'kv' }, h('span', { text: 'Entity trong game' }), h('b', { text: `${p.entities} · ${p.keys.join(' ')}` })) : null,
@@ -574,8 +656,13 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const status = !db ? 'Đang tải dữ liệu wiki…'
       : !socket && !state.messages ? 'Đang chờ dữ liệu trận… (vào phòng chơi)'
       : !state.haveKeyframe ? 'Đã kết nối — chờ ảnh chụp đầy đủ của căn cứ…' : null;
+    const kind = clientKind();
     const header = h('div', { class: 'top', title: `CUTD Helper v${VERSION} — chỉ gửi lệnh khi mày bấm nút Bắt/Tiến hóa/Trade` },
       h('b', { text: 'CUTD Helper' }),
+      // Tool tự nhận biết đang ở bản nào và tự chọn cách thao tác — không cần đổi site.
+      h('span', { class: 'pill mute', text: kind === 'web' ? 'm. · web' : kind === 'cocos' ? 'Cocos' : 'đang tải', title: kind === 'web'
+        ? 'Bản web (m.cutd.site): bấm dòng/nút → tool chạm đúng con trên sàn (camera về mặc định), kiểm tra tên rồi bấm nút của game. F = nút chính.'
+        : 'Bản Cocos (cutd.site): bấm dòng/nút → tool gọi thẳng hàm của game.' }),
       h('span', { class: 'grow' }),
       h('button', { class: 'x', text: layout === 'h' ? '▯' : '▭', title: layout === 'h' ? 'Chuyển sang dọc' : 'Chuyển sang ngang', onClick: () => setLayout(layout === 'h' ? 'v' : 'h') }),
       h('button', { class: 'x', text: '–', title: 'Thu nhỏ', onClick: () => toggle() }),
@@ -596,13 +683,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     } catch (err) {
       content = h('p', { class: 'empty bad', text: `Lỗi hiển thị: ${err?.message ?? err}` });
     }
-    // Bản m.cutd.site: không bấm hộ được → gợi ý mở đúng phòng này trên cutd.site (cùng server, cùng phòng).
-    const room = new URLSearchParams(location.search).get('room');
-    const webNote = clientKind() === 'web' ? h('div', { class: 'webnote' },
-      h('span', { text: 'Bản web: bấm con trên sàn rồi nhấn F = nút chính của game (Bắt / Tiến hóa / Trade). Nút trong panel chỉ chạy trên cutd.site.' }),
-      room && /^[A-Za-z0-9]{4,16}$/.test(room)
-        ? h('a', { class: 'chip on', href: `https://cutd.site/?room=${room}`, sameTab: true, text: 'Mở phòng này trên cutd.site' }) : null) : null;
-    const body = bodyEl = h('div', { class: 'body' }, webNote, toast ? h('p', { class: 'toast', text: toast }) : null, content);
+    const body = bodyEl = h('div', { class: 'body' }, toast ? h('p', { class: 'toast', text: toast }) : null, content);
     panel.className = `panel ${layout}`;
     panel.replaceChildren(header, tabs, body);
     body.scrollTop = scroll;
@@ -669,6 +750,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     .catch(err => { panel.replaceChildren(h('p', { class: 'empty bad', text: `CUTD Helper: không tải được dữ liệu wiki (${err.message}).` })); });
   // Catalog của chính server game (cùng origin với trang game) — nguồn cho mọi quyết định của nút thao tác.
   getJSON('/catalog', 32 * 1024 * 1024)
-    .then(raw => { gameCat = buildGameCatalog(raw); gameCatReady = true; mergeGameCatalog(); })
+    .then(raw => { gameCat = buildGameCatalog(raw); baseRules = baseRulesOf(raw); gameCatReady = true; mergeGameCatalog(); })
     .catch(() => { toast = 'Không tải được catalog của game — nút Bắt/Tiến hóa/Trade tạm khoá.'; dirty = true; render(true); });
 })();

@@ -1,7 +1,8 @@
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM, VirtualConsole } from 'jsdom';
-import { createState, applyMessage, tradeOptions, evolvePath, nextWaveForBase, myUnits } from '../../tool/logic.js';
+import { createState, applyMessage, tradeOptions, evolvePath, nextWaveForBase, myUnits, buildGameCatalog } from '../../tool/logic.js';
+import { screenPoint, groundOf, tradeSlotPos } from '../../tool/web-camera.js';
 import { buildTool } from '../build-tool.mjs';
 import { build, buildOverlay, PATHS } from '../build.mjs';
 import { readJSON } from '../lib/fsx.mjs';
@@ -400,23 +401,191 @@ test('bookmarklet: nhãn + đích của nút lấy từ catalog GAME, overlay gi
   assert.equal(calls.length, n);
 });
 
-test('bookmarklet: bản m.cutd.site → khoá nút + link mở đúng phòng trên cutd.site', async t => {
+// Bản web (m.cutd.site): dựng 1 "game giả" đúng các điểm tool dựa vào — canvas #world nhận chạm, phím Esc/Home,
+// dock HTML (MonsterPanel/Name, Primary), bảng "Chọn tiến hóa" (ModalShade/RowN/Title). Game giả chọn con gần điểm chạm
+// nhất theo toạ độ màn hình của camera mặc định; chỉ khi đã nhấn Home thì camera mới ở mặc định.
+function fakeWebGame(w, { honourHome = true } = {}) {
+  const doc = w.document;
+  const cat = buildGameCatalog(readJSON(PATHS.catalog)), rules = readJSON(PATHS.catalog).catalog.base;
+  const game = { commands: [], keys: [], sel: null, tradeTargeting: false, home: false, entities: [], origin: null };
+  // jsdom chưa có PointerEvent (trình duyệt thật thì có).
+  w.PointerEvent ??= class extends w.MouseEvent {
+    constructor(type, o = {}) { super(type, o); this.pointerId = o.pointerId; this.pointerType = o.pointerType; this.isPrimary = !!o.isPrimary; }
+  };
+  w.Element.prototype.getClientRects = function () { return this.closest('[hidden]') ? [] : [{ width: 1, height: 1 }]; };
+  const canvas = doc.createElement('canvas');
+  canvas.id = 'world';
+  canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 1280, height: 720 });
+  const node = (tag, name, parent) => { const el = doc.createElement(tag); el.className = 'authored-node'; el.dataset.node = name; parent.append(el); return el; };
+  const panel = node('div', 'MonsterPanel', doc.body); panel.hidden = true;
+  const detail = node('div', 'Detail', panel);
+  const nameEl = node('div', 'Name', detail);
+  node('div', 'Name', node('button', 'Skill0', detail)).textContent = 'tên kỹ năng';
+  const primary = node('button', 'Primary', detail);
+  const shade = node('div', 'ModalShade', doc.body); shade.hidden = true;
+  doc.body.append(canvas);
+  const render = () => {
+    const e = game.sel;
+    panel.hidden = !e;
+    nameEl.textContent = e ? cat.get(e.stage).shown : '';
+    primary.disabled = !e;
+  };
+  w.addEventListener('keydown', e => {
+    game.keys.push(e.key);
+    if (e.key === 'Home' && honourHome) game.home = true;
+    if (e.key === 'Escape') { if (!shade.hidden) shade.hidden = true; else { game.sel = null; game.tradeTargeting = false; render(); } }
+  });
+  const pick = (x, y) => {
+    let best = null, bestD = 25;
+    for (const e of game.entities) {
+      const pt = screenPoint(rules, game.origin, 0, 1280, 720, e.pos);
+      const d = pt ? Math.hypot(pt.x - x, pt.y - y) : Infinity;
+      if (d < bestD) { bestD = d; best = e; }
+    }
+    return best;
+  };
+  let down = null;
+  canvas.addEventListener('pointerdown', e => { down = e; });
+  canvas.addEventListener('pointerup', e => {
+    if (!down || e.button !== 0 || down.button !== 0) return;
+    down = null;
+    game.taps = (game.taps ?? 0) + 1;
+    const hit = game.home ? pick(e.clientX, e.clientY) : null; // camera chưa về mặc định → chạm lệch
+    if (game.tradeTargeting && hit?.kind === 'unit') { game.commands.push(['trade', hit.key, game.sel.slot]); game.tradeTargeting = false; return; }
+    game.sel = hit; render();
+  });
+  primary.onclick = () => {
+    const e = game.sel;
+    if (!e) return;
+    if (e.kind === 'wild') game.commands.push(['catch', e.key]);
+    if (e.kind === 'offer') game.tradeTargeting = true;
+    if (e.kind === 'unit') {
+      shade.replaceChildren();
+      cat.get(e.stage).ev.forEach((to, i) => {
+        const row = node('button', `Row${i}`, shade);
+        node('div', 'Title', row).textContent = cat.get(to).shown;
+        row.onclick = () => { game.commands.push(['evolve', e.key, to]); shade.hidden = true; };
+      });
+      shade.hidden = false;
+    }
+  };
+  render();
+  return { game, canvas, rules, cat };
+}
+
+test('bookmarklet: bản m.cutd.site — tự nhận bản web, chạm đúng con rồi bấm nút của game (Bắt / Tiến hóa / Trade)', async t => {
   const { w, log, code, FakeWS } = setupDom('https://m.cutd.site/?room=805A6070');
   t.after(() => w.close());
   w.document.getElementById('GameCanvas').remove(); // bản web không có #GameCanvas/cc
+  const { game, rules } = fakeWebGame(w);
+  const origin = { x: 2048, y: 2336 };
+  const g = groundOf(rules, origin);
+  game.origin = origin;
+  const wildPos = { x: origin.x + 300, y: origin.y + 1900 }, u1Pos = { x: origin.x + 608, y: origin.y + 1000 }, u2Pos = { x: origin.x + 400, y: origin.y + 700 };
+  game.entities = [
+    { key: 'w1', kind: 'wild', stage: scenario.a, pos: wildPos },
+    { key: 'u1', kind: 'unit', stage: scenario.c, pos: u1Pos },
+    { key: 'u2', kind: 'unit', stage: scenario.a, pos: u2Pos },
+    { key: 't1', kind: 'offer', stage: scenario.b, slot: 1, pos: tradeSlotPos(g, 1) },
+  ];
+
   w.eval(code);
   const ws = new FakeWS();
   ws.addEventListener('message', e => e.data);
   const emit = m => ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
   emit(summary);
   await tick(0);
-  emit(keyframe([{ id: 1, stage_id: scenario.c, owner_id: 11, health: 5, max_health: 10, active: true }]));
+  emit(keyframe([
+    { id: 1, stage_id: scenario.c, owner_id: 11, health: 5, max_health: 10, active: true, position: u1Pos },
+    { id: 2, stage_id: scenario.a, owner_id: 11, health: 5, max_health: 10, active: true, position: u2Pos },
+  ], { base: { base_id: 7, lives: 30, gold: 50000, lumber: 0, alive: true, research: [], origin }, wilds: [{ id: 1, stage_id: scenario.a, position: wildPos }] }));
   await tick(1200);
   const root = log.roots[0];
-  const link = root.querySelector('.webnote a');
-  assert.equal(link?.href, 'https://cutd.site/?room=805A6070');
-  assert.ok(!link.target, 'mở trong tab hiện tại (tránh 2 kết nối cùng lúc)');
-  assert.ok([...root.querySelectorAll('button.act')].every(b => b.disabled), 'bản web: nút thao tác phải khoá');
+  assert.match(root.querySelector('.top').textContent, /m\. · web/, 'tự nhận bản web');
+  assert.ok(!root.querySelector('.webnote'), 'không còn gợi ý chuyển sang cutd.site');
+  const btn = text => [...root.querySelectorAll('button.act')].find(b => b.textContent.startsWith(text));
+  const tab = name => [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith(name)).click();
+  const done = () => tick(900);
+
+  // Trade: click do script → bỏ qua; click thật → chọn hàng trade, bấm Trade, chạm đúng con u1.
+  btn('Trade').click();
+  await done();
+  assert.equal(game.taps ?? 0, 0);
+  trustedClick(w, btn('Trade'));
+  await done();
+  assert.deepEqual(game.commands, [['trade', 'u1', 1]], root.querySelector('.toast')?.textContent);
+  assert.ok(game.keys.includes('Escape') && game.keys.includes('Home'), 'Esc + Home trước khi chạm');
+
+  // Bắt.
+  tab('Wild');
+  await tick(50);
+  trustedClick(w, btn('Bắt'));
+  await done();
+  assert.deepEqual(game.commands.at(-1), ['catch', 'w1']);
+
+  // Tiến hóa: mở bảng của game rồi bấm đúng hàng nhánh.
+  tab('Đội');
+  await tick(50);
+  const up = [...root.querySelectorAll('button.act')].find(b => b.textContent.startsWith('↑'));
+  trustedClick(w, up);
+  await done();
+  const evo = game.commands.at(-1);
+  assert.equal(evo[0], 'evolve');
+  const stage = game.entities.find(e => e.key === evo[1]).stage;
+  assert.ok(overlay.u[stage].e.some(([to]) => to === evo[2]), 'đúng nhánh của đúng con');
+
+  // Bấm dòng = chỉ chọn, không lệnh.
+  const n = game.commands.length;
+  trustedClick(w, root.querySelector('.row.pick .mid'));
+  await done();
+  assert.equal(game.commands.length, n);
+  assert.ok(game.sel, 'đã chọn con trong game');
+  assert.equal(log.sent, 0, 'không tự gửi gì qua socket');
+});
+
+test('bookmarklet: bản web — chạm lệch (tên trên dock không khớp) thì dừng, không bấm nút của game', async t => {
+  const { w, log, code, FakeWS } = setupDom('https://m.cutd.site/?room=805A6070');
+  t.after(() => w.close());
+  w.document.getElementById('GameCanvas').remove();
+  const { game } = fakeWebGame(w, { honourHome: false }); // game "đổi camera": Home không đưa về mặc định
+  const origin = { x: 2048, y: 2336 };
+  const wildPos = { x: origin.x + 300, y: origin.y + 1900 };
+  game.origin = origin;
+  game.entities = [{ key: 'w1', kind: 'wild', stage: scenario.a, pos: wildPos }];
+  w.eval(code);
+  const ws = new FakeWS();
+  ws.addEventListener('message', e => e.data);
+  const emit = m => ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
+  emit(summary);
+  await tick(0);
+  emit(keyframe([], { base: { base_id: 7, lives: 30, gold: 50000, lumber: 0, alive: true, research: [], origin }, wilds: [{ id: 1, stage_id: scenario.a, position: wildPos }] }));
+  await tick(1200);
+  const root = log.roots[0];
+  [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith('Wild')).click();
+  await tick(50);
+  trustedClick(w, [...root.querySelectorAll('button.act')].find(b => b.textContent.startsWith('Bắt')));
+  await tick(900);
+  assert.equal(game.taps, 1);
+  assert.deepEqual(game.commands, [], 'chạm lệch → không bấm nút Bắt');
+  assert.match(root.querySelector('.toast').textContent, /Chạm chưa trúng/);
+});
+
+test('web-camera: khớp số tính bằng PlayCanvas + hàm căn khung của game (m.cutd.site)', () => {
+  const rules = readJSON(PATHS.catalog).catalog.base;
+  const origin = { x: 2048, y: 2336 };
+  // Sinh bằng playcanvas@2.22 (Quat.setFromEulerAngles, Mat4.setPerspective) + hàm KL/aR chép từ bundle game.
+  const golden = [
+    [0, 1280, 720, { x: 2656, y: 3336 }, 655.979, 386.007], [0, 1280, 720, { x: 2348, y: 4236 }, 752.985, 765.694],
+    [0, 1280, 720, { x: 1688, y: 3232 }, 138.538, 492.545], [0, 1280, 720, { x: 2148, y: 2536 }, 368.436, 244.394],
+    [2, 900, 1100, { x: 2656, y: 3336 }, 431.971, 579.343], [2, 900, 1100, { x: 2348, y: 4236 }, 119.554, 905.997],
+    [2, 900, 1100, { x: 1688, y: 3232 }, 2.811, 386.85], [2, 900, 1100, { x: 2148, y: 2536 }, 378.565, 307.336],
+  ];
+  for (const [view, W, H, pos, x, y] of golden) {
+    const pt = screenPoint(rules, origin, view, W, H, pos);
+    assert.ok(Math.abs(pt.x - x) < 0.01 && Math.abs(pt.y - y) < 0.01, `view ${view} ${JSON.stringify(pos)} → ${pt.x},${pt.y}`);
+  }
+  assert.deepEqual(tradeSlotPos(groundOf(rules, origin), 3), { x: 1688, y: 3232 });
+  assert.equal(screenPoint(null, origin, 0, 100, 100, origin), null);
 });
 
 test('bookmarklet: phím F bấm nút chính của game (bản web) — chỉ phím thật, không khi đang gõ/giữ phím/nút tắt', async t => {

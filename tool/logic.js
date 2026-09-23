@@ -14,24 +14,27 @@ const str = v => (typeof v === 'string' ? v : null);
 
 export function createState() {
   return {
-    tick: 0, baseId: null, haveKeyframe: false,
+    tick: 0, baseId: null, haveKeyframe: false, origin: null,
     lives: 0, gold: 0, lumber: 0, alive: true,
     research: new Map(), units: new Map(), creeps: new Map(), wilds: new Map(), offers: new Map(),
     summary: null, messages: 0,
   };
 }
 
+// Vị trí trên sàn (toạ độ gameplay của server) — bản web dùng để chạm đúng chỗ con đó.
+const posOf = p => (isObj(p) && Number.isFinite(p.x) && Number.isFinite(p.y) ? { x: p.x, y: p.y } : null);
 const unitOf = u => ({
-  id: num(u.id), stage: str(u.stage_id), owner: u.owner_id ?? null,
+  id: num(u.id), stage: str(u.stage_id), owner: u.owner_id ?? null, pos: posOf(u.position),
   hp: num(u.health), maxHp: num(u.max_health), active: u.active !== false, book: num(u.book_value),
 });
 const creepOf = c => ({ id: num(c.id), stage: str(c.stage_id), hp: num(c.health), maxHp: num(c.max_health) });
-const wildOf = w => ({ id: num(w.id), stage: str(w.stage_id) });
+const wildOf = w => ({ id: num(w.id), stage: str(w.stage_id), pos: posOf(w.position) });
 const offerOf = o => ({ slot: num(o.slot), get: str(o.offered_stage_id), give: str(o.required_stage_id) });
 
 function applyBase(s, b) {
   if (!isObj(b)) return;
   s.lives = num(b.lives); s.gold = num(b.gold); s.lumber = num(b.lumber); s.alive = b.alive !== false;
+  if (b.origin !== undefined) s.origin = posOf(b.origin);
   s.research = new Map(arr(b.research).filter(isObj).map(r => [str(r.research_id), num(r.level)]));
 }
 
@@ -125,19 +128,36 @@ export function buildGameCatalog(raw) {
   const cat = raw?.catalog;
   if (!isObj(cat) || !Array.isArray(cat.species)) throw new Error('catalog game sai định dạng');
   const names = new Map(arr(cat.display_names).filter(isObj).map(d => [d.id, typeof d.value === 'string' ? d.value : '']));
+  // Tên đúng như game hiện trên bảng thông tin (bỏ mã màu |cAARRGGBB, |r, |n) — để kiểm tra chạm trúng con.
+  const shown = v => v.replace(/\|c[0-9a-f]{8}/gi, '').replace(/\|r/gi, '').replace(/\|n/gi, ' ').trim();
   const out = new Map();
   for (const sp of cat.species) {
     if (!isObj(sp) || typeof sp.id !== 'string') continue;
-    const full = (names.get(sp.display_name_id) || sp.id).replace(/\|c[0-9a-f]{8}|\|r/gi, '').trim();
+    const raw = names.get(sp.display_name_id);
+    const full = shown(raw || sp.id);
     const m = /^(.*?)\s+level\s+(\d+)$/i.exec(full);
     out.set(sp.id, {
       n: (m ? m[1] : full).slice(0, 60), l: m ? +m[2] : undefined,
-      b: num(sp.book_value), c: num(sp.catch_chance),
+      b: num(sp.book_value), c: num(sp.catch_chance), shown: raw ? shown(raw).slice(0, 120) : null,
+      // Thứ tự nhánh y như bảng "Chọn tiến hóa" của game (hàng 0, 1, 2…).
+      ev: arr(sp.evolutions).map(e => (isObj(e) && typeof e.stage_id === 'string' ? e.stage_id : null)),
       e: arr(sp.evolutions).filter(e => isObj(e) && typeof e.stage_id === 'string' && Number.isFinite(e.cost) && e.cost >= 0)
         .map(e => [e.stage_id, e.cost]),
     });
   }
   return out;
+}
+
+// Khung căn cứ (catalog.base) — chỉ giữ các hình chữ nhật cần để tính vị trí trên sàn, số phải hữu hạn.
+export function baseRulesOf(raw) {
+  const b = raw?.catalog?.base;
+  const r = k => {
+    const v = b?.[k];
+    const ok = isObj(v) && ['min', 'max'].every(m => isObj(v[m]) && Number.isFinite(v[m].x) && Number.isFinite(v[m].y));
+    return ok ? { min: { x: v.min.x, y: v.min.y }, max: { x: v.max.x, y: v.max.y } } : null;
+  };
+  const out = { arena: r('arena'), wild_area: r('wild_area'), spawn_area: r('spawn_area'), exit_area: r('exit_area') };
+  return Object.values(out).every(Boolean) ? out : null;
 }
 
 // Mỗi trade offer: có sẵn lính đúng stage không, nếu không thì lính nào tiến hóa tới được rẻ nhất.

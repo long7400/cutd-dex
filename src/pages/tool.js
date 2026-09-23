@@ -20,7 +20,7 @@ export default {
         <h2>Cài đặt</h2>
         <ol class="steps">
           <li><b>Máy tính:</b> kéo nút dưới đây thả lên thanh bookmark (Ctrl/Cmd + Shift + B để hiện thanh bookmark).</li>
-          <li>Vào phòng game trên <code>cutd.site</code> rồi bấm bookmark <b>CUTD Helper</b>. Bấm lần nữa để ẩn/hiện.</li>
+          <li>Vào phòng game trên <code>cutd.site</code> hoặc <code>m.cutd.site</code> rồi bấm bookmark <b>CUTD Helper</b>. Bấm lần nữa để ẩn/hiện.</li>
           <li><b>Điện thoại:</b> bấm "Chép link", tạo 1 bookmark bất kỳ, sửa URL thành nội dung vừa chép, đặt tên <b>CUTD Helper</b>. Trong game gõ "CUTD Helper" vào thanh địa chỉ rồi chọn bookmark đó.</li>
         </ol>
         <div class="chips">
@@ -50,7 +50,11 @@ export default {
         <h2>Có gì</h2>
         <ul class="steps">
           <li><b>Trade:</b> 7 slot đang mở — nhận con gì, cần đưa con gì; có sẵn lính thì có nút <b>Trade</b>, chưa có thì hiện lính nào tiến hóa tới được và tốn bao nhiêu vàng.</li>
-          <li><b>Hai bản game:</b> thông tin + camera chạy trên cả <code>cutd.site</code> lẫn <code>m.cutd.site</code>. Nút Bắt / Tiến hóa / Trade / chọn con trong panel chỉ chạy trên <code>cutd.site</code> (bản web đóng kín code game).</li>
+          <li><b>Hai bản game — tool tự nhận biết</b> (góc trên panel ghi <i>Cocos</i> hoặc <i>m. · web</i>), không cần đổi site. Mọi tab, nút Bắt / Tiến hóa / Trade và bấm dòng để chọn đều chạy trên cả hai:
+            <ul>
+              <li><code>cutd.site</code>: gọi thẳng hàm của nút trong game.</li>
+              <li><code>m.cutd.site</code>: thao tác như tay — Esc, Home (camera về mặc định), chạm đúng chỗ con đó trên sàn, kiểm tra tên trên bảng thông tin của game rồi mới bấm nút của game. Chạm lệch là dừng, không bấm gì. Tiến hóa: tool bấm đúng hàng nhánh trong bảng "Chọn tiến hóa" (kiểm tra tên nhánh).</li>
+            </ul></li>
           <li><b>Phím F (bản web m.cutd.site):</b> bấm con trên sàn rồi nhấn <b>F</b> = bấm nút chính của game ở dock (Bắt / Tiến hóa / Trade) — khỏi rê chuột. Chỉ nhận phím thật, bỏ qua khi đang gõ chat.</li>
           <li><b>Nút thao tác nhanh:</b> <b>Bắt</b> ở tab Wild, <b>↑ tiến hóa</b> (mỗi nhánh 1 nút) ở tab Đội, <b>Trade</b> ở tab Trade/Đội. Bấm vào dòng để chọn con đó trong game.</li>
           <li><b>Wild:</b> toàn bộ sinh vật hoang dã trên bãi — giá bắt (đủ tiền không), tỉ lệ bắt, DPS tối đa cả cây, cây nào đang có trade cần.</li>
