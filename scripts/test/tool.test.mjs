@@ -558,3 +558,28 @@ test('bookmarklet: wiki cũ hơn game → tool tự tính DPS thật / vai trò 
   [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith('Đo tải')).click();
   assert.match(root.querySelector('.panel').textContent, /wiki cũ hơn game/);
 });
+
+test('bookmarklet: nhãn vai trò (ATK/TANK/BUFF…) + lọc theo vai trò ở tab Wild', async t => {
+  const { w, log, code, FakeWS } = setupDom();
+  t.after(() => w.close());
+  w.eval(code);
+  const ws = new FakeWS();
+  ws.addEventListener('message', e => e.data);
+  const emit = m => ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
+  emit(summary);
+  await tick(0);
+  emit(keyframe([{ id: 1, stage_id: scenario.c, owner_id: 11, health: 5, max_health: 10, active: true }]));
+  await tick(1200);
+  const root = log.roots[0];
+  const clickText = text => [...root.querySelectorAll('button')].find(b => b.textContent === text).click();
+  [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith('Wild')).click();
+  const chips = [...root.querySelectorAll('.row .kit b')].map(b => b.textContent);
+  assert.ok(chips.some(c => c === 'ATK' || c === 'TANK'), 'có vai chính');
+  const primary = chips.find(c => c === 'ATK' || c === 'TANK');
+  clickText(primary === 'ATK' ? 'TANK' : 'ATK');
+  assert.equal(root.querySelectorAll('.row').length, 0);
+  assert.match(root.querySelector('.panel').textContent, /Không có con nào đúng vai trò/);
+  clickText(primary);
+  assert.equal(root.querySelectorAll('.row').length, 1);
+  clickText('Tất cả');
+});

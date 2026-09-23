@@ -60,6 +60,7 @@ export default {
               <li><b>Huy hiệu cạnh nút</b> = hạng <b>hiện tại</b>, so với các con cùng tầm cấp.</li>
               <li><b>Dải ô màu</b> = hạng từng cấp tiến hóa từ bây giờ tới đỉnh (ô cuối là dạng mạnh nhất). Vd Staryu: ô đầu A, giữa C, cuối S+ → yếu giữa đường nhưng Lv100 rất mạnh.</li>
               <li>Rê chuột: DPS hiện tại, dạng đỉnh + hạng + số vàng cần, kỹ năng mở ở cấp nào.</li>
+              <li><b>Nhãn vai trò</b>: <b>ATK</b> (sát thương) hoặc <b>TANK</b> (máu / giáp dày, xét ở dạng đỉnh) + kỹ năng đặc biệt kể cả khi lên cấp mới mở: <b>BUFF</b> hào quang cả đội, <b>CC</b> làm chậm, <b>HEAL</b> hồi máu, <b>NÉ</b>, <b>TAUNT</b> kéo quái, <b>BOSS</b> diệt boss, <b>AOE</b> đánh lan. Tab Wild lọc được theo ATK / TANK / Hỗ trợ.</li>
             </ul></li>
 
           <li><b>Wild:</b> toàn bộ sinh vật hoang dã trên bãi — giá bắt (đủ tiền không), tỉ lệ bắt, DPS tối đa cả cây, cây nào đang có trade cần.</li>

@@ -4,6 +4,8 @@ const round = (v, d = 2) => Math.round(v * 10 ** d) / 10 ** d;
 const POWER_TIERS = [[0.9, 'S+'], [0.65, 'S'], [0.45, 'A'], [0.28, 'B'], [0, 'C']];
 export const powerTier = score => POWER_TIERS.find(([min]) => score >= min)[1];
 const LEVEL_BANDS = [2, 20, 40, 70, Infinity];
+const KIT_OF_ROLE = { aura: 'buff', cc: 'cc', sustain: 'heal', evade: 'evade', taunt: 'taunt', boss: 'boss', aoe: 'aoe' };
+const KIT_ORDER = ['atk', 'tank', 'buff', 'cc', 'heal', 'evade', 'taunt', 'boss', 'aoe'];
 const bandOf = level => LEVEL_BANDS.findIndex(max => (level || 1) < max);
 
 function teamAuras(s, abilityById, modifierById) {
@@ -61,7 +63,8 @@ export function analyzeCatalog(catalog) {
       eff: sv.eff, pct: sv.pct, roles: [...roles].sort(), unsure: sv.uncertain, auras,
       splash: !!(s.attack_splash || s.attack_bounce),
       evo: (s.evolutions ?? []).filter(e => typeof e?.stage_id === 'string' && Number.isFinite(e.cost) && e.cost >= 0).map(e => [e.stage_id, e.cost]),
-      level, legendary: !!s.legendary, traps: {}, unlocks: [], peak: null, power: 0, stageTier: null, path: [],
+      level, legendary: !!s.legendary, hp: s.max_health ?? 0, armor: s.armor ?? 0,
+      traps: {}, unlocks: [], peak: null, power: 0, stageTier: null, path: [], kit: [],
       stats: {
         hp: s.max_health ?? 0, dps: round(((s.attack_damage ?? 0) * 32) / Math.max(1, s.attack_cooldown_ticks ?? 32), 1),
         a: s.attack_type ?? 'normal', at: s.armor_type ?? 'normal', ar: s.armor || undefined, ms: s.move_speed || undefined,
@@ -126,6 +129,12 @@ export function analyzeCatalog(catalog) {
   const peaks = [...roots].map(id => out.get(id).peak[2]).sort((a, b) => a - b);
   const ref = peaks[Math.floor(peaks.length * 0.9)] || 1;
   for (const id of inPool) out.get(id).power = round(Math.min(1, out.get(id).peak[2] / ref));
+  for (const id of inPool) {
+    const u = out.get(id), top = out.get(u.peak[0]);
+    const tank = top.armor >= 15 || top.hp / Math.max(1, top.eff) >= 12;
+    const extra = new Set(u.path.flatMap(st => out.get(st)?.roles ?? []).map(r => KIT_OF_ROLE[r]).filter(Boolean));
+    u.kit = [tank ? 'tank' : 'atk', ...KIT_ORDER.filter(k => extra.has(k))];
+  }
   const bands = new Map();
   for (const id of inPool) {
     if (out.get(id).legendary) continue;
@@ -146,7 +155,7 @@ export function overlayFields(a) {
   return {
     ed: a.eff, r: a.roles.length ? a.roles : undefined, pk: a.peak ?? undefined, pw: a.peak ? a.power : undefined,
     ul: a.unlocks.length ? a.unlocks : undefined, st: a.stageTier ?? undefined,
-    pg: a.path?.length > 1 ? a.path : undefined,
+    pg: a.path?.length > 1 ? a.path : undefined, kt: a.kit?.length ? a.kit : undefined,
     tp: Object.keys(a.traps).length ? Object.fromEntries(Object.entries(a.traps).map(([to, k]) => [to, k === 'trap' ? 2 : 1])) : undefined,
   };
 }
