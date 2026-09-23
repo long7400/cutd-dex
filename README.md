@@ -35,4 +35,14 @@ src/
 - **Trade** — 7 slot × 3 recipe, ảnh 2 bên, link về chuỗi tiến hóa pet đem đổi
 - **Wild Pools** — 7 pool theo hệ, thanh tỉ lệ xuất hiện, catch %
 
-Ghi chú: tick rate game = 32/s (cooldown 27 tick ≈ 0.84s). Legendary chỉ spawn wild (w=1, catch 12%), không trade được.
+## Tự cập nhật khi game update
+
+Game update 4-5 lần/ngày → GitHub Action chạy **mỗi 2 tiếng** (cron `7 */2 * * *`):
+
+1. So `catalog_hash` mới vs cũ — trùng thì thoát ngay, khác thì mới bóc tiếp (bóc khi có thay đổi)
+2. Bóc lại bundle JS mới → map unit→model, hệ, màu
+3. In báo cáo: **pet mới thêm / pet bị xoá** khỏi game
+4. Tải ảnh portrait mới, **tự xoá ảnh rác** của pet không còn tồn tại (giữ logo; guard: nếu bóc mapping bất thường < 100 unit thì bỏ qua bước xoá)
+5. Build lại `data.json` (sinh lại từ đầu nên pet bị remove tự biến mất khỏi web) → commit → Deploy tự chạy
+
+Chạy tay: `npm run update` (check hash) hoặc `npm run update:force` (ép bóc toàn bộ).
