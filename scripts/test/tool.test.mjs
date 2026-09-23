@@ -121,7 +121,7 @@ test('bookmarklet: chỉ đọc, bắt socket rồi trả getter, hiển thị t
   assert.match(text(), new RegExp(overlay.u[scenario.a].n));
   const tier = root.querySelector('.tier');
   assert.ok(tier && /^(S\+|S|A|B|C|—)$/.test(tier.textContent), 'wild có huy hiệu hạng');
-  assert.match(tier.title, /sức mạnh cá nhân/);
+  assert.match(tier.title, /^Hạng hiện tại (S\+|S|A|B|C)/);
   const strip = root.querySelector('.row .strip');
   assert.ok(strip && strip.querySelectorAll('i').length >= 2, 'dải hạng theo cấp (không chữ)');
   assert.match(strip.title, /Lv\d+ (S\+|S|A|B|C)/);
@@ -553,7 +553,7 @@ test('bookmarklet: wiki cũ hơn game → tool tự tính DPS thật / vai trò 
   [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith('Wild')).click();
   const tier = root.querySelector('.tier');
   assert.ok(tier, 'vẫn có hạng dù overlay thiếu số liệu');
-  assert.match(tier.title, /Đỉnh: |dạng mạnh nhất/);
+  assert.match(tier.title, /Đỉnh dòng: |dạng mạnh nhất/);
   [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith('Đo tải')).click();
   assert.match(root.querySelector('.panel').textContent, /wiki cũ hơn game/);
 });

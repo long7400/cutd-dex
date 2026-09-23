@@ -55,7 +55,13 @@ export default {
             </ul></li>
           <li><b>Phím F (bản web m.cutd.site):</b> bấm con trên sàn rồi nhấn <b>F</b> = bấm nút chính của game ở dock (Bắt / Tiến hóa / Trade) — khỏi rê chuột. Chỉ nhận phím thật, bỏ qua khi đang gõ chat.</li>
           <li><b>Nút thao tác nhanh:</b> <b>Bắt</b> ở tab Wild, <b>↑ tiến hóa</b> (mỗi nhánh 1 nút) ở tab Đội, <b>Trade</b> ở tab Trade/Đội. Bấm vào dòng để chọn con đó trong game.</li>
-          <li><b>Hạng S+ / S / A / B / C</b> ở tab Wild và Đội = <b>sức mạnh cá nhân của cả dòng</b>: DPS thật (đã cộng kỹ năng) ở dạng mạnh nhất con đó có thể lên — không tính quái hay đồng đội. Bắt Eevee Lv1 đã thấy S+ vì Lv100 rất mạnh. Rê chuột xem dạng đỉnh, số vàng cần và kỹ năng mở ở cấp nào. Cùng thang với trang <a href="#/strategy">Chiến thuật</a>.</li>
+          <li><b>Hạng S+ / S / A / B / C</b> ở tab Wild và Đội — chỉ tính sức mạnh của chính con pet (DPS thật đã cộng kỹ năng), không tính quái hay đồng đội:
+            <ul>
+              <li><b>Huy hiệu cạnh nút</b> = hạng <b>hiện tại</b>, so với các con cùng tầm cấp.</li>
+              <li><b>Dải ô màu</b> = hạng từng cấp tiến hóa từ bây giờ tới đỉnh (ô cuối là dạng mạnh nhất). Vd Staryu: ô đầu A, giữa C, cuối S+ → yếu giữa đường nhưng Lv100 rất mạnh.</li>
+              <li>Rê chuột: DPS hiện tại, dạng đỉnh + hạng + số vàng cần, kỹ năng mở ở cấp nào.</li>
+            </ul></li>
+
           <li><b>Wild:</b> toàn bộ sinh vật hoang dã trên bãi — giá bắt (đủ tiền không), tỉ lệ bắt, DPS tối đa cả cây, cây nào đang có trade cần.</li>
           <li><b>Đội hình:</b> lính của mày — máu, giá bán, các nhánh tiến hóa kèm giá, con nào đem trade được ngay.</li>
           <li><b>Đợt tới:</b> quái sắp tới căn cứ — tổng máu, số mạng mất nếu lọt, loại đòn khắc chế giáp của nó.</li>

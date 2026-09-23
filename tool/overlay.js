@@ -384,7 +384,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const TIER_CLASS = { 'S+': 't-sp', S: 't-s', A: 't-a', B: 't-b', C: 't-c' };
   const powerOf = stage => U(stage)?.pw ?? -1;
   const levelOf = id => (U(id)?.l ? `Lv${U(id).l}` : nameOf(id));
-  const legend = () => h('div', { class: 'legend', title: 'Huy hiệu bên phải = hạng của cả dòng (dạng mạnh nhất có thể lên). Dải ô màu = hạng từng cấp tiến hóa so với các con cùng tầm cấp.' },
+  const legend = () => h('div', { class: 'legend', title: 'Huy hiệu cạnh nút = hạng HIỆN TẠI (so với các con cùng tầm cấp). Dải ô màu = hạng từng cấp tiến hóa từ bây giờ tới đỉnh — ô cuối là dạng mạnh nhất.' },
     h('span', { text: 'Hạng từng cấp →' }),
     ['S+', 'S', 'A', 'B', 'C'].map(t => h('span', null, h('span', { class: 'strip' }, h('i', { class: TIER_CLASS[t] })), t)));
   function strip(stage) {
@@ -396,15 +396,17 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 
   const tierPill = stage => {
     const u = U(stage);
-    if (!u?.pk || !Number.isFinite(u.pw)) return null;
-    const [peakId, cost, eff] = u.pk;
-    const t = powerTier(u.pw);
-    const lines = [`Hạng ${t} — sức mạnh cá nhân của dòng này (không tính quái hay đồng đội)`,
-      peakId === stage ? `Đây là dạng mạnh nhất: ${fmt(Math.round(eff))} DPS thật` : `Đỉnh: ${nameOf(peakId)} · ${fmt(Math.round(eff))} DPS thật · cần ${fmt(cost)} vàng tiến hóa`,
-      `Hiện tại: ${fmt(Math.round(u.ed ?? u.dps ?? 0))} DPS thật`,
-      ...(u.ul ?? []).map(([r, to, c]) => `Lên ${nameOf(to)} (${fmt(c)} vàng) mở ${db.rn?.[r] ?? r}`)];
-    return h('span', { class: `tier ${TIER_CLASS[t]}`, text: t, title: lines.join('\n') });
+    if (!u?.st) return null;
+    const lines = [`Hạng hiện tại ${u.st} — ${nameOf(stage)} so với các con cùng tầm cấp · ${fmt(Math.round(u.ed ?? u.dps ?? 0))} DPS thật`];
+    if (u.pk && Number.isFinite(u.pw)) {
+      const [peakId, cost, eff] = u.pk;
+      lines.push(peakId === stage ? 'Đây đã là dạng mạnh nhất của dòng'
+        : `Đỉnh dòng: ${nameOf(peakId)} · hạng ${powerTier(u.pw)} · ${fmt(Math.round(eff))} DPS thật · cần ${fmt(cost)} vàng tiến hóa`);
+    }
+    for (const [r, to, c] of u.ul ?? []) lines.push(`Lên ${nameOf(to)} (${fmt(c)} vàng) mở ${db.rn?.[r] ?? r}`);
+    return h('span', { class: `tier ${TIER_CLASS[u.st]}`, text: u.st, title: lines.join('\n') });
   };
+
 
   function viewWild() {
     const groups = new Map();
