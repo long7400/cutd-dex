@@ -121,7 +121,9 @@ test('bookmarklet: chỉ đọc, bắt socket rồi trả getter, hiển thị t
   assert.match(text(), new RegExp(overlay.u[scenario.a].n));
   const tier = root.querySelector('.tier');
   assert.ok(tier && /^(S\+|S|A|B|C|—)$/.test(tier.textContent), 'wild có huy hiệu hạng');
-  assert.match(tier.title, /Hạng .* · \d+\/100 \(PvE/);
+  assert.match(tier.title, /sức mạnh cá nhân/);
+  assert.match(root.querySelector('.row .pg')?.textContent ?? '', /Lv\d+ (S\+|S|A|B|C)/, 'chuỗi hạng theo cấp');
+  assert.doesNotMatch(tier.title, /đợt tới|đồng đội:/, 'không tính quái / đội');
   clickTab('Đội');
   assert.ok(root.querySelector('.row .tier'), 'đội có huy hiệu hạng');
   clickTab('Đợt');
@@ -549,7 +551,7 @@ test('bookmarklet: wiki cũ hơn game → tool tự tính DPS thật / vai trò 
   [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith('Wild')).click();
   const tier = root.querySelector('.tier');
   assert.ok(tier, 'vẫn có hạng dù overlay thiếu số liệu');
-  assert.match(tier.title, /\d+\/100/);
+  assert.match(tier.title, /Đỉnh: |dạng mạnh nhất/);
   [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith('Đo tải')).click();
   assert.match(root.querySelector('.panel').textContent, /wiki cũ hơn game/);
 });

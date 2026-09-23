@@ -1,7 +1,10 @@
 import { skillValue } from './skillvalue.js';
 
-const MID_GOLD = 1500;
 const round = (v, d = 2) => Math.round(v * 10 ** d) / 10 ** d;
+const POWER_TIERS = [[0.9, 'S+'], [0.65, 'S'], [0.45, 'A'], [0.28, 'B'], [0, 'C']];
+export const powerTier = score => POWER_TIERS.find(([min]) => score >= min)[1];
+const LEVEL_BANDS = [2, 20, 40, 70, Infinity];
+const bandOf = level => LEVEL_BANDS.findIndex(max => (level || 1) < max);
 
 function teamAuras(s, abilityById, modifierById) {
   return (s.abilities ?? []).flatMap(id => {
@@ -58,7 +61,7 @@ export function analyzeCatalog(catalog) {
       eff: sv.eff, pct: sv.pct, roles: [...roles].sort(), unsure: sv.uncertain, auras,
       splash: !!(s.attack_splash || s.attack_bounce),
       evo: (s.evolutions ?? []).filter(e => typeof e?.stage_id === 'string' && Number.isFinite(e.cost) && e.cost >= 0).map(e => [e.stage_id, e.cost]),
-      traps: {}, unlocks: [], mid: 0, strategic: 0,
+      level, legendary: !!s.legendary, traps: {}, unlocks: [], peak: null, power: 0, stageTier: null, path: [],
       stats: {
         hp: s.max_health ?? 0, dps: round(((s.attack_damage ?? 0) * 32) / Math.max(1, s.attack_cooldown_ticks ?? 32), 1),
         a: s.attack_type ?? 'normal', at: s.armor_type ?? 'normal', ar: s.armor || undefined, ms: s.move_speed || undefined,
@@ -84,46 +87,66 @@ export function analyzeCatalog(catalog) {
   }
 
   const inPool = new Set();
-  const queue = (catalog.wild?.pools ?? []).flatMap(p => (p.entries ?? []).map(e => e.stage_id)).filter(id => out.has(id));
-  for (const s of species) if (s.catchable && out.has(s.id)) queue.push(s.id);
+  const roots = new Set((catalog.wild?.pools ?? []).flatMap(p => (p.entries ?? []).map(e => e.stage_id)).filter(id => out.has(id)));
+  for (const s of species) if (s.catchable && out.has(s.id)) roots.add(s.id);
+  const queue = [...roots];
   while (queue.length) {
     const id = queue.pop();
     if (inPool.has(id)) continue;
     inPool.add(id);
     for (const [to] of out.get(id).evo) if (out.has(to)) queue.push(to);
   }
-  const midOf = id => {
+  const climb = id => {
     const cost = new Map([[id, 0]]), list = [id];
-    let top = out.get(id).eff;
+    let peak = [id, 0];
     const unlocks = new Map();
+    const prev = new Map();
     while (list.length) {
       const cur = list.shift();
       for (const [to, c0] of out.get(cur).evo) {
         const c = cost.get(cur) + c0;
-        if (!out.has(to) || c > MID_GOLD || cost.get(to) <= c) continue;
-        cost.set(to, c); list.push(to); top = Math.max(top, out.get(to).eff);
+        if (!out.has(to) || cost.get(to) <= c) continue;
+        cost.set(to, c); list.push(to); prev.set(to, cur);
+        const [pid, pc] = peak;
+        if (out.get(to).eff > out.get(pid).eff || (out.get(to).eff === out.get(pid).eff && c < pc)) peak = [to, c];
         for (const r of out.get(to).roles) if (!out.get(id).roles.includes(r) && !(unlocks.get(r)?.[1] <= c)) unlocks.set(r, [to, c]);
       }
     }
-    return { top, unlocks };
+    const path = [];
+    for (let at = peak[0], n = 0; at !== undefined && n < 30; at = prev.get(at), n++) path.unshift(at);
+    return { peak, unlocks, path };
   };
-  const mids = [...inPool].map(id => [id, midOf(id)]);
-  const ref = mids.map(([, v]) => v.top).sort((a, b) => a - b)[Math.floor(mids.length * 0.95)] || 1;
-  for (const [id, { top, unlocks }] of mids) {
+  for (const id of inPool) {
+    const { peak, unlocks, path } = climb(id);
     const u = out.get(id);
-    const roles = new Set([...u.roles, ...unlocks.keys()]);
-    const roleBonus = (roles.has('aura') ? 0.35 : 0) + Math.min(0.2, 0.1 * [...roles].filter(r => ['cc', 'sustain', 'taunt', 'boss'].includes(r)).length);
-    u.mid = Math.round(top);
-    u.strategic = round(Math.min(1, top / ref + roleBonus));
+    u.peak = [peak[0], peak[1], out.get(peak[0]).eff];
+    u.path = path;
     u.unlocks = [...unlocks].map(([r, [to, c]]) => [r, to, c]);
+  }
+  const peaks = [...roots].map(id => out.get(id).peak[2]).sort((a, b) => a - b);
+  const ref = peaks[Math.floor(peaks.length * 0.9)] || 1;
+  for (const id of inPool) out.get(id).power = round(Math.min(1, out.get(id).peak[2] / ref));
+  const bands = new Map();
+  for (const id of inPool) {
+    if (out.get(id).legendary) continue;
+    const b = bandOf(out.get(id).level);
+    if (!bands.has(b)) bands.set(b, []);
+    bands.get(b).push(out.get(id).eff);
+  }
+  const bandRef = new Map([...bands].map(([b, list]) => [b, list.sort((x, y) => x - y)[Math.floor(list.length * 0.9)] || 1]));
+  const anyRef = Math.max(1, ...bandRef.values());
+  for (const id of inPool) {
+    const u = out.get(id);
+    u.stageTier = powerTier(Math.min(1, u.eff / (bandRef.get(bandOf(u.level)) ?? anyRef)));
   }
   return out;
 }
 
 export function overlayFields(a) {
   return {
-    ed: a.eff, pt: a.pct || undefined, r: a.roles.length ? a.roles : undefined, sv: a.strategic || undefined, md: a.mid || undefined,
-    ul: a.unlocks.length ? a.unlocks : undefined, au: a.auras.length ? a.auras : undefined, sp: a.splash ? 1 : undefined,
+    ed: a.eff, r: a.roles.length ? a.roles : undefined, pk: a.peak ?? undefined, pw: a.peak ? a.power : undefined,
+    ul: a.unlocks.length ? a.unlocks : undefined, st: a.stageTier ?? undefined,
+    pg: a.path?.length > 1 ? a.path : undefined,
     tp: Object.keys(a.traps).length ? Object.fromEntries(Object.entries(a.traps).map(([to, k]) => [to, k === 'trap' ? 2 : 1])) : undefined,
   };
 }

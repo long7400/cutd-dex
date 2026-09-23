@@ -5,7 +5,7 @@ import { request } from './lib/http.mjs';
 const WEB = 'https://m.cutd.site';
 const COCOS = 'https://cutd.site';
 
-export const SIGNATURES = {
+const SIGNATURES = {
   web: [
     ['WebSocket JSON (tool đọc dữ liệu trận)', /\.onmessage=\w=>\{let \w=\w+\(typeof \w\.data==`string`/],
     ['session.nextSequence (móc hàm game)', /this\.nextSequence=1\b/],

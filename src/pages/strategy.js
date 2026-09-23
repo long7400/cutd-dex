@@ -7,7 +7,11 @@ const TIER_CLASS = { 'S+': 't-sp', S: 't-s', A: 't-a', B: 't-b', C: 't-c' };
 const TIER_NOTE = {
   'S+': 'Ưu tiên bắt / nâng ngay', S: 'Rất mạnh, nên có trong đội', A: 'Tốt, dùng khi hợp đội hình', B: 'Tạm được / cần điều kiện', C: 'Bỏ qua trừ khi cần vai trò riêng',
 };
-const MODES = { pve: { key: 'pve', name: 'PvE · Sinh tồn' }, pvp: { key: 'pvp', name: 'PvP · Đối kháng' } };
+const MODES = {
+  solo: { key: 'solo', name: 'Sức mạnh', note: 'Sức mạnh cá nhân của cả dòng: DPS thật (đã cộng kỹ năng) ở dạng mạnh nhất có thể lên — không tính quái hay đồng đội. Cùng thang với huy hiệu trong CUTD Helper.' },
+  pve: { key: 'pve', name: 'PvE · Sinh tồn', note: 'Mốc giữa trận (≤1.500 vàng tiến hóa) × khắc chế của chế độ Sinh tồn + vai trò trong đội.' },
+  pvp: { key: 'pvp', name: 'PvP · Đối kháng', note: 'Mốc giữa trận: 70% sức thủ + 30% độ trâu khi bị gửi sang nhà đối thủ + vai trò trong đội.' },
+};
 const KEY_ROLES = ['aura', 'cc', 'sustain', 'taunt', 'boss', 'evade', 'aoe', 'execute'];
 
 const unit = id => db.units[id];
@@ -19,7 +23,7 @@ const hardTrap = l => l.traps.find(([, , k]) => k === 'trap');
 
 function step(id, eff, cost, tag) {
   return html`<span class="step" title="${stageName(id)}${cost ? ` · ${num(cost)} vàng tiến hóa` : ''}">
-    ${img(unit(id)?.model, '', '', 38)}<b>${short(Math.round(eff))}</b><small>${tag || lvl(id)}</small></span>`;
+    ${img(unit(id)?.model, '', '', 38)}<b>${short(Math.round(eff))}${unit(id)?.stageTier ? html` <em class="stier ${TIER_CLASS[unit(id).stageTier]}" title="Hạng so với các con cùng tầm cấp">${unit(id).stageTier}</em>` : ''}</b><small>${tag || lvl(id)}</small></span>`;
 }
 
 function card(l, mode) {
@@ -36,7 +40,7 @@ function card(l, mode) {
       </div>
       <span class="sscore" title="Điểm ${mode.name}">${Math.round(l[mode.key].score * 100)}</span>
     </div>
-    <div class="chain" title="DPS thật (đã cộng kỹ năng) ở Lv1 → mốc 1.500 vàng → đỉnh">
+    <div class="chain" title="DPS thật (đã cộng kỹ năng) ở Lv1 → mốc 1.500 vàng → đỉnh; chữ nhỏ = hạng của dạng đó so với các con cùng tầm cấp">
       ${stops.map(([id, eff, cost, tag], i) => html`${i ? html`<span class="arr">›</span>` : ''}${step(id, eff, cost, tag)}`)}
     </div>
     ${lineRoles(l).length || trap ? html`<div class="sroles">
@@ -70,7 +74,7 @@ function comps(lines, modes) {
       picks: [...core.map(l => [l, 'chủ lực']), ...second.map(l => [l, `phụ · ${label(l.atk)}`]), ...aura.map(l => [l, roleNote(l, 'aura')]), ...cc.map(l => [l, roleNote(l, 'cc')])] },
     monoEl && { title: `Đội cùng hệ ${el(monoEl)}`, desc: `4 dòng mạnh nhất cùng hệ ${el(monoEl)} → 1 nhánh nghiên cứu tốc đánh buff cả đội${aura.length && aura[0].el !== monoEl ? `, thêm ${aura[0].name} cho hào quang` : ''}.`,
       picks: [...monoLines.map(l => [l, `hệ ${el(monoEl)}`]), ...(aura.length && aura[0].el !== monoEl ? aura.map(l => [l, roleNote(l, 'aura')]) : [])] },
-    { title: 'PvP Đối kháng', desc: 'Đội mày bị gửi sang đánh đối thủ → 3 dòng sát thương + hào quang + 2 con trâu (hồi máu / né / chống chịu) khó giết khi sang nhà đối thủ. Trong trận xem hạng của CUTD Helper — tool biết đợt tới gồm con gì.',
+    { title: 'PvP Đối kháng', desc: 'Đội mày bị gửi sang đánh đối thủ → 3 dòng sát thương + hào quang + 2 con trâu (hồi máu / né / chống chịu) khó giết khi sang nhà đối thủ.',
       picks: [...pvpDps.map(l => [l, 'sát thương']), ...aura.map(l => [l, roleNote(l, 'aura')]), ...tanks.map(l => [l, lineRoles(l).map(([r]) => roleName(r)).slice(0, 1)[0] ?? 'trâu'])] },
   ].filter(Boolean);
 }
@@ -79,7 +83,7 @@ export default {
   title: () => 'Chiến thuật',
   render({ params }) {
     const S = db.strategy;
-    const mode = MODES[params[0]] ?? MODES.pve;
+    const mode = MODES[params[0]] ?? MODES.solo;
     const lines = S.lines;
     const atkEl = {};
     for (const l of lines) (atkEl[l.atk] ??= {})[l.el] = (atkEl[l.atk][l.el] ?? 0) + 1;
@@ -96,10 +100,11 @@ export default {
         <div>
           <h1>Chiến thuật</h1>
           <p class="sub">Hạng mỗi dòng pet theo <b>DPS thật</b> (chỉ số + kỹ năng + kỹ năng mở khi tiến hóa), vai trò trong đội và khắc chế theo chế độ.
-            Tự tính từ dữ liệu game (ruleset <code>${db.meta.ruleset}</code>). Trong trận, <a href="#/tool">CUTD Helper</a> chấm lại theo đội, vàng và đợt tới.</p>
+            Tự tính từ dữ liệu game (ruleset <code>${db.meta.ruleset}</code>). Huy hiệu hạng trong <a href="#/tool">CUTD Helper</a> dùng đúng bảng <b>Sức mạnh</b>.</p>
         </div>
         <div class="strat-switch">${Object.values(MODES).map(m => html`<a class="chip ${m.key === mode.key ? 'on' : ''}" href="#/strategy/${m.key}">${m.name}</a>`)}</div>
       </div>
+      <p class="note">${mode.note}</p>
 
       <section class="tierlist">
         ${TIERS.map(t => {

@@ -55,13 +55,7 @@ export default {
             </ul></li>
           <li><b>Phím F (bản web m.cutd.site):</b> bấm con trên sàn rồi nhấn <b>F</b> = bấm nút chính của game ở dock (Bắt / Tiến hóa / Trade) — khỏi rê chuột. Chỉ nhận phím thật, bỏ qua khi đang gõ chat.</li>
           <li><b>Nút thao tác nhanh:</b> <b>Bắt</b> ở tab Wild, <b>↑ tiến hóa</b> (mỗi nhánh 1 nút) ở tab Đội, <b>Trade</b> ở tab Trade/Đội. Bấm vào dòng để chọn con đó trong game.</li>
-          <li><b>Xếp hạng S+ / S / A / B / C</b> ở tab Wild và Đội, tính theo trận đang chơi (rê chuột xem lý do):
-            <ul>
-              <li><b>Sức thủ:</b> DPS thật đánh vào giáp của đợt tới (PvE nhìn trước 3 đợt theo kịch bản), cộng tiến hóa đủ vàng trong tầm gần, đỉnh cây tính nhẹ; con hoang dã trừ tiền bắt theo tỉ lệ bắt.</li>
-              <li><b>Hợp đội:</b> hào quang cả căn cứ nhân theo DPS đội (hào quang trùng không cộng), nghiên cứu tốc đánh đã nâng đúng hệ, hàng trade đổi được.</li>
-              <li><b>PvP:</b> đội mày bị gửi sang đánh đối thủ → 30% điểm cho độ trâu khi làm quái (máu × giáp × số mạng làm mất × tốc chạy).</li>
-              <li>Hạng so với con mạnh nhất đang có trên sân + bãi: S+ ≥ 90%, S ≥ 75%, A ≥ 55%, B ≥ 35%. Đã có huyền thoại thì huyền thoại khác ghi "—" (không bắt được).</li>
-            </ul></li>
+          <li><b>Hạng S+ / S / A / B / C</b> ở tab Wild và Đội = <b>sức mạnh cá nhân của cả dòng</b>: DPS thật (đã cộng kỹ năng) ở dạng mạnh nhất con đó có thể lên — không tính quái hay đồng đội. Bắt Eevee Lv1 đã thấy S+ vì Lv100 rất mạnh. Rê chuột xem dạng đỉnh, số vàng cần và kỹ năng mở ở cấp nào. Cùng thang với trang <a href="#/strategy">Chiến thuật</a>.</li>
           <li><b>Wild:</b> toàn bộ sinh vật hoang dã trên bãi — giá bắt (đủ tiền không), tỉ lệ bắt, DPS tối đa cả cây, cây nào đang có trade cần.</li>
           <li><b>Đội hình:</b> lính của mày — máu, giá bán, các nhánh tiến hóa kèm giá, con nào đem trade được ngay.</li>
           <li><b>Đợt tới:</b> quái sắp tới căn cứ — tổng máu, số mạng mất nếu lọt, loại đòn khắc chế giáp của nó.</li>

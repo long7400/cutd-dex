@@ -1,3 +1,5 @@
+import { powerTier } from '../../tool/analyze.js';
+
 const MODES = [['mode_survival', 'Sinh tồn'], ['mode_survival_hard', 'Sinh tồn · Khó'], ['mode_survival_old', 'Sinh tồn · Cũ'], ['duel', 'Đối kháng (quái bổ sung)']];
 const ROLE_WEIGHT = { aura: 0.5, cc: 0.1, sustain: 0.1, taunt: 0.1, boss: 0.1 };
 const TIERS = [[0.85, 'S+'], [0.65, 'S'], [0.45, 'A'], [0.28, 'B'], [0, 'C']];
@@ -64,6 +66,7 @@ export function buildStrategy({ units, pets, waveSets, damage }) {
       id: p.id, slug: p.slug, name: p.name, el: p.el, atk: first.atk, legendary: !!first.legendary, catch: first.catch,
       e500, e1500, emax: { id: emax, cost: cost.get(emax), eff: units[emax].eff },
       roles: Object.entries(roles).map(([r, [id, c]]) => [r, id, c]), traps, unsure: [...unsure],
+      solo: { score: first.power ?? 0, tier: powerTier(first.power ?? 0) },
       pveRaw: e1500.eff * (survival[first.atk] ?? 1), offense, roleBonus,
     };
   });
@@ -78,5 +81,5 @@ export function buildStrategy({ units, pets, waveSets, damage }) {
     l.pvp = { score: round(pvp), tier: tierOf(pvp) };
     delete l.pveRaw; delete l.offense; delete l.roleBonus;
   }
-  return { modes, lines: lines.sort((a, b) => b.pve.score - a.pve.score), budget: [500, 1500] };
+  return { modes, lines: lines.sort((a, b) => b.solo.score - a.solo.score), budget: [500, 1500] };
 }

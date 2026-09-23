@@ -50,9 +50,32 @@ test('dữ liệu thật: bẫy tiến hóa (tụt mãi) vs tụt tạm', () => 
 test('dữ liệu thật: vai trò + kỹ năng mở sau khi lên cấp', () => {
   const machop = find('Machop', 1);
   assert.ok(machop.unlocks.some(([r, to]) => r === 'aura' && U[to].name === 'Machoke'), 'Machop → Machoke mở hào quang');
-  assert.ok(machop.strategic >= 0.35, 'hào quang tương lai tính vào giá trị chiến lược');
   assert.ok(find('Onix', 1).roles.includes('taunt'));
   assert.ok(find('Kyogre', 1).roles.includes('sustain'));
   assert.ok(find('Arbok', 26).roles.includes('cc'));
   assert.ok(find('Darkrai', 1).roles.includes('boss') && find('Darkrai', 1).pctHit > 0);
+});
+
+import { analyzeCatalog, powerTier } from '../../tool/analyze.js';
+
+test('sức mạnh cá nhân: hạng theo dạng đỉnh của dòng — Lv1 đã thấy hạng Lv100, không phụ thuộc trận', () => {
+  const a = analyzeCatalog(readJSON(PATHS.catalog).catalog);
+  const tierOf = (name, level) => powerTier(a.get(find(name, level).id).power);
+  assert.equal(tierOf('Eevee', 1), 'S+', 'Eevee Lv1 yếu nhưng Lv100 rất mạnh');
+  assert.equal(tierOf('Treecko', 1), 'S+');
+  assert.equal(tierOf('Charmander', 1), 'C');
+  assert.equal(a.get(find('Eevee', 1).id).peak[0], find('Eevee', 100).id);
+  assert.equal(a.get(find('Magnemite', 1).id).peak[0], find('Magneton', 30).id, 'đỉnh dừng trước bẫy');
+  assert.equal(tierOf('Blastoise', 100), 'C', 'đã qua bẫy → tính từ dạng hiện tại');
+  assert.ok(['C', 'B'].includes(tierOf('Kyogre', 1)), 'huyền thoại không tiến hóa, DPS thấp');
+});
+
+test('hạng từng dạng theo tầm cấp: thấy được dòng yếu giữa đường nhưng mạnh cuối (vd Staryu)', () => {
+  const a = analyzeCatalog(readJSON(PATHS.catalog).catalog);
+  const st = (name, level) => a.get(find(name, level).id).stageTier;
+  assert.equal(st('Staryu', 30), 'C');
+  assert.equal(powerTier(a.get(find('Staryu', 1).id).power), 'S+');
+  assert.ok(['S', 'S+'].includes(st('Mankey', 1)));
+  assert.ok(a.get(find('Staryu', 1).id).path.length >= 5, 'có đường tiến hóa tới đỉnh');
+  assert.equal(st('Kyogre', 1), 'S+', 'huyền thoại vẫn được chấm (không làm mốc so sánh)');
 });

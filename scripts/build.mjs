@@ -156,7 +156,7 @@ export function build({ raw, client, changelog = [] }) {
       groundOnly: !!s.attack_ground_only,
       splash: s.attack_splash ?? null,
       auras: an.auras, eff: an.eff, pctHit: an.pct || null, roles: an.roles, unsure: an.unsure,
-      mid: an.mid, strategic: an.strategic, unlocks: an.unlocks,
+      peak: an.peak, power: an.power, unlocks: an.unlocks, stageTier: an.stageTier, path: an.path,
       bounce: s.attack_bounce ?? null,
       armor: s.armor ?? 0,
       armorType: s.armor_type ?? 'normal',
@@ -283,23 +283,20 @@ export function buildOverlay(db) {
   for (const x of Object.values(db.units)) {
     u[x.id] = {
       n: x.name, l: x.level ?? undefined, m: x.model, el: x.el, hp: x.hp, dps: x.dps, a: x.atk, at: x.armorType,
-      ms: x.move || undefined,
       ar: x.armor || undefined, c: x.catch || undefined, b: x.book || undefined, L: x.legendary ? 1 : undefined,
       k: x.catchable ? 1 : undefined, lk: x.leak || undefined, f: x.family, p: x.pet ? slugOf.get(x.pet) : undefined,
       s: x.skills?.length ? x.skills.map(id => db.abilities[id]?.name).filter(Boolean) : undefined,
       e: x.evo?.length ? x.evo.filter(e => Number.isFinite(e.cost) && e.cost >= 0).map(e => [e.to, e.cost]) : undefined,
       ...overlayFields({
-        eff: x.eff, pct: x.pctHit, roles: x.roles ?? [], strategic: x.strategic, mid: x.mid, unlocks: x.unlocks ?? [], auras: x.auras ?? [],
-        splash: !!(x.splash || x.bounce), traps: Object.fromEntries((x.evo ?? []).filter(e => e.trap).map(e => [e.to, e.trap])),
+        eff: x.eff, roles: x.roles ?? [], peak: x.peak ?? null, power: x.power ?? 0, unlocks: x.unlocks ?? [], stageTier: x.stageTier, path: x.path ?? [],
+        traps: Object.fromEntries((x.evo ?? []).filter(e => e.trap).map(e => [e.to, e.trap])),
       }),
     };
   }
   return {
     v: db.meta.catalogHash.slice(0, 12), sell: db.game.rules.sellGold,
     el: Object.fromEntries(Object.entries(db.elements).map(([k, e]) => [k, { n: e.name, c: e.mid }])),
-    lb: db.labels, u, dmg: db.damage.table, ac: db.damage.armorCoefficient, lc: db.game.rules.legendaryCap, rn: ROLE_NAMES,
-    rs: Object.fromEntries(db.research.map(r => [r.id, [r.el, r.kind, r.magnitude]])),
-    wv: Object.fromEntries(db.waveSets.map(set => [set.id, Object.fromEntries(set.waves.map(w => [w.n, w.groups.map(g => [g.unit, g.count])]))])),
+    lb: db.labels, u, dmg: db.damage.table, rn: ROLE_NAMES,
   };
 }
 

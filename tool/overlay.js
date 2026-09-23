@@ -1,11 +1,11 @@
 import {
   createState, applyMessage, isGameMessage, myUnits, tradeOptions, offersForFamily,
-  bestAttacks, nextWaveForBase, buildGameCatalog, rateStages,
+  bestAttacks, nextWaveForBase, buildGameCatalog,
 } from './logic.js';
 import * as web from './web-input.js';
 import { findGame, findEntity, selectEntity, catchWild, evolveCreature, tradePet, probe, clientKind, armWebCapture, disarmWebCapture, webCaptured, forgetWebCapture } from './game-bridge.js';
 import { realm, gameDoc } from './realm.js';
-import { analyzeCatalog, overlayFields } from './analyze.js';
+import { analyzeCatalog, overlayFields, powerTier } from './analyze.js';
 
 const DATA_URL = __CUTD_DATA_URL__;
 const VERSION = '__CUTD_VERSION__';
@@ -76,6 +76,9 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .tier{min-width:26px;text-align:center;padding:1px 6px;border-radius:6px;font-size:11.5px;font-weight:800;background:#1b2a44;color:#8fb7e8}
 .tier.t-sp{background:#ffde8f;color:#0b1526}.tier.t-s{background:#f0a35e;color:#0b1526}.tier.t-a{background:#1d3a2a;color:#9fd6a8}
 .tier.t-b{background:#1b2a44;color:#8fb7e8}.tier.t-c,.tier.t-x{background:transparent;color:#6f8fb8;border:1px solid #2a3d5c}
+.pg{display:flex;flex-wrap:wrap;align-items:center;gap:2px 3px;margin-top:3px;font-size:10.5px;color:#6f8fb8;white-space:nowrap}
+.pg i{font-style:normal;opacity:.6}.pg b{font-weight:800;padding:0 4px;border-radius:4px;background:#1b2a44;color:#8fb7e8}
+.pg b.t-sp{background:#ffde8f;color:#0b1526}.pg b.t-s{background:#f0a35e;color:#0b1526}.pg b.t-a{background:#1d3a2a;color:#9fd6a8}.pg b.t-c{background:transparent;color:#6f8fb8;border:1px solid #2a3d5c}
 .toast{margin:6px 10px;padding:6px 10px;border-radius:8px;background:#3d2226;color:#ff9c9c;font-size:12px}
 [hidden]{display:none!important}
 `;
@@ -96,7 +99,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const SAFE_ID = /^[a-z0-9_-]+$/i;
   const state = createState();
   let db = null, socket = null, dirty = true, tab = 'trade', wildSort = 'value', lastRender = 0;
-  const famMax = new Map();
   let gameCat = new Map(), gameCatReady = false, ownBase = null;
 
   let savedDesc = null, patchedWin = null;
@@ -375,19 +377,27 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     });
   }
 
-  const TIER_CLASS = { 'S+': 't-sp', S: 't-s', A: 't-a', B: 't-b', C: 't-c', '—': 't-x' };
-  let rating = null;
-  const ratingOf = stage => rating?.ratings.get(stage);
-  function rateAll() {
-    const stages = [...state.wilds.values(), ...myUnits(state)].map(x => x.stage).filter(Boolean);
-    rating = db && stages.length ? rateStages(state, db, stages) : null;
+  const TIER_CLASS = { 'S+': 't-sp', S: 't-s', A: 't-a', B: 't-b', C: 't-c' };
+  const powerOf = stage => U(stage)?.pw ?? -1;
+  const levelOf = id => (U(id)?.l ? `Lv${U(id).l}` : nameOf(id));
+  function progression(stage) {
+    const steps = [stage, ...(U(stage)?.pg ?? []).slice(1)].filter(id => U(id)?.st);
+    if (steps.length < 2) return null;
+    const keep = steps.filter((id, i) => i === 0 || i === steps.length - 1 || U(id).st !== U(steps[i - 1]).st);
+    const shown = keep.length > 6 ? [...keep.slice(0, 4), keep[keep.length - 1]] : keep;
+    return h('span', { class: 'pg', title: `Hạng từng dạng so với các con cùng tầm cấp — cả chuỗi: ${steps.map(id => `${levelOf(id)} ${U(id).st}`).join(' › ')}` },
+      shown.map((id, i) => [i ? h('i', { text: '›' }) : null, `${levelOf(id)} `, h('b', { class: TIER_CLASS[U(id).st], text: U(id).st })]));
   }
   const tierPill = stage => {
-    const r = ratingOf(stage);
-    if (!r) return null;
-    const mode = rating.pvp ? 'PvP: thủ 70% + công 30%' : 'PvE: sức thủ vs 3 đợt tới';
-    return h('span', { class: `tier ${TIER_CLASS[r.tier]}`, text: r.tier,
-      title: `Hạng ${r.tier} · ${Math.round(r.score * 100)}/100 (${mode})${r.reasons.length ? `\n• ${r.reasons.join('\n• ')}` : ''}` });
+    const u = U(stage);
+    if (!u?.pk || !Number.isFinite(u.pw)) return null;
+    const [peakId, cost, eff] = u.pk;
+    const t = powerTier(u.pw);
+    const lines = [`Hạng ${t} — sức mạnh cá nhân của dòng này (không tính quái hay đồng đội)`,
+      peakId === stage ? `Đây là dạng mạnh nhất: ${fmt(Math.round(eff))} DPS thật` : `Đỉnh: ${nameOf(peakId)} · ${fmt(Math.round(eff))} DPS thật · cần ${fmt(cost)} vàng tiến hóa`,
+      `Hiện tại: ${fmt(Math.round(u.ed ?? u.dps ?? 0))} DPS thật`,
+      ...(u.ul ?? []).map(([r, to, c]) => `Lên ${nameOf(to)} (${fmt(c)} vàng) mở ${db.rn?.[r] ?? r}`)];
+    return h('span', { class: `tier ${TIER_CLASS[t]}`, text: t, title: lines.join('\n') });
   };
 
   function viewWild() {
@@ -395,11 +405,10 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     for (const w of state.wilds.values()) { if (!groups.has(w.stage)) groups.set(w.stage, []); groups.get(w.stage).push(w.id); }
     const wilds = [...groups].map(([stage, idList]) => {
       const u = U(stage) ?? {};
-      return { stage, idList, count: idList.length, u, maxDps: famMax.get(u.f) ?? u.dps ?? 0, trades: offersForFamily(state, db, stage) };
+      return { stage, idList, count: idList.length, u, peak: u.pk?.[2] ?? u.ed ?? u.dps ?? 0, trades: offersForFamily(state, db, stage) };
     });
     const sorters = {
-      value: (a, b) => Number(!!ratingOf(a.stage)?.blocked) - Number(!!ratingOf(b.stage)?.blocked)
-        || (ratingOf(b.stage)?.score ?? 0) - (ratingOf(a.stage)?.score ?? 0) || b.maxDps - a.maxDps,
+      value: (a, b) => powerOf(b.stage) - powerOf(a.stage) || (a.u.b ?? 0) - (b.u.b ?? 0),
       cheap: (a, b) => (a.u.b ?? 0) - (b.u.b ?? 0),
       catch: (a, b) => (b.u.c ?? 0) - (a.u.c ?? 0),
     };
@@ -408,8 +417,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     return [
       h('div', { class: 'bar-row' }, sortBtn('value', 'Đáng bắt'), sortBtn('cheap', 'Rẻ'), sortBtn('catch', 'Dễ bắt'),
         h('span', { class: 'muted', text: `${state.wilds.size} con` })),
-      wilds.length ? wilds.map(({ stage, idList, count, u, maxDps, trades }) => pickable(row(stage,
-        `bắt ${Math.round((u.c ?? 0) * 100)}% · max DPS ${short(maxDps)}`,
+      wilds.length ? wilds.map(({ stage, idList, count, u, peak, trades }) => pickable(row(stage,
+        [`bắt ${Math.round((u.c ?? 0) * 100)}% · đỉnh ${short(peak)} DPS`, progression(stage)],
         [tierPill(stage), count > 1 ? pill(`×${count}`, 'mute') : null,
           trades.length ? pill('Trade', 'warn', trades.map(t => `S${t.slot}: cần ${nameOf(t.give)} → nhận ${nameOf(t.get)}`).join('\n')) : null,
           act(`Bắt ${short(u.b ?? 0)}g`, 'catch', `w${idList[0]}`, null, { stage }, (u.b ?? 0) <= state.gold ? 'ok' : 'bad', `Bắt 1 con ${nameOf(stage)}`)],
@@ -423,12 +432,12 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     if (!mine.length) return empty('Chưa có lính (hoặc đang chờ dữ liệu).');
     const wanted = new Map();
     for (const o of state.offers.values()) wanted.set(o.give, [...(wanted.get(o.give) ?? []), o]);
-    return mine.sort((a, b) => (ratingOf(b.stage)?.score ?? 0) - (ratingOf(a.stage)?.score ?? 0) || (U(b.stage)?.dps ?? 0) - (U(a.stage)?.dps ?? 0)).map(u => {
+    return mine.sort((a, b) => powerOf(b.stage) - powerOf(a.stage) || (U(b.stage)?.ed ?? 0) - (U(a.stage)?.ed ?? 0)).map(u => {
       const evo = U(u.stage)?.e ?? [];
       const trades = wanted.get(u.stage) ?? [];
       const pct = u.maxHp ? Math.round((u.hp / u.maxHp) * 100) : 0;
       return pickable(row(u.stage,
-        h('div', { class: 'hp', title: `${fmt(u.hp)} / ${fmt(u.maxHp)} HP` }, h('i', { style: `width:${Math.max(0, Math.min(100, pct))}%` })),
+        [h('div', { class: 'hp', title: `${fmt(u.hp)} / ${fmt(u.maxHp)} HP` }, h('i', { style: `width:${Math.max(0, Math.min(100, pct))}%` })), progression(u.stage)],
         [tierPill(u.stage), !u.active ? pill('Gục', 'bad') : null,
           trades.length ? act(`Trade S${trades[0].slot}`, 'trade', `u${u.id}`, trades[0].slot, { stage: u.stage, get: trades[0].get }, 'ok', `Đổi lấy ${nameOf(trades[0].get)}`) : null,
           evo.length ? evo.map(([to, cost]) => {
@@ -585,7 +594,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       t, count[k] ? h('small', { text: ` ${count[k]}` }) : null)));
     let content;
     try {
-      if (!status && (tab === 'wild' || tab === 'team')) rateAll();
       content = status && tab !== 'diag' ? empty(status) : ({
         trade: viewTrade, wild: viewWild, team: viewTeam, wave: viewWave, players: viewPlayers, diag: viewDiag,
       })[tab]();
@@ -687,7 +695,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     .then(d => {
       if (!d || typeof d.u !== 'object' || Array.isArray(d.u)) throw new Error('dữ liệu sai định dạng');
       db = d;
-      for (const x of Object.values(d.u)) if (x && x.f) famMax.set(x.f, Math.max(famMax.get(x.f) ?? 0, Number.isFinite(x.dps) ? x.dps : 0));
       mergeGameCatalog();
       dirty = true; render(true);
     })

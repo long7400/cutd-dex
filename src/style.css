@@ -328,3 +328,6 @@ ul.notes { margin: 8px 0 18px; padding-left: 20px; line-height: 1.6; } ul.notes 
   .tier-label b { font-size: 24px; }
   .tier-cards, .comps, .traps, .roles-grid { grid-template-columns: 1fr; }
 }
+.stier { font-style: normal; font-size: 10px; font-weight: 800; padding: 0 4px; border-radius: 4px; vertical-align: 1px; background: #1b2d4a; color: var(--sub); }
+.stier.t-sp { background: #ffde8f; color: #0b1526; } .stier.t-s { background: #f0a35e; color: #0b1526; } .stier.t-a { background: #1d3a2a; color: var(--green); }
+.stier.t-c { background: transparent; color: var(--dim); border: 1px solid var(--line2); }
