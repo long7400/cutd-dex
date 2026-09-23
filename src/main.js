@@ -4,6 +4,7 @@ import { petPage } from './pages/pet.js';
 import { tradePage } from './pages/trade.js';
 import { poolsPage } from './pages/pools.js';
 import { filters as homeFilters } from './pages/home.js';
+import { updateButtonHTML, modalHTML, bindUpdateUI } from './update.js';
 
 const app = document.getElementById('app');
 
@@ -22,7 +23,9 @@ function nav(active) {
     <nav>${links.map(([href, label]) =>
       `<a class="navlink ${active === href.slice(2) ? 'on' : ''}" href="${href}">${label}</a>`
     ).join('')}</nav>
-  </header>`;
+    ${updateButtonHTML()}
+  </header>
+  ${modalHTML()}`;
 }
 
 // Gắn lại mọi listener sau mỗi lần vẽ DOM (kể cả re-render cục bộ)
@@ -54,6 +57,7 @@ function render() {
 
   app.innerHTML = html;
   bindAll();
+  bindUpdateUI();
   // giữ focus ô search khi đang gõ filter
   const search = document.querySelector('input[type=search]');
   if (search && homeFilters.q) { search.focus(); search.setSelectionRange(9999, 9999); }

@@ -1,8 +1,7 @@
 name: Auto-update data from game
+# Chỉ chạy khi được gọi từ nút 🔄 trên web (workflow_dispatch).
+# Bản thân script tự check catalog_hash — trùng thì thoát ngay (0 request thừa).
 on:
-  schedule:
-    - cron: '7 */2 * * *' # mỗi 2 tiếng (game update 4-5 lần/ngày vẫn bắt kịp)
-    - cron: '23 4 * * *' # thêm 1 lần dọn dẹp sâu lúc 11h VN
   workflow_dispatch:
 permissions:
   contents: write
