@@ -66,7 +66,10 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .panel.h{width:min(1180px,calc(100vw - 24px));max-height:min(320px,50vh);display:grid;grid-template-columns:auto auto minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
 .panel.h .top{grid-column:1;padding-right:4px}.panel.h .top .grow{flex:0 0 6px}
 .panel.h .stats{grid-column:2;padding:0 10px;align-self:center;border-left:1px solid #243552}.panel.h .clock{margin-left:10px}
-.panel.h .tabs{grid-column:3;border:0;border-left:1px solid #243552;overflow-x:auto}
+.panel.h .tabs{grid-column:3;border:0;border-left:1px solid #243552;overflow-x:auto;scrollbar-width:none}
+.panel.h .tabs::-webkit-scrollbar{display:none}
+@media (max-width:1100px){.panel.h{grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr)}
+.panel.h .tabs{grid-column:1/-1;border-left:0;border-top:1px solid #243552}.panel.h .tab{flex:1 0 auto}}
 .panel.h .body{grid-column:1/-1;border-top:1px solid #243552}
 .panel.h .body{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));align-content:start;column-gap:4px}
 .panel.h .body>.bar-row,.panel.h .body>.empty,.panel.h .body>table,.panel.h .body>.verdict,.panel.h .body>.sec{grid-column:1/-1}
