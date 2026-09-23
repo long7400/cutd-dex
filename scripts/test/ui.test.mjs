@@ -117,7 +117,7 @@ test('crawl mọi link nội bộ: không trang nào vỡ', async () => {
     if (seen.has(h)) continue;
     seen.add(h);
     await go(h);
-    if (/Không tìm thấy|Không tải được/.test($('main')?.textContent ?? '')) broken.push(h);
+    if ($$('main .empty').some(e => /Không tìm thấy|Không tải được/.test(e.textContent))) broken.push(h);
     for (const a of $$('a[href^="#/"]')) {
       const href = a.getAttribute('href');
       if (!seen.has(href)) queue.push(href);

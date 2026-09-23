@@ -96,23 +96,48 @@ export function myUnits(s) {
   return [...s.units.values()].filter(u => owner == null || u.owner === owner);
 }
 
-// Đường tiến hóa ngắn nhất (theo tổng vàng) từ stage `from` tới stage `to`; null nếu không tới được.
+// Đường tiến hóa rẻ nhất (Dijkstra) từ stage `from` tới `to`; null nếu không tới được.
+// Bỏ qua cạnh có chi phí không hợp lệ (âm / NaN) và giới hạn số bước → dữ liệu xấu không làm treo tab.
 export function evolvePath(db, from, to) {
   if (from === to) return { cost: 0, steps: [] };
-  const best = new Map([[from, 0]]);
-  const prev = new Map();
-  const queue = [from];
-  while (queue.length) {
-    const id = queue.shift();
-    for (const [next, cost] of db.u[id]?.e ?? []) {
-      const c = best.get(id) + cost;
-      if (!best.has(next) || c < best.get(next)) { best.set(next, c); prev.set(next, id); queue.push(next); }
+  const best = new Map([[from, 0]]), prev = new Map(), done = new Set();
+  for (let guard = 0; guard < 5000; guard++) {
+    let cur = null, curCost = Infinity;
+    for (const [id, c] of best) if (!done.has(id) && c < curCost) { cur = id; curCost = c; }
+    if (cur === null || cur === to) break;
+    done.add(cur);
+    for (const edge of db.u[cur]?.e ?? []) {
+      const [next, cost] = Array.isArray(edge) ? edge : [];
+      if (typeof next !== 'string' || !Number.isFinite(cost) || cost < 0) continue;
+      const c = curCost + cost;
+      if (!best.has(next) || c < best.get(next)) { best.set(next, c); prev.set(next, cur); }
     }
   }
   if (!best.has(to)) return null;
   const steps = [];
-  for (let id = to; id !== from; id = prev.get(id)) steps.unshift(id);
+  for (let id = to, n = 0; id !== from && n < 100; id = prev.get(id), n++) steps.unshift(id);
   return { cost: best.get(to), steps };
+}
+
+// Catalog của CHÍNH server game (GET /catalog cùng origin) → tên, cấp, giá, tỉ lệ bắt, nhánh tiến hóa.
+// Dữ liệu dùng để quyết định nút làm gì phải lấy từ đây, không lấy từ overlay.json (file wiki có thể bị giả mạo).
+export function buildGameCatalog(raw) {
+  const cat = raw?.catalog;
+  if (!isObj(cat) || !Array.isArray(cat.species)) throw new Error('catalog game sai định dạng');
+  const names = new Map(arr(cat.display_names).filter(isObj).map(d => [d.id, typeof d.value === 'string' ? d.value : '']));
+  const out = new Map();
+  for (const sp of cat.species) {
+    if (!isObj(sp) || typeof sp.id !== 'string') continue;
+    const full = (names.get(sp.display_name_id) || sp.id).replace(/\|c[0-9a-f]{8}|\|r/gi, '').trim();
+    const m = /^(.*?)\s+level\s+(\d+)$/i.exec(full);
+    out.set(sp.id, {
+      n: (m ? m[1] : full).slice(0, 60), l: m ? +m[2] : undefined,
+      b: num(sp.book_value), c: num(sp.catch_chance),
+      e: arr(sp.evolutions).filter(e => isObj(e) && typeof e.stage_id === 'string' && Number.isFinite(e.cost) && e.cost >= 0)
+        .map(e => [e.stage_id, e.cost]),
+    });
+  }
+  return out;
 }
 
 // Mỗi trade offer: có sẵn lính đúng stage không, nếu không thì lính nào tiến hóa tới được rẻ nhất.

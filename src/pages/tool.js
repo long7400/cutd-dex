@@ -4,8 +4,9 @@ import { footer } from '../ui.js';
 
 const SOURCE = 'https://github.com/long7400/cutd-dex/blob/main/tool/overlay.js';
 
-// Code trỏ dữ liệu về đúng site đang mở trang này (GitHub Pages hoặc localhost khi dev).
-const consoleCode = () => tool.code.replace('"__CUTD_DATA_URL__"', () => JSON.stringify(new URL('.', location.origin + location.pathname).href));
+// Code đã khoá sẵn địa chỉ dữ liệu lúc build — trang này không chèn gì vào code (bản sao wiki ở site khác
+// cũng đưa ra đúng code, lấy dữ liệu đúng nơi).
+const consoleCode = () => tool.code;
 const bookmarklet = () => `javascript:${encodeURIComponent(consoleCode())}`;
 
 export default {
@@ -55,7 +56,7 @@ export default {
           <li><b>Đợt tới:</b> quái sắp tới căn cứ — tổng máu, số mạng mất nếu lọt, loại đòn khắc chế giáp của nó.</li>
           <li><b>Phòng:</b> mạng, vàng, tinh thể, số quái của từng nhà.</li>
           <li><b>Đo tải:</b> bấm bookmark ở sảnh rồi mới vào phòng — tool đo vào trận bao lâu mới có pet và chậm ở khâu nào (server, tải file hay máy), có nút chép báo cáo.</li>
-          <li><b>Camera bằng chuột:</b> giữ <b>chuột trái</b> (hoặc chuột giữa) trên sàn rồi kéo — bản đồ trôi theo tay, dừng tay là dừng. Bấm thường vẫn là bấm của game; kéo xong game không bị hiểu nhầm là chạm sàn. Tool chỉ "giữ" phím W/A/S/D thay mày.</li>
+          <li><b>Camera bằng chuột:</b> giữ <b>Option (Alt)</b> + bấm-kéo trên sàn (dùng được trên trackpad), hoặc giữ <b>chuột giữa</b> rồi kéo — bản đồ trôi theo tay, dừng tay là dừng. Kéo chuột trái thường vẫn là thao tác của game. Tool chỉ "giữ" phím W/A/S/D thay mày.</li>
           <li>Nút <b>▭ / ▯</b> trên thanh tiêu đề: đổi panel dọc ↔ thanh ngang dưới đáy màn hình. Rê chuột vào dòng để xem chi tiết.</li>
         </ul>
       </section>
@@ -67,14 +68,16 @@ export default {
           <li>Chỉ tải 1 file <b>dữ liệu</b> <code>overlay.json</code> từ wiki. File này chỉ được đọc như dữ liệu và hiển thị dạng chữ, không bao giờ bị chạy như code.</li>
           <li><b>Chỉ hành động khi mày bấm:</b> nút Bắt / Tiến hóa / Trade gọi đúng hàm của game (như bấm nút trong game) — 1 cú bấm = 1 lệnh, khoá 0,6s chống bấm đúp, không có vòng lặp hay tự mua. Click do script khác tạo ra bị bỏ qua.</li>
           <li>Bấm vào 1 dòng = chọn con đó trong game (chỉ đổi lựa chọn trên máy, không gửi gì).</li>
-          <li>Camera chuột chỉ giả lập đúng 4 phím W/A/S/D (build kiểm tra), luôn nhả phím khi dừng tay, thả chuột, mất focus hoặc tắt tool.</li>
+          <li>Camera chuột chỉ giả lập đúng 4 phím W/A/S/D, luôn nhả phím khi dừng tay, thả chuột, mất focus hoặc tắt tool. Cú Option+kéo bị chặn trọn vẹn nên game không kẹt trạng thái.</li>
+          <li>Tên, giá, nhánh tiến hóa trên nút lấy từ <b>catalog của chính game</b> — file dữ liệu wiki có bị sửa cũng không đổi được nút làm gì. Đang xem nhà người khác thì nút tự khoá.</li>
           <li>Không đọc/ghi cookie hay localStorage.</li>
-          <li>Build tự fail nếu code có <code>eval</code>, <code>innerHTML</code>, <code>socket.send</code>, nạp script ngoài, hoặc gọi hàm game nào khác ngoài 4 hàm trên (bán, thả, di chuyển, chat… đều bị chặn).</li>
-          <li>Phiên bản <code>${tool.version}</code> · SHA-256 <code class="hash">${tool.sha256}</code></li>
+          <li>Build phân tích cú pháp (AST) và tự fail nếu code có <code>eval</code>, <code>innerHTML</code>, <code>socket.send</code>, <code>sendBeacon</code>, cookie/storage, nạp script ngoài, truy cập ngoặc vuông/gán biến để lách, hoặc gọi hàm game nào khác ngoài 4 hàm trên (bán, thả, di chuyển, chat… đều bị chặn). Mọi lệnh gọi vào game nằm trong 1 file duy nhất <code>tool/game-bridge.js</code>.</li>
+          <li>Phiên bản <code>${tool.version}</code> · dữ liệu chỉ lấy từ <code>${tool.dataUrl}</code> (khoá cứng trong code) và <code>/catalog</code> của chính game.</li>
+          <li>SHA-256 của đúng đoạn code mày nhận: <code class="hash">${tool.sha256}</code> — đối chiếu với mã băm ghi trong commit trên GitHub.</li>
           <li>Mã nguồn: <a class="rootlink" href="${SOURCE}" target="_blank" rel="noopener noreferrer">tool/overlay.js</a></li>
         </ul>
         <details class="codebox"><summary>Xem toàn bộ code (dán được thẳng vào Console)</summary><pre>${consoleCode()}</pre></details>
-        <p class="dim small">SHA-256 tính trên bản build trước khi chèn địa chỉ dữ liệu (<code>"__CUTD_DATA_URL__"</code>).</p>
+
       </section>
       ${footer()}
     </main>`;

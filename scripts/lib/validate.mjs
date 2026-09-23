@@ -11,6 +11,7 @@ export function validateCatalog(raw) {
   if (cat?.species?.some(s => typeof s?.id !== 'string' || !SAFE_NAME.test(s.id))) bad.push('species.id lạ');
   if (cat?.research?.some(r => typeof r?.id !== 'string' || !SAFE_NAME.test(r.id))) bad.push('research.id lạ');
   if ((cat?.species?.filter(s => s.catchable).length ?? 0) < 10) bad.push('catchable<10');
+  if (cat?.species?.some(s => (s?.evolutions ?? []).some(e => typeof e?.stage_id !== 'string' || !Number.isFinite(e.cost) || e.cost < 0))) bad.push('evolutions.cost lạ');
   return bad;
 }
 

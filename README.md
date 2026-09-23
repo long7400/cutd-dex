@@ -73,6 +73,8 @@ Dữ liệu từ server game được coi là **không tin cậy**:
 
 CI/CD: action ghim theo commit SHA, `permissions: {}` mặc định + quyền tối thiểu từng job, token không nằm trên đĩa khi xử lý dữ liệu lạ,
 `npm ci --ignore-scripts`, `npm audit --audit-level=high` chặn deploy. Bookmarklet: xem trang **Công cụ** của wiki.
-Bookmarklet chỉ gọi 4 hàm của client game: `interaction.selectEntity` (chọn, trên máy) và `session.catchWild` /
-`evolveCreature` / `tradePet` (khi người dùng bấm nút; 1 cú bấm = 1 lệnh, bỏ qua click không phải của người).
-`scripts/build-tool.mjs` fail nếu code dùng hàm game nào khác. `scripts/test/security.test.mjs` giữ các điểm trên không bị hồi quy.
+Bookmarklet (CUTD Helper): mọi lệnh gọi vào game nằm trong `tool/game-bridge.js` — chỉ `interaction.selectEntity` và
+`session.catchWild` / `evolveCreature` / `tradePet`, chỉ khi người dùng bấm chuột thật (isTrusted, detail>0), 1 cú = 1 lệnh,
+kiểm tra lại đúng thứ nhãn nút hứa. Nhãn/đích của nút lấy từ `/catalog` của chính game, không từ overlay.json.
+Địa chỉ dữ liệu khoá cứng lúc build (`homepage` trong package.json). `scripts/build-tool.mjs` kiểm tra AST bằng acorn
+và fail nếu code lách danh sách cho phép (ngoặc vuông, gán biến, `.call`, eval, storage, `send`, sự kiện giả ngoài W/A/S/D…). `scripts/test/security.test.mjs` giữ các điểm trên không bị hồi quy.

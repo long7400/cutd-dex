@@ -77,10 +77,15 @@ function setupDom(url = 'https://cutd.site/?room=TEST') {
   class FakeWS extends w.EventTarget { send() { log.sent++; } }
   w.WebSocket = FakeWS;
   w.alert = m => log.alerts.push(m);
-  w.fetch = async (u, opts) => { log.fetches.push({ u, opts }); return { ok: true, json: async () => JSON.parse(JSON.stringify(overlay)) }; };
+  // overlay.json của wiki + /catalog của chính game (tool lấy dữ liệu quyết định hành động từ /catalog).
+  w.fetch = async (u, opts) => {
+    log.fetches.push({ u, opts });
+    const body = JSON.stringify(u === '/catalog' ? readJSON(PATHS.catalog) : overlay);
+    return { ok: true, text: async () => body };
+  };
   const attach = w.Element.prototype.attachShadow;
   w.Element.prototype.attachShadow = function (o) { const r = attach.call(this, { ...o, mode: 'open' }); log.roots.push(r); return r; };
-  const code = tool.code.replace('"__CUTD_DATA_URL__"', JSON.stringify(DATA_URL));
+  const code = tool.code; // địa chỉ dữ liệu đã khoá sẵn lúc build
   return { w, log, code, FakeWS };
 }
 
@@ -98,9 +103,8 @@ test('bookmarklet: chỉ đọc, bắt socket rồi trả getter, hiển thị t
   const emit = m => ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
 
   w.eval(code);
-  assert.equal(log.fetches.length, 1);
-  assert.equal(log.fetches[0].u, `${DATA_URL}overlay.json`);
-  assert.equal(log.fetches[0].opts.credentials, 'omit');
+  assert.deepEqual(log.fetches.map(f => f.u).sort(), ['/catalog', `${DATA_URL}overlay.json`]);
+  assert.ok(log.fetches.every(f => f.opts.credentials === 'omit'));
   assert.notEqual(Object.getOwnPropertyDescriptor(w.MessageEvent.prototype, 'data').get, original.get, 'phải bọc getter để bắt socket');
 
   emit(summary);
@@ -142,7 +146,7 @@ test('bookmarklet: chỉ đọc, bắt socket rồi trả getter, hiển thị t
 test('bookmarklet: dữ liệu wiki độc hại không chạy được code', async () => {
   const { w, log, code, FakeWS } = setupDom();
   const evil = '<img src=x onerror="window.pwned=1">';
-  overlay.u[scenario.c] = { ...overlay.u[scenario.c], n: evil, m: '../../evil"><script>', p: 'x"onclick="alert(1)' };
+  overlay.u[scenario.c] = { ...overlay.u[scenario.c], n: evil, s: [evil], m: '../../evil"><script>', p: 'x"onclick="alert(1)' };
   try {
     const ws = new FakeWS();
     ws.addEventListener('message', e => e.data);
@@ -152,7 +156,8 @@ test('bookmarklet: dữ liệu wiki độc hại không chạy được code', a
     ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(keyframe([{ id: 1, stage_id: scenario.c, owner_id: 11, active: true }])) }));
     await tick(1200);
     const root = log.roots[0];
-    assert.ok(root.querySelector('.panel').textContent.includes(evil), 'tên độc hại hiện dạng chữ');
+    // Tên lấy theo catalog game nên tên giả không hiện; dù hiện ở đâu (tooltip kỹ năng…) cũng chỉ là chữ.
+    assert.ok(root.querySelector('.panel').textContent.length > 0);
     assert.equal(w.pwned, undefined);
     assert.equal(root.querySelectorAll('script,[onerror],[onclick]').length, 0);
     for (const img of root.querySelectorAll('img')) assert.ok(!img.getAttribute('src') || img.getAttribute('src').startsWith(DATA_URL));
@@ -170,6 +175,8 @@ test('bookmarklet: không chạy ngoài trang game', t => {
   assert.equal(log.alerts.length, 1);
   assert.equal(log.fetches.length, 0);
   assert.equal(w.__cutdHelper, undefined);
+  assert.ok(tool.code.includes(JSON.stringify(DATA_URL)), 'địa chỉ dữ liệu phải khoá cứng trong code');
+  assert.ok(!tool.code.includes('__CUTD_DATA_URL__'));
 });
 
 test('bookmarklet: bấm ở sảnh → bỏ qua socket sảnh, bám đúng socket trận; ngang/dọc; tab Đo tải', async t => {
@@ -213,7 +220,7 @@ test('bookmarklet: bấm ở sảnh → bỏ qua socket sảnh, bám đúng sock
 import { createRequire } from 'node:module';
 const jsdomUtils = createRequire(import.meta.url)('jsdom/lib/jsdom/living/generated/utils.js');
 function trustedClick(w, el) {
-  const ev = new w.MouseEvent('click', { bubbles: true, composed: true, cancelable: true });
+  const ev = new w.MouseEvent('click', { bubbles: true, composed: true, cancelable: true, detail: 1 });
   jsdomUtils.implForWrapper(ev).isTrusted = true;
   jsdomUtils.implForWrapper(el)._dispatch(jsdomUtils.implForWrapper(ev));
 }
@@ -282,56 +289,48 @@ test('bookmarklet: nút Bắt/Tiến hóa/Trade gọi đúng hàm game, chỉ kh
   assert.equal(log.sent, 0, 'không tự gửi gì qua socket');
 });
 
-test('bookmarklet: giữ chuột rồi kéo = kéo bản đồ (giữ W/A/S/D), không làm game hiểu nhầm là bấm', async t => {
+test('bookmarklet: camera — Option/Alt+kéo trái (chặn trọn cú bấm) và kéo chuột giữa; kéo trái thường là của game', async t => {
   const { w, log, code } = setupDom();
   t.after(() => w.close());
   const canvas = w.document.getElementById('GameCanvas');
   const keys = new Set(), seen = [], gameGot = [];
   canvas.addEventListener('keydown', e => { keys.add(e.code); seen.push(e.code); });
   canvas.addEventListener('keyup', e => keys.delete(e.code));
-  canvas.addEventListener('mouseup', () => gameGot.push('mouseup'));
-  canvas.addEventListener('click', () => gameGot.push('click'));
+  for (const type of ['mousedown', 'mousemove', 'mouseup', 'click']) canvas.addEventListener(type, () => gameGot.push(type));
   w.eval(code);
-  const fire = (type, x, y, button = 0, buttons = button === 0 ? 1 : 4) =>
-    canvas.dispatchEvent(new w.MouseEvent(type, { clientX: x, clientY: y, button, buttons: type === 'mouseup' || type === 'click' ? 0 : buttons, bubbles: true, cancelable: true }));
+  const fire = (type, x, y, { button = 0, alt = false } = {}) => canvas.dispatchEvent(new w.MouseEvent(type, {
+    clientX: x, clientY: y, button, altKey: alt, bubbles: true, cancelable: true,
+    buttons: type === 'mouseup' || type === 'click' ? 0 : button === 1 ? 4 : 1,
+  }));
 
-  // Bấm thường (không kéo) → game nhận đủ, không phím nào bị giữ.
-  fire('mousedown', 500, 400); fire('mouseup', 500, 400); fire('click', 500, 400);
-  assert.deepEqual(gameGot, ['mouseup', 'click']);
+  // Kéo chuột trái thường → hoàn toàn là của game (tool không giữ phím, không chặn gì).
+  fire('mousedown', 500, 400); fire('mousemove', 460, 400); fire('mouseup', 460, 400); fire('click', 460, 400);
   assert.equal(keys.size, 0);
+  assert.deepEqual(gameGot, ['mousedown', 'mousemove', 'mouseup', 'click']);
 
-  // Giữ trái kéo sang trái → giữ D (bản đồ trôi theo tay); kéo lên → giữ S.
+  // Option/Alt + kéo trái → giữ phím; game KHÔNG thấy nửa nào của cú bấm (không kẹt trạng thái).
   gameGot.length = 0;
-  fire('mousedown', 500, 400);
-  fire('mousemove', 495, 400);
-  assert.equal(keys.size, 0, 'chưa quá 8px thì chưa kéo');
-  fire('mousemove', 480, 400);
-  assert.deepEqual([...keys], ['KeyD']);
-  fire('mousemove', 480, 370);
+  fire('mousedown', 500, 400, { alt: true });
+  fire('mousemove', 480, 400, { alt: true });
+  assert.deepEqual([...keys], ['KeyD'], 'kéo tay sang trái → camera sang phải');
+  fire('mousemove', 480, 370, { alt: true });
   assert.deepEqual([...keys], ['KeyS']);
   await tick(150);
   assert.equal(keys.size, 0, 'dừng tay → dừng camera');
-  fire('mousemove', 520, 370);
-  assert.deepEqual([...keys], ['KeyA']);
-  fire('mouseup', 520, 370); fire('click', 520, 370);
-  assert.equal(keys.size, 0, 'thả chuột → nhả phím');
-  assert.deepEqual(gameGot, [], 'kéo xong thì game không nhận cú thả (không bị hiểu là chạm sàn)');
+  fire('mouseup', 480, 370, { alt: true }); fire('click', 480, 370, { alt: true });
+  assert.deepEqual(gameGot, [], 'cú bấm Alt+kéo bị chặn trọn vẹn');
 
-  // Chuột giữa cũng kéo được.
-  fire('mousedown', 500, 400, 1);
-  fire('mousemove', 500, 430, 1);
+  // Chuột giữa + kéo → giữ phím; game vẫn nhận đủ (game bỏ qua chuột giữa).
+  fire('mousedown', 500, 400, { button: 1 });
+  fire('mousemove', 500, 430, { button: 1 });
   assert.deepEqual([...keys], ['KeyW']);
-  fire('mouseup', 500, 430, 1);
+  fire('mouseup', 500, 430, { button: 1 });
   assert.equal(keys.size, 0);
-
-  // Chuột phải không đụng tới.
-  fire('mousedown', 500, 400, 2, 2); fire('mousemove', 560, 400, 2, 2);
-  assert.equal(keys.size, 0);
-  fire('mouseup', 560, 400, 2);
+  assert.ok(gameGot.includes('mousedown') && gameGot.includes('mouseup'));
 
   // Đang kéo mà tắt tool → nhả hết phím.
-  fire('mousedown', 500, 400);
-  fire('mousemove', 540, 400);
+  fire('mousedown', 500, 400, { alt: true });
+  fire('mousemove', 540, 400, { alt: true });
   assert.deepEqual([...keys], ['KeyA']);
   w.__cutdHelper.destroy();
   assert.equal(keys.size, 0, 'tắt tool phải nhả mọi phím');
@@ -352,4 +351,51 @@ test('bookmarklet: dán bản mới khi bản cũ còn chạy → thay bản cũ
   w.eval(code);
   assert.equal(log.roots.length, 1);
   assert.ok(log.roots[0].querySelector('.panel').hidden);
+});
+
+test('bookmarklet: nhãn + đích của nút lấy từ catalog GAME, overlay giả mạo không đổi được; không thao tác nhà người khác', async t => {
+  const raw = readJSON(PATHS.catalog);
+  // Chọn 1 stage có 2 nhánh tiến hóa thật.
+  const branchy = raw.catalog.species.find(s => s.evolutions?.length === 2);
+  const [realA, realB] = branchy.evolutions.map(e => e.stage_id);
+  const { w, log, code, FakeWS } = setupDom();
+  t.after(() => { w.close(); overlay = buildOverlay(build({ raw, client: readJSON(PATHS.client) })); });
+  // Overlay giả mạo: đảo thứ tự nhánh + tráo tên + giá rẻ bèo.
+  overlay.u[branchy.id] = { ...overlay.u[branchy.id], e: [[realB, 1], [realA, 1]] };
+  overlay.u[realA] = { ...overlay.u[realA], n: 'TÊN-GIẢ-B' };
+  overlay.u[realB] = { ...overlay.u[realB], n: 'TÊN-GIẢ-A' };
+
+  const calls = [];
+  const entities = new Map([['u1', { kind: 'creature', contentId: branchy.id }]]);
+  const session = { catchWild() {}, tradePet() {}, evolveCreature: (ent, to) => calls.push(to) };
+  w.cc = { director: { getScene: () => ({ components: [{ store: { entities }, session, interaction: { selectEntity() {} } }], children: [] }) } };
+  w.eval(code);
+  const ws = new FakeWS();
+  ws.addEventListener('message', e => e.data);
+  const emit = m => ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
+  emit({ type: 'server_hello', base_id: 7 });
+  await tick(0);
+  emit(summary);
+  emit(keyframe([{ id: 1, stage_id: branchy.id, owner_id: 11, health: 5, max_health: 10, active: true }]));
+  await tick(1200);
+  const root = log.roots[0];
+  [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith('Đội')).click();
+  const ups = [...root.querySelectorAll('button.act')].filter(b => b.textContent.startsWith('↑'));
+  assert.equal(ups.length, 2);
+  assert.ok(!root.textContent.includes('TÊN-GIẢ'), 'tên hiển thị phải theo catalog của game');
+  const cost = to => branchy.evolutions.find(e => e.stage_id === to).cost;
+  // Mỗi nút gửi đúng nhánh mà nhãn/giá của nó ghi (theo game), bất kể overlay xếp thế nào.
+  for (const b of ups) {
+    trustedClick(w, b);
+    const sent = calls.at(-1);
+    assert.ok(b.title.includes(`${cost(sent).toLocaleString('vi-VN')} vàng`), `nút "${b.textContent}" gửi ${sent} nhưng giá không khớp`);
+    await tick(650);
+  }
+
+  // Chuyển sang xem nhà người khác (base 8) → nút bị khoá.
+  emit({ ...keyframe([{ id: 1, stage_id: branchy.id, owner_id: 12, health: 5, max_health: 10, active: true }]), base: { base_id: 8, lives: 1, gold: 9, lumber: 0 } });
+  await tick(1200);
+  const n = calls.length;
+  for (const b of root.querySelectorAll('button.act')) { assert.ok(b.disabled, 'đang xem nhà khác → nút phải khoá'); trustedClick(w, b); }
+  assert.equal(calls.length, n);
 });

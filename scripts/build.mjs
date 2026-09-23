@@ -291,7 +291,7 @@ export function buildOverlay(db) {
       ar: x.armor || undefined, c: x.catch || undefined, b: x.book || undefined, L: x.legendary ? 1 : undefined,
       k: x.catchable ? 1 : undefined, lk: x.leak || undefined, f: x.family, p: x.pet ? slugOf.get(x.pet) : undefined,
       s: x.skills?.length ? x.skills.map(id => db.abilities[id]?.name).filter(Boolean) : undefined,
-      e: x.evo?.length ? x.evo.map(e => [e.to, e.cost]) : undefined,
+      e: x.evo?.length ? x.evo.filter(e => Number.isFinite(e.cost) && e.cost >= 0).map(e => [e.to, e.cost]) : undefined,
     };
   }
   return {

