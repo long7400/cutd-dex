@@ -43,7 +43,6 @@ const CSS = `
 .right{display:flex;gap:4px;align-items:center}
 .pill{padding:1px 7px;border-radius:6px;font-size:11.5px;font-weight:700;background:#1b2a44;color:#8fb7e8;white-space:nowrap}
 .pill.ok{background:#1d3a2a;color:#9fd6a8}.pill.bad{background:#3d2226;color:#ff9c9c}.pill.warn{background:#3a3016;color:#ffde8f}.pill.mute{color:#6f8fb8}
-.hp{height:4px;background:#0b1526;border-radius:2px;overflow:hidden;margin-top:4px}.hp i{display:block;height:100%;background:#9fd6a8}
 .trade{display:grid;grid-template-columns:20px minmax(0,1fr) 10px minmax(0,1fr) auto;align-items:center;gap:6px;padding:6px 10px;border-left:3px solid transparent}
 .trade.is-ok{border-left-color:#5f9e6a}.trade.is-warn{border-left-color:#b69c62}
 .slot{color:#6f8fb8;font-size:11px;font-weight:700}
@@ -77,7 +76,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .tier.t-sp{background:#ffde8f;color:#0b1526}.tier.t-s{background:#f0a35e;color:#0b1526}.tier.t-a{background:#1d3a2a;color:#9fd6a8}
 .tier.t-b{background:#1b2a44;color:#8fb7e8}.tier.t-c,.tier.t-x{background:transparent;color:#6f8fb8;border:1px solid #2a3d5c}
 .line2{display:flex;align-items:center;gap:6px;margin-top:3px;min-width:0}
-.line2 .hp{flex:1;margin:0;max-width:110px}
+.ptw{position:relative;width:32px;height:32px}.ptw .hpbar{position:absolute;left:3px;right:3px;bottom:2px;height:3px;border-radius:2px;background:#0b1526cc;overflow:hidden}
+.ptw .hpbar i{display:block;height:100%;background:#9fd6a8}.ptw .hpbar.low i{background:#ff9c9c}.ptw.down img{filter:grayscale(1) brightness(.6)}
 .strip{display:inline-flex;gap:2px;flex-shrink:0}.strip i{width:9px;height:9px;border-radius:2px;background:#4a6fa5}
 .strip i.t-sp{background:#ffde8f}.strip i.t-s{background:#f0a35e}.strip i.t-a{background:#5f9e6a}.strip i.t-c{background:transparent;box-shadow:inset 0 0 0 1px #3a5480}
 .rare{color:#ff9c9c;font-size:11px;font-weight:700}
@@ -232,8 +232,13 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       u.l && !noLevel ? h('small', { text: ` Lv${u.l}` }) : null,
       u.L ? h('b', { class: 'leg', text: ' ★' }) : null);
   };
-  const row = (id, sub, right, { cls = '', tip } = {}) => h('div', { class: `row ${cls}`, title: tip },
-    img(id), h('div', { class: 'mid' }, title(id), sub ? h('div', { class: 'sub' }, sub) : null), h('div', { class: 'right' }, right));
+  const row = (id, sub, right, { cls = '', tip, portrait } = {}) => h('div', { class: `row ${cls}`, title: tip },
+    portrait ?? img(id), h('div', { class: 'mid' }, title(id), sub ? h('div', { class: 'sub' }, sub) : null), h('div', { class: 'right' }, right));
+  const unitPortrait = u => {
+    const pct = u.maxHp ? Math.max(0, Math.min(100, Math.round((u.hp / u.maxHp) * 100))) : 100;
+    return h('div', { class: `ptw${u.active ? '' : ' down'}`, title: u.active ? `${fmt(u.hp)} / ${fmt(u.maxHp)} HP` : 'Gục — trở lại đợt sau' }, img(u.stage),
+      pct < 100 || !u.active ? h('div', { class: `hpbar${pct < 35 ? ' low' : ''}` }, h('i', { style: `width:${pct}%` })) : null);
+  };
   const statsTip = id => {
     const u = U(id) ?? {};
     const roles = (u.r ?? []).map(r => db?.rn?.[r] ?? r);
@@ -474,11 +479,10 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     return [legend(), ...mine.sort((a, b) => powerOf(b.stage) - powerOf(a.stage) || (U(b.stage)?.ed ?? 0) - (U(a.stage)?.ed ?? 0)).map(u => {
       const evo = U(u.stage)?.e ?? [];
       const trades = wanted.get(u.stage) ?? [];
-      const pct = u.maxHp ? Math.round((u.hp / u.maxHp) * 100) : 0;
       return pickable(row(u.stage,
-        h('div', { class: 'line2' }, h('div', { class: 'hp', title: `${fmt(u.hp)} / ${fmt(u.maxHp)} HP` }, h('i', { style: `width:${Math.max(0, Math.min(100, pct))}%` })), strip(u.stage), kitChips(u.stage)),
-        [tierPill(u.stage), !u.active ? pill('Gục', 'bad') : null,
-          trades.length ? act(`Trade S${trades[0].slot}`, 'trade', `u${u.id}`, trades[0].slot, { stage: u.stage, get: trades[0].get }, 'ok', `Đổi lấy ${nameOf(trades[0].get)}`) : null,
+        h('div', { class: 'line2' }, strip(u.stage), kitChips(u.stage)),
+        [tierPill(u.stage),
+          trades.length ? act(`⇄S${trades[0].slot}`, 'trade', `u${u.id}`, trades[0].slot, { stage: u.stage, get: trades[0].get }, 'ok', `Trade slot ${trades[0].slot}: đổi lấy ${nameOf(trades[0].get)}`) : null,
           evo.length ? evo.map(([to, cost]) => {
             const trap = U(u.stage)?.tp?.[to];
             const drop = `${fmt(U(u.stage)?.ed ?? U(u.stage)?.dps)} → ${fmt(U(to)?.ed ?? U(to)?.dps)} DPS thật`;
@@ -486,7 +490,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
             return act(`↑${evo.length > 1 ? `${U(to)?.n ?? ''} ` : ''}${short(cost)}g${trap ? ' ⚠' : ''}`, 'evolve', `u${u.id}`, to, { stage: u.stage },
               trap === 2 || cost > state.gold ? 'bad' : 'ok', `Tiến hóa lên ${nameOf(to)}: ${fmt(cost)} vàng${warn}`);
           }) : pill('Max', 'mute', 'Dạng cuối')],
-        { tip: `${statsTip(u.stage)}\nBán: ${fmt(Math.floor(u.book * (db.sell ?? 0)))} vàng\nBấm để chọn trong game` }), `u${u.id}`);
+        { portrait: unitPortrait(u), tip: `${statsTip(u.stage)}\nBán: ${fmt(Math.floor(u.book * (db.sell ?? 0)))} vàng\nBấm để chọn trong game` }), `u${u.id}`);
     })];
   }
 
