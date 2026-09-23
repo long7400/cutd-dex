@@ -81,6 +81,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .strip{display:inline-flex;gap:2px;flex-shrink:0}.strip i{width:9px;height:9px;border-radius:2px;background:#4a6fa5}
 .strip i.t-sp{background:#ffde8f}.strip i.t-s{background:#f0a35e}.strip i.t-a{background:#5f9e6a}.strip i.t-c{background:transparent;box-shadow:inset 0 0 0 1px #3a5480}
 .rare{color:#ff9c9c;font-size:11px;font-weight:700}
+.tier.sm{min-width:0;padding:0 4px;font-size:10px;line-height:14px;margin-left:4px;vertical-align:1px}
 .legend{display:flex;flex-wrap:nowrap;white-space:nowrap;align-items:center;gap:3px 7px;padding:2px 10px 5px;font-size:10.5px;color:#6f8fb8}
 .legend span{display:inline-flex;align-items:center;gap:3px}.legend .strip i{width:8px;height:8px}
 .toast{margin:6px 10px;padding:6px 10px;border-radius:8px;background:#3d2226;color:#ff9c9c;font-size:12px}
@@ -375,7 +376,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
           `Nâng ${nameOf(o.evolve.unit.stage)} → ${o.evolve.steps.map(nameOf).join(' → ')}: ${fmt(o.evolve.cost)} vàng`)
         : pill('Chưa có', 'mute');
       const side = id => h('div', { class: 'side', title: statsTip(id) }, img(id, 28),
-        h('div', { class: 'mid' }, title(id, { noLevel: true }), h('div', { class: 'sub', text: U(id)?.l ? `Lv${U(id).l}` : '' })));
+        h('div', { class: 'mid' }, title(id, { noLevel: true }), h('div', { class: 'sub' }, U(id)?.l ? `Lv${U(id).l}` : '', tierPill(id, true))));
       return pickable(h('div', { class: `trade ${o.ready.length ? 'is-ok' : o.evolve ? 'is-warn' : ''}`, title: 'Bấm để chọn slot này trong game' },
         h('span', { class: 'slot', text: `S${o.slot}` }), side(o.give), h('span', { class: 'arrow', text: '→' }), side(o.get), status), `t${o.slot}`);
     });
@@ -394,7 +395,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       steps.map(id => h('i', { class: TIER_CLASS[U(id).st] })));
   }
 
-  const tierPill = stage => {
+  const tierPill = (stage, small = false) => {
     const u = U(stage);
     if (!u?.st) return null;
     const lines = [`Hạng hiện tại ${u.st} — ${nameOf(stage)} so với các con cùng tầm cấp · ${fmt(Math.round(u.ed ?? u.dps ?? 0))} DPS thật`];
@@ -404,7 +405,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         : `Đỉnh dòng: ${nameOf(peakId)} · hạng ${powerTier(u.pw)} · ${fmt(Math.round(eff))} DPS thật · cần ${fmt(cost)} vàng tiến hóa`);
     }
     for (const [r, to, c] of u.ul ?? []) lines.push(`Lên ${nameOf(to)} (${fmt(c)} vàng) mở ${db.rn?.[r] ?? r}`);
-    return h('span', { class: `tier ${TIER_CLASS[u.st]}`, text: u.st, title: lines.join('\n') });
+    return h('span', { class: `tier ${TIER_CLASS[u.st]}${small ? ' sm' : ''}`, text: u.st, title: lines.join('\n') });
   };
 
 

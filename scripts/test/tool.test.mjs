@@ -112,6 +112,7 @@ test('bookmarklet: chỉ đọc, bắt socket rồi trả getter, hiển thị t
   const root = log.roots[0];
   const text = () => root.querySelector('.panel').textContent;
   assert.match(text(), /S1/);
+  assert.equal(root.querySelectorAll('.trade').length ? root.querySelector('.trade').querySelectorAll('.tier').length : 0, 2, 'trade: hạng cho cả con đưa và con nhận');
   assert.ok(root.querySelector('.trade.is-ok button.act'), 'slot có sẵn lính phải có nút Trade');
   assert.doesNotMatch(text(), /Vàng/, 'không lặp lại chỉ số game đã hiện');
   assert.ok(root.querySelector('.trade.is-ok'), 'slot trade được phải được đánh dấu');
