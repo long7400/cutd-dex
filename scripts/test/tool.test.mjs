@@ -112,17 +112,18 @@ test('bookmarklet: chỉ đọc, bắt socket rồi trả getter, hiển thị t
 
   const root = log.roots[0];
   const text = () => root.querySelector('.panel').textContent;
-  assert.match(text(), /Slot 1/);
-  assert.match(text(), /Trade được ngay/);
-  assert.match(text(), /Vàng 5\.000/);
+  assert.match(text(), /S1/);
+  assert.match(text(), /Có sẵn/);
+  assert.match(text(), /Vàng\s*5k/);
+  assert.ok(root.querySelector('.trade.is-ok'), 'slot trade được phải được đánh dấu');
 
-  const clickTab = name => [...root.querySelectorAll('button')].find(b => b.textContent === name).click();
+  const clickTab = name => [...root.querySelectorAll('button')].find(b => b.textContent.startsWith(name)).click();
   clickTab('Wild');
   assert.match(text(), new RegExp(overlay.u[scenario.a].n));
   clickTab('Đợt tới');
-  assert.match(text(), /× 3/);
-  assert.doesNotMatch(text(), /× 9/, 'không hiện quái của nhà khác');
-  clickTab('Người chơi');
+  assert.match(text(), /×3/);
+  assert.doesNotMatch(text(), /×9/, 'không hiện quái của nhà khác');
+  clickTab('Phòng');
   assert.match(text(), /Tao/);
 
   // Không có HTML nào từ dữ liệu được parse: tên độc hại hiển thị dạng chữ.

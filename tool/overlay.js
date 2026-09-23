@@ -18,39 +18,51 @@ const NS = '__cutdHelper';
 
 const CSS = `
 :host{all:initial}
-*{box-sizing:border-box;font:13px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-.panel{width:min(400px,calc(100vw - 24px));max-height:calc(100vh - 24px);display:flex;flex-direction:column;background:#101c30f2;color:#e6f2ff;border:1px solid #3a5480;border-radius:14px;box-shadow:0 10px 34px #000a;overflow:hidden}
-.top{display:flex;align-items:center;gap:6px;padding:8px 10px;background:#16243c;cursor:move;user-select:none}
-.top b{color:#ffde8f}
-.grow{flex:1;min-width:0}
-.x{all:unset;cursor:pointer;width:24px;height:24px;text-align:center;border-radius:6px;color:#8fb7e8;font-size:16px}
-.x:hover{background:#2b3f60;color:#fff}
-.stats{display:flex;flex-wrap:wrap;gap:4px 10px;padding:6px 10px;color:#8fb7e8;border-bottom:1px solid #2b3f60}
-.stats span:first-child{color:#ffde8f;font-weight:700}
-.tabs,.row{display:flex;flex-wrap:wrap;gap:5px;padding:8px 10px;align-items:center}
-.chip{all:unset;cursor:pointer;padding:3px 10px;border-radius:99px;border:1px solid #3a5480;color:#8fb7e8;font-weight:600;font-size:12px}
+*{box-sizing:border-box;margin:0;font:12.5px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.panel{width:min(340px,calc(100vw - 24px));max-height:calc(100vh - 24px);display:flex;flex-direction:column;background:#0f1a2df5;color:#e6f2ff;border:1px solid #33496b;border-radius:12px;box-shadow:0 10px 30px #000a;overflow:hidden}
+.top{display:flex;align-items:center;gap:6px;padding:6px 6px 6px 12px;cursor:move;user-select:none}
+.top b{color:#ffde8f;font-weight:700;letter-spacing:.2px}
+.grow{flex:1}
+.x{all:unset;cursor:pointer;width:22px;height:22px;display:grid;place-items:center;border-radius:6px;color:#8fb7e8;font-size:15px}
+.x:hover{background:#243552;color:#fff}
+.stats{display:flex;align-items:baseline;gap:12px;padding:0 12px 8px}
+.st small{color:#6f8fb8;margin-right:3px;font-size:11px}.st b{font-weight:700}
+.st.gold b{color:#ffde8f}.st.crys b{color:#9fe3ff}
+.clock{margin-left:auto;color:#8fb7e8;font-size:11.5px;white-space:nowrap}
+.tabs{display:flex;border-top:1px solid #243552;border-bottom:1px solid #243552}
+.tab{all:unset;cursor:pointer;flex:1;text-align:center;padding:7px 0;color:#8fb7e8;font-weight:600;border-bottom:2px solid transparent}
+.tab small{color:#6f8fb8;font-size:10.5px}
+.tab:hover{color:#fff}.tab.on{color:#ffde8f;border-bottom-color:#ffde8f}.tab.on small{color:#ffde8f}
+.body{overflow:auto;padding:4px 0 6px}
+.bar-row{display:flex;align-items:center;gap:5px;padding:6px 10px 4px}
+.chip{all:unset;cursor:pointer;padding:2px 9px;border-radius:99px;border:1px solid #33496b;color:#8fb7e8;font-weight:600;font-size:11.5px}
 .chip.on{background:#ffde8f;color:#0b1526;border-color:transparent}
-.body{overflow:auto;padding:0 10px 10px}
-.card{background:#16243c;border:1px solid #2b3f60;border-radius:10px;padding:8px;margin:6px 0}
-.card.ok{border-color:#5f9e6a}.card.warn{border-color:#b69c62}
-.hd{display:flex;justify-content:space-between;align-items:center;font-weight:800;color:#ffde8f;margin-bottom:4px}
-.st{font-size:11.5px;font-weight:700;color:#6488b8}.st.ok,.okc{color:#9fd6a8}.st.warn{color:#ffde8f}.bad{color:#ff9c9c}
-.lbl{font-size:10.5px;letter-spacing:.5px;color:#6488b8;font-weight:700;margin-top:4px}
-.ul{display:flex;gap:8px;align-items:flex-start}
-.pt{width:40px;height:40px;border-radius:8px;background:#0b1526;border:1px solid #3a5480;flex-shrink:0;object-fit:cover}
-.nm{font-weight:700}
-.sub,.dim{color:#8fb7e8;font-size:12px}
-.dim{color:#6488b8}
-.sk{font-size:11.5px;color:#9fd6a8}
-.hint{font-size:12px;color:#ffde8f;margin-top:2px}
-.tag{display:inline-block;padding:0 6px;border-radius:5px;font-size:10.5px;font-weight:700;vertical-align:1px}
-.leg{color:#ffde8f}
-.wk{color:#cbb3ff;font-size:11px;text-decoration:underline}
-.bar{height:5px;background:#0b1526;border-radius:3px;overflow:hidden;margin:3px 0}.bar i{display:block;height:100%;background:#9fd6a8}
-table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:4px;border-bottom:1px solid #2b3f60;font-size:12px}th{color:#6488b8}
-tr.me td{color:#ffde8f}
-.foot{padding:6px 10px;font-size:10.5px;color:#6488b8;border-top:1px solid #2b3f60}
-.mini{all:unset;cursor:pointer;padding:6px 12px;border-radius:10px;background:#16243c;color:#ffde8f;border:1px solid #b69c62;font-weight:700;box-shadow:0 4px 14px #0008}
+.muted{margin-left:auto;color:#6f8fb8;font-size:11.5px}
+.row{display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:8px;padding:5px 10px}
+.row:hover,.trade:hover{background:#17263f}
+.pt{width:32px;height:32px;border-radius:7px;background:#0b1526;border:1px solid #2a3d5c;object-fit:cover;flex-shrink:0}
+.mid{min-width:0}
+.nm{display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden}
+.nm a{color:#e6f2ff;font-weight:600;text-decoration:none;overflow:hidden;text-overflow:ellipsis}
+.nm a:hover{text-decoration:underline}
+.nm small{color:#6f8fb8;font-size:11px;flex-shrink:0}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.leg{color:#ffde8f;flex-shrink:0}
+.sub{color:#6f8fb8;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.right{display:flex;gap:4px;align-items:center}
+.pill{padding:1px 7px;border-radius:6px;font-size:11.5px;font-weight:700;background:#1b2a44;color:#8fb7e8;white-space:nowrap}
+.pill.ok{background:#1d3a2a;color:#9fd6a8}.pill.bad{background:#3d2226;color:#ff9c9c}.pill.warn{background:#3a3016;color:#ffde8f}.pill.mute{color:#6f8fb8}
+.hp{height:4px;background:#0b1526;border-radius:2px;overflow:hidden;margin-top:4px}.hp i{display:block;height:100%;background:#9fd6a8}
+.trade{display:grid;grid-template-columns:22px 1fr 12px 1fr auto;align-items:center;gap:6px;padding:6px 10px;border-left:3px solid transparent}
+.trade.is-ok{border-left-color:#5f9e6a}.trade.is-warn{border-left-color:#b69c62}
+.slot{color:#6f8fb8;font-size:11px;font-weight:700}
+.side{display:flex;align-items:center;gap:5px;min-width:0}.side .pt{width:28px;height:28px}.side .nm{flex:1}
+.arrow{color:#6f8fb8;text-align:center}
+.empty{padding:14px 12px;color:#6f8fb8}.bad{color:#ff9c9c}
+table{width:100%;border-collapse:collapse}th,td{text-align:right;padding:5px 10px;border-bottom:1px solid #1d2c47}
+th{color:#6f8fb8;font-weight:600;font-size:11px}td:first-child,th:first-child{text-align:left}
+tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
+.mini{all:unset;cursor:pointer;padding:5px 11px;border-radius:9px;background:#0f1a2d;color:#ffde8f;border:1px solid #b69c62;font-weight:700;box-shadow:0 4px 14px #0008}
 [hidden]{display:none!important}
 `;
 
@@ -139,51 +151,67 @@ tr.me td{color:#ffde8f}
   }
 
   const fmt = n => (Number.isFinite(n) ? n.toLocaleString('vi-VN', { maximumFractionDigits: 1 }) : '—');
-  const short = n => (n >= 1e6 ? `${+(n / 1e6).toFixed(1)}M` : n >= 1e4 ? `${Math.round(n / 1e3)}k` : fmt(n));
+  const short = n => {
+    if (!Number.isFinite(n)) return '—';
+    if (n < 1e3) return fmt(Math.round(n));
+    if (n < 1e6) return `${+(n / 1e3).toFixed(n < 1e4 ? 1 : 0)}k`;
+    return `${+(n / 1e6).toFixed(1)}M`;
+  };
   const U = id => db?.u[id];
   const nameOf = id => { const u = U(id); return u ? `${u.n}${u.l ? ` Lv${u.l}` : ''}` : String(id ?? '?'); };
   const label = k => db?.lb[k] ?? k ?? '—';
-  const img = (id, size = 40) => {
+  const img = (id, size = 32) => {
     const m = U(id)?.m;
     return h('img', { class: 'pt', width: size, height: size, alt: '', src: m && SAFE_ID.test(m) ? `${DATA_URL}portraits/${m}.webp` : null });
   };
-  const elTag = el => {
-    const e = db?.el[el];
-    if (!e || !Array.isArray(e.c)) return null;
-    const [r, g, b] = e.c.map(x => Math.max(0, Math.min(255, x | 0)));
-    return h('span', { class: 'tag', style: `background:rgb(${r},${g},${b});color:#0b1526` , text: e.n });
+  const rgbOf = el => {
+    const c = db?.el[el]?.c;
+    return Array.isArray(c) ? `rgb(${[0, 1, 2].map(i => Math.max(0, Math.min(255, c[i] | 0))).join(',')})` : '#6488b8';
   };
-  const wiki = id => {
+  const wikiUrl = id => {
     const u = U(id);
-    if (!u) return null;
-    const path = u.p && SAFE_ID.test(u.p) ? `#/pet/${u.p}/${id.replace(/^unit_/, '')}` : `#/unit/${id.replace(/^unit_/, '')}`;
-    return h('a', { class: 'wk', href: DATA_URL + path, text: 'wiki' });
+    if (!u || typeof id !== 'string') return null;
+    const sid = id.replace(/^unit_/, '');
+    return DATA_URL + (u.p && SAFE_ID.test(u.p) ? `#/pet/${u.p}/${sid}` : `#/unit/${sid}`);
   };
-  const unitLine = (id, extra) => h('div', { class: 'ul' }, img(id), h('div', { class: 'grow' },
-    h('div', { class: 'nm' }, nameOf(id), ' ', U(id)?.L ? h('span', { class: 'leg', text: '★' }) : null, ' ', elTag(U(id)?.el), ' ', wiki(id)),
-    h('div', { class: 'sub' }, `HP ${short(U(id)?.hp)} · DPS ${short(U(id)?.dps)} · ${label(U(id)?.a)} · giáp ${label(U(id)?.at)}`),
-    extra));
+  const pill = (text, kind = '', tip) => h('span', { class: `pill ${kind}`, text, title: tip });
+  // Tên (link wiki) + level nhỏ + chấm màu hệ + sao huyền thoại — 1 dòng, cắt bớt nếu dài.
+  const title = id => {
+    const u = U(id) ?? {};
+    return h('div', { class: 'nm' },
+      h('i', { class: 'dot', style: `background:${rgbOf(u.el)}`, title: db?.el[u.el]?.n ?? 'Không hệ' }),
+      wikiUrl(id) ? h('a', { href: wikiUrl(id), text: u.n, title: 'Mở trên wiki' }) : h('span', { text: String(id ?? '?') }),
+      u.l ? h('small', { text: ` Lv${u.l}` }) : null,
+      u.L ? h('b', { class: 'leg', text: ' ★' }) : null);
+  };
+  // Mỗi con 1 dòng: [ảnh] [tên / dòng phụ] [nhãn bên phải]. Chi tiết nằm trong tooltip.
+  const row = (id, sub, right, { cls = '', tip } = {}) => h('div', { class: `row ${cls}`, title: tip },
+    img(id), h('div', { class: 'mid' }, title(id), sub ? h('div', { class: 'sub' }, sub) : null), h('div', { class: 'right' }, right));
+  const statsTip = id => { const u = U(id) ?? {}; return `HP ${fmt(u.hp)} · DPS ${fmt(u.dps)} · đòn ${label(u.a)} · giáp ${label(u.at)}${u.s ? `\nKỹ năng: ${u.s.join(', ')}` : ''}`; };
+  const empty = t => h('p', { class: 'empty', text: t });
 
   // ───────────── các tab ─────────────
   function viewTrade() {
     const list = tradeOptions(state, db);
-    if (!list.length) return h('p', { class: 'dim', text: 'Chưa thấy trade offer nào (trade tắt, hoặc đang chờ dữ liệu).' });
-    return list.map(o => h('div', { class: `card ${o.ready.length ? 'ok' : o.evolve ? 'warn' : ''}` },
-      h('div', { class: 'hd' }, `Slot ${o.slot}`,
-        o.ready.length ? h('span', { class: 'st ok', text: `Trade được ngay (có ${o.ready.length} con)` })
-          : o.evolve ? h('span', { class: 'st warn', text: `Tiến hóa thêm ${fmt(o.evolve.cost)} vàng` })
-          : h('span', { class: 'st', text: 'Chưa có' })),
-      h('div', { class: 'lbl', text: 'NHẬN' }), unitLine(o.get, U(o.get)?.s ? h('div', { class: 'sk', text: U(o.get).s.join(' · ') }) : null),
-      h('div', { class: 'lbl', text: 'CẦN ĐƯA' }), unitLine(o.give,
-        o.evolve ? h('div', { class: 'hint' }, `Có ${nameOf(o.evolve.unit.stage)} → `, o.evolve.steps.map(nameOf).join(' → '),
-          ` (${fmt(o.evolve.cost)} vàng${state.gold >= o.evolve.cost ? ', đủ tiền' : `, thiếu ${fmt(o.evolve.cost - state.gold)}`})`)
-          : !o.ready.length && U(o.give)?.p ? h('div', { class: 'hint', text: 'Bắt/nuôi từ cây tiến hóa này (xem wiki).' }) : null)));
+    if (!list.length) return empty('Chưa có trade offer (trade tắt hoặc đang chờ dữ liệu).');
+    return list.map(o => {
+      const status = o.ready.length ? pill('Có sẵn', 'ok')
+        : o.evolve ? pill(`+${short(o.evolve.cost)}g`, state.gold >= o.evolve.cost ? 'warn' : 'bad',
+          `Nâng ${nameOf(o.evolve.unit.stage)} → ${o.evolve.steps.map(nameOf).join(' → ')}: ${fmt(o.evolve.cost)} vàng`)
+        : pill('Chưa có', 'mute');
+      const side = id => h('div', { class: 'side', title: statsTip(id) }, img(id, 28), title(id));
+      return h('div', { class: `trade ${o.ready.length ? 'is-ok' : o.evolve ? 'is-warn' : ''}` },
+        h('span', { class: 'slot', text: `S${o.slot}` }), side(o.give), h('span', { class: 'arrow', text: '→' }), side(o.get), status);
+    });
   }
 
   function viewWild() {
-    const wilds = [...state.wilds.values()].map(w => {
-      const u = U(w.stage) ?? {};
-      return { w, u, maxDps: famMax.get(u.f) ?? u.dps ?? 0, trades: offersForFamily(state, db, w.stage) };
+    // Gộp các con trùng loài: 1 dòng + ×số lượng.
+    const groups = new Map();
+    for (const w of state.wilds.values()) groups.set(w.stage, (groups.get(w.stage) ?? 0) + 1);
+    const wilds = [...groups].map(([stage, count]) => {
+      const u = U(stage) ?? {};
+      return { stage, count, u, maxDps: famMax.get(u.f) ?? u.dps ?? 0, trades: offersForFamily(state, db, stage) };
     });
     const sorters = {
       value: (a, b) => (b.u.L ?? 0) - (a.u.L ?? 0) || b.trades.length - a.trades.length || b.maxDps - a.maxDps,
@@ -191,59 +219,62 @@ tr.me td{color:#ffde8f}
       catch: (a, b) => (b.u.c ?? 0) - (a.u.c ?? 0),
     };
     wilds.sort(sorters[wildSort]);
-    const sortBtn = (k, t) => h('button', { class: `chip ${wildSort === k ? 'on' : ''}`, text: t, onClick: () => { wildSort = k; dirty = true; render(true); } });
+    const sortBtn = (k, t) => h('button', { class: `chip sm ${wildSort === k ? 'on' : ''}`, text: t, onClick: () => { wildSort = k; dirty = true; render(true); } });
     return [
-      h('div', { class: 'row' }, sortBtn('value', 'Đáng bắt'), sortBtn('cheap', 'Rẻ nhất'), sortBtn('catch', 'Dễ bắt'),
-        h('span', { class: 'dim', text: `${wilds.length} con · vàng ${fmt(state.gold)}` })),
-      wilds.length ? wilds.map(({ w, u, maxDps, trades }) => h('div', { class: 'card' }, unitLine(w.stage,
-        h('div', null,
-          h('span', { class: (u.b ?? 0) <= state.gold ? 'okc' : 'bad', text: `Giá ${fmt(u.b ?? 0)} vàng` }),
-          ` · bắt ${Math.round((u.c ?? 0) * 100)}% · DPS tối đa cả cây ${short(maxDps)}`,
-          trades.length ? h('div', { class: 'hint', text: `Cây này đang được trade: ${trades.map(t => `slot ${t.slot} cần ${nameOf(t.give)} → nhận ${nameOf(t.get)}`).join('; ')}` }) : null))))
-        : h('p', { class: 'dim', text: 'Không có sinh vật hoang dã (hoặc đang chờ dữ liệu).' }),
+      h('div', { class: 'bar-row' }, sortBtn('value', 'Đáng bắt'), sortBtn('cheap', 'Rẻ'), sortBtn('catch', 'Dễ bắt'),
+        h('span', { class: 'muted', text: `${state.wilds.size} con` })),
+      wilds.length ? wilds.map(({ stage, count, u, maxDps, trades }) => row(stage,
+        `bắt ${Math.round((u.c ?? 0) * 100)}% · max DPS ${short(maxDps)}`,
+        [count > 1 ? pill(`×${count}`, 'mute') : null,
+          trades.length ? pill('Trade', 'warn', trades.map(t => `S${t.slot}: cần ${nameOf(t.give)} → nhận ${nameOf(t.get)}`).join('\n')) : null,
+          pill(`${short(u.b ?? 0)}g`, (u.b ?? 0) <= state.gold ? 'ok' : 'bad', 'Giá bắt')],
+        { tip: statsTip(stage) }))
+        : empty('Bãi đang trống.'),
     ];
   }
 
   function viewTeam() {
     const mine = myUnits(state);
-    if (!mine.length) return h('p', { class: 'dim', text: 'Chưa có lính (hoặc đang chờ keyframe).' });
+    if (!mine.length) return empty('Chưa có lính (hoặc đang chờ dữ liệu).');
     const wanted = new Map();
     for (const o of state.offers.values()) wanted.set(o.give, [...(wanted.get(o.give) ?? []), o]);
     return mine.sort((a, b) => (U(b.stage)?.dps ?? 0) - (U(a.stage)?.dps ?? 0)).map(u => {
       const evo = U(u.stage)?.e ?? [];
+      const cheapest = evo.reduce((m, e) => (!m || e[1] < m[1] ? e : m), null);
       const trades = wanted.get(u.stage) ?? [];
-      return h('div', { class: `card ${trades.length ? 'ok' : ''}` }, unitLine(u.stage, h('div', null,
-        h('div', { class: 'bar' }, h('i', { style: `width:${u.maxHp ? Math.round((u.hp / u.maxHp) * 100) : 0}%` })),
-        u.active ? null : h('span', { class: 'bad', text: 'Đang gục · ' }),
-        `Bán: ${fmt(Math.floor(u.book * (db.sell ?? 0)))} vàng`,
-        evo.length ? h('div', { class: 'hint' }, 'Tiến hóa: ', evo.map(([to, cost], i) => [i ? ' · ' : '', nameOf(to), ' ',
-          h('span', { class: cost <= state.gold ? 'okc' : 'bad', text: `${fmt(cost)}g` })])) : h('div', { class: 'dim', text: 'Dạng cuối' }),
-        trades.map(t => h('div', { class: 'okc', text: `Trade được: slot ${t.slot} → nhận ${nameOf(t.get)}` })))));
+      const pct = u.maxHp ? Math.round((u.hp / u.maxHp) * 100) : 0;
+      return row(u.stage,
+        h('div', { class: 'hp', title: `${fmt(u.hp)} / ${fmt(u.maxHp)} HP` }, h('i', { style: `width:${Math.max(0, Math.min(100, pct))}%` })),
+        [!u.active ? pill('Gục', 'bad') : null,
+          trades.length ? pill(`Trade S${trades[0].slot}`, 'ok', trades.map(t => `S${t.slot} → nhận ${nameOf(t.get)}`).join('\n')) : null,
+          cheapest ? pill(`↑${short(cheapest[1])}g`, cheapest[1] <= state.gold ? 'ok' : 'bad',
+            evo.map(([to, cost]) => `${nameOf(to)}: ${fmt(cost)} vàng`).join('\n')) : pill('Max', 'mute', 'Dạng cuối')],
+        { tip: `${statsTip(u.stage)}\nBán: ${fmt(Math.floor(u.book * (db.sell ?? 0)))} vàng` });
     });
   }
 
   function viewWave() {
     const groups = nextWaveForBase(state);
     const mine = myUnits(state);
-    const s = state.summary;
-    const head = h('p', { class: 'dim', text: s ? `Đợt hiện tại: ${s.wave} · ${s.phase === 'wave' ? 'đang đánh' : 'chuẩn bị'} · còn ${fmt(secondsLeft(state))}s` : 'Chờ room_summary…' });
-    if (!groups.length) return [head, h('p', { class: 'dim', text: 'Server chưa công bố đợt tới.' })];
-    return [head, groups.map(g => {
+    if (!groups.length) return empty(state.summary ? 'Server chưa công bố đợt tới.' : 'Đang chờ dữ liệu phòng…');
+    return groups.map(g => {
       const u = U(g.stage) ?? {};
-      const best = bestAttacks(db, u.at).slice(0, 3);
-      const myBest = mine.filter(x => (db.dmg?.[U(x.stage)?.a]?.[u.at] ?? 1) > 1).length;
-      return h('div', { class: 'card' }, unitLine(g.stage, h('div', null,
-        `× ${g.count} · tổng HP ${short((u.hp ?? 0) * g.count)} · lọt mất ${(u.lk ?? 0) * g.count} mạng`,
-        h('div', { class: 'hint', text: `Khắc chế giáp ${label(u.at)}: ${best.map(([a, m]) => `${label(a)} ${Math.round(m * 100)}%`).join(', ')} · ${myBest} lính của mày đánh được ×>100%` }))));
-    })];
+      const best = bestAttacks(db, u.at);
+      const counters = mine.filter(x => (db.dmg?.[U(x.stage)?.a]?.[u.at] ?? 1) > 1).length;
+      return row(g.stage, `HP ${short((u.hp ?? 0) * g.count)} · lọt −${(u.lk ?? 0) * g.count} mạng`,
+        [pill(`×${g.count}`, 'mute'),
+          best[0] && best[0][1] > 1 ? pill(`${label(best[0][0])} ${Math.round(best[0][1] * 100)}%`, 'warn',
+            `Khắc giáp ${label(u.at)}: ${best.filter(b => b[1] > 1).map(([a, m]) => `${label(a)} ${Math.round(m * 100)}%`).join(', ')}\n${counters} lính của mày đánh lợi thế`) : null],
+        { tip: statsTip(g.stage) });
+    });
   }
 
   function viewPlayers() {
     const s = state.summary;
-    if (!s) return h('p', { class: 'dim', text: 'Chờ room_summary…' });
-    return h('table', null, h('tr', null, ['Người chơi', 'Mạng', 'Vàng', 'Tinh thể', 'Quái', 'Wild'].map(t => h('th', { text: t }))),
-      [...s.bases].sort((a, b) => Number(b.alive) - Number(a.alive) || b.lives - a.lives).map(b => h('tr', { class: b.baseId === state.baseId ? 'me' : '' },
-        [b.name + (b.alive ? '' : ' (bị loại)'), b.lives, short(b.gold), short(b.lumber), b.creeps, b.wilds].map(v => h('td', { text: String(v) })))));
+    if (!s) return empty('Đang chờ dữ liệu phòng…');
+    return h('table', null, h('tr', null, ['', 'Mạng', 'Vàng', 'TT', 'Quái'].map(t => h('th', { text: t }))),
+      [...s.bases].sort((a, b) => Number(b.alive) - Number(a.alive) || b.lives - a.lives).map(b => h('tr', { class: `${b.baseId === state.baseId ? 'me' : ''} ${b.alive ? '' : 'out'}` },
+        [b.name, b.lives, short(b.gold), short(b.lumber), b.creeps].map(v => h('td', { text: String(v) })))));
   }
 
   // ───────────── khung panel ─────────────
@@ -255,7 +286,7 @@ tr.me td{color:#ffde8f}
   document.documentElement.append(host);
 
   let drag = null;
-  const TABS = [['trade', 'Trade'], ['wild', 'Wild'], ['team', 'Đội hình'], ['wave', 'Đợt tới'], ['players', 'Người chơi']];
+  const TABS = [['trade', 'Trade'], ['wild', 'Wild'], ['team', 'Đội'], ['wave', 'Đợt tới'], ['players', 'Phòng']];
 
   let clockEl = null, bodyEl = null;
   function render(force = false) {
@@ -268,8 +299,8 @@ tr.me td{color:#ffde8f}
     const status = !db ? 'Đang tải dữ liệu wiki…'
       : !socket && !state.messages ? 'Đang chờ dữ liệu trận… (vào phòng chơi)'
       : !state.haveKeyframe ? 'Đã kết nối — chờ ảnh chụp đầy đủ của căn cứ…' : null;
-    const header = h('div', { class: 'top' },
-      h('b', { text: 'CUTD Helper' }), h('span', { class: 'dim', text: ` v${VERSION}` }),
+    const header = h('div', { class: 'top', title: `CUTD Helper v${VERSION} — chỉ đọc dữ liệu trận, không gửi gì lên server` },
+      h('b', { text: 'CUTD Helper' }),
       h('span', { class: 'grow' }),
       h('button', { class: 'x', text: '–', title: 'Thu nhỏ', onClick: () => toggle() }),
       h('button', { class: 'x', text: '×', title: 'Tắt tool', onClick: () => destroy() }));
@@ -278,26 +309,26 @@ tr.me td{color:#ffde8f}
       const r = host.getBoundingClientRect();
       drag = { dx: e.clientX - r.left, dy: e.clientY - r.top };
     });
-    const stats = db && state.haveKeyframe ? h('div', { class: 'stats' },
-      owner ? h('span', { text: owner.name }) : null,
-      h('span', { text: `Vàng ${fmt(state.gold)}` }), h('span', { text: `Tinh thể ${fmt(state.lumber)}` }),
-      h('span', { text: `Mạng ${fmt(state.lives)}` }),
-      (clockEl = h('span', { text: clock() }))) : null;
-    const tabs = h('div', { class: 'tabs' }, TABS.map(([k, t]) => h('button', { class: `chip ${tab === k ? 'on' : ''}`, text: t, onClick: () => { tab = k; dirty = true; render(true); if (bodyEl) bodyEl.scrollTop = 0; } })));
+    const stat = (k, v, cls = '') => h('span', { class: `st ${cls}` }, h('small', { text: k }), h('b', { text: v }));
+    const stats = db && state.haveKeyframe ? h('div', { class: 'stats', title: owner ? `Căn cứ: ${owner.name}` : null },
+      stat('Vàng', short(state.gold), 'gold'), stat('TT', short(state.lumber), 'crys'), stat('Mạng', fmt(state.lives)),
+      (clockEl = h('span', { class: 'clock', text: clock() }))) : null;
+    const count = { trade: state.offers.size, wild: state.wilds.size, team: myUnits(state).length, wave: nextWaveForBase(state).length };
+    const tabs = h('div', { class: 'tabs' }, TABS.map(([k, t]) => h('button', { class: `tab ${tab === k ? 'on' : ''}`, onClick: () => { tab = k; dirty = true; render(true); if (bodyEl) bodyEl.scrollTop = 0; } },
+      t, count[k] ? h('small', { text: ` ${count[k]}` }) : null)));
     let content;
     try {
-      content = status ? h('p', { class: 'dim', text: status }) : ({
+      content = status ? empty(status) : ({
         trade: viewTrade, wild: viewWild, team: viewTeam, wave: viewWave, players: viewPlayers,
       })[tab]();
     } catch (err) {
-      content = h('p', { class: 'bad', text: `Lỗi hiển thị: ${err?.message ?? err}` });
+      content = h('p', { class: 'empty bad', text: `Lỗi hiển thị: ${err?.message ?? err}` });
     }
     const body = bodyEl = h('div', { class: 'body' }, content);
-    panel.replaceChildren(header, stats ?? '', tabs, body,
-      h('div', { class: 'foot', text: 'Chỉ đọc dữ liệu trận mà game đã gửi cho máy mày · không gửi gì lên server' }));
+    panel.replaceChildren(header, stats ?? '', tabs, body);
     body.scrollTop = scroll;
   }
-  const clock = () => (state.summary ? `Đợt ${state.summary.wave} · ${state.summary.phase === 'wave' ? 'đánh' : 'chuẩn bị'} ${fmt(Math.ceil(secondsLeft(state) ?? 0))}s` : '');
+  const clock = () => (state.summary ? `Đợt ${state.summary.wave} · ${state.summary.phase === 'wave' ? 'đánh' : 'nghỉ'} ${fmt(Math.ceil(secondsLeft(state) ?? 0))}s` : '');
 
   const onMove = e => { if (drag) { host.style.left = `${Math.max(0, e.clientX - drag.dx)}px`; host.style.top = `${Math.max(0, e.clientY - drag.dy)}px`; } };
   const onUp = () => { drag = null; };
@@ -334,5 +365,5 @@ tr.me td{color:#ffde8f}
       for (const x of Object.values(d.u)) if (x && x.f) famMax.set(x.f, Math.max(famMax.get(x.f) ?? 0, x.dps ?? 0));
       dirty = true; render(true);
     })
-    .catch(err => { panel.replaceChildren(h('p', { class: 'bad', text: `CUTD Helper: không tải được dữ liệu wiki (${err.message}).` })); });
+    .catch(err => { panel.replaceChildren(h('p', { class: 'empty bad', text: `CUTD Helper: không tải được dữ liệu wiki (${err.message}).` })); });
 })();
