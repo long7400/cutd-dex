@@ -51,7 +51,8 @@ export default {
           <li><b>Hai bản game — tool tự nhận biết</b> (góc trên panel ghi <i>Cocos</i> hoặc <i>m. · web</i>), không cần đổi site. Mọi tab, nút Bắt / Tiến hóa / Trade và bấm dòng để chọn đều chạy trên cả hai:
             <ul>
               <li><code>cutd.site</code>: gọi thẳng hàm của nút trong game.</li>
-              <li><code>m.cutd.site</code>: thao tác như tay — Esc, Home (camera về mặc định), chạm đúng chỗ con đó trên sàn, kiểm tra tên trên bảng thông tin của game rồi mới bấm nút của game. Chạm lệch là dừng, không bấm gì. Tiến hóa: tool bấm đúng hàng nhánh trong bảng "Chọn tiến hóa" (kiểm tra tên nhánh).</li>
+              <li><code>m.cutd.site</code> — <b>dán tool ở sảnh / phòng chờ, TRƯỚC khi bấm Start</b>: tool móc được hàm của game lúc trận bắt đầu (panel ghi <i>m. · móc</i>) → gọi thẳng như bản Cocos, chọn đúng con kể cả khi lính đứng chồng.</li>
+              <li><code>m.cutd.site</code> dán giữa trận (panel ghi <i>m. · chạm</i>): tool chạm hộ đúng chỗ con đó trên sàn, kiểm tra tên trên bảng thông tin rồi mới bấm nút của game. Lính mới bắt đứng chồng giữa sân thì phải kéo ra trước.</li>
             </ul></li>
           <li><b>Phím F (bản web m.cutd.site):</b> bấm con trên sàn rồi nhấn <b>F</b> = bấm nút chính của game ở dock (Bắt / Tiến hóa / Trade) — khỏi rê chuột. Chỉ nhận phím thật, bỏ qua khi đang gõ chat.</li>
           <li><b>Nút thao tác nhanh:</b> <b>Bắt</b> ở tab Wild, <b>↑ tiến hóa</b> (mỗi nhánh 1 nút) ở tab Đội, <b>Trade</b> ở tab Trade/Đội. Bấm vào dòng để chọn con đó trong game.</li>
