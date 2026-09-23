@@ -9,7 +9,7 @@
 //  • UI nằm trong Shadow DOM đóng → không đụng CSS/DOM của game. Không ghi cookie/localStorage.
 import {
   createState, applyMessage, isGameMessage, myUnits, tradeOptions, offersForFamily,
-  bestAttacks, secondsLeft, nextWaveForBase, ownerOf,
+  bestAttacks, nextWaveForBase,
 } from './logic.js';
 
 const DATA_URL = '__CUTD_DATA_URL__';
@@ -25,11 +25,7 @@ const CSS = `
 .grow{flex:1}
 .x{all:unset;cursor:pointer;width:22px;height:22px;display:grid;place-items:center;border-radius:6px;color:#8fb7e8;font-size:15px}
 .x:hover{background:#243552;color:#fff}
-.stats{display:flex;align-items:baseline;gap:12px;padding:0 12px 8px}
-.st small{color:#6f8fb8;margin-right:3px;font-size:11px}.st b{font-weight:700}
-.st.gold b{color:#ffde8f}.st.crys b{color:#9fe3ff}
-.clock{margin-left:auto;color:#8fb7e8;font-size:11.5px;white-space:nowrap}
-.tabs{display:flex;border-top:1px solid #243552;border-bottom:1px solid #243552}
+.tabs{display:flex;border-bottom:1px solid #243552}
 .tab{all:unset;cursor:pointer;flex:1;text-align:center;padding:7px 0;color:#8fb7e8;font-weight:600;border-bottom:2px solid transparent}
 .tab small{color:#6f8fb8;font-size:10.5px}
 .tab:hover{color:#fff}.tab.on{color:#ffde8f;border-bottom-color:#ffde8f}.tab.on small{color:#ffde8f}
@@ -63,12 +59,11 @@ table{width:100%;border-collapse:collapse}th,td{text-align:right;padding:5px 10p
 th{color:#6f8fb8;font-weight:600;font-size:11px}td:first-child,th:first-child{text-align:left}
 tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .mini{all:unset;cursor:pointer;padding:5px 11px;border-radius:9px;background:#0f1a2d;color:#ffde8f;border:1px solid #b69c62;font-weight:700;box-shadow:0 4px 14px #0008}
-.panel.h{width:min(1180px,calc(100vw - 24px));max-height:min(320px,50vh);display:grid;grid-template-columns:auto auto minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+.panel.h{width:min(1180px,calc(100vw - 24px));max-height:min(320px,50vh);display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
 .panel.h .top{grid-column:1;padding-right:4px}.panel.h .top .grow{flex:0 0 6px}
-.panel.h .stats{grid-column:2;padding:0 10px;align-self:center;border-left:1px solid #243552}.panel.h .clock{margin-left:10px}
-.panel.h .tabs{grid-column:3;border:0;border-left:1px solid #243552;overflow-x:auto;scrollbar-width:none}
+.panel.h .tabs{grid-column:2;border:0;border-left:1px solid #243552;overflow-x:auto;scrollbar-width:none}
 .panel.h .tabs::-webkit-scrollbar{display:none}
-@media (max-width:1100px){.panel.h{grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr)}
+@media (max-width:700px){.panel.h{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr)}
 .panel.h .tabs{grid-column:1/-1;border-left:0;border-top:1px solid #243552}.panel.h .tab{flex:1 0 auto}}
 .panel.h .body{grid-column:1/-1;border-top:1px solid #243552}
 .panel.h .body{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));align-content:start;column-gap:4px}
@@ -92,7 +87,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 
   const SAFE_ID = /^[a-z0-9_-]+$/i;
   const state = createState();
-  let db = null, socket = null, dirty = true, tab = 'trade', timer = 0, wildSort = 'value', lastRender = 0;
+  let db = null, socket = null, dirty = true, tab = 'trade', wildSort = 'value', lastRender = 0;
   const famMax = new Map(); // gia phả → DPS cao nhất cả cây
 
   // ───────────── nghe dữ liệu (chỉ đọc) ─────────────
@@ -384,14 +379,13 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     dirty = true; render(true);
   }
 
-  let clockEl = null, bodyEl = null;
+  let bodyEl = null;
   function render(force = false) {
     if (!dirty || panel.hidden) return;
     if (!force && performance.now() - lastRender < 1000) { invalidate(); return; }
     lastRender = performance.now();
     dirty = false;
     const scroll = bodyEl?.scrollTop ?? 0;
-    const owner = ownerOf(state);
     const status = !db ? 'Đang tải dữ liệu wiki…'
       : !socket && !state.messages ? 'Đang chờ dữ liệu trận… (vào phòng chơi)'
       : !state.haveKeyframe ? 'Đã kết nối — chờ ảnh chụp đầy đủ của căn cứ…' : null;
@@ -406,10 +400,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       const r = host.getBoundingClientRect();
       drag = { dx: e.clientX - r.left, dy: e.clientY - r.top };
     });
-    const stat = (k, v, cls = '') => h('span', { class: `st ${cls}` }, h('small', { text: k }), h('b', { text: v }));
-    const stats = db && state.haveKeyframe ? h('div', { class: 'stats', title: owner ? `Căn cứ: ${owner.name}` : null },
-      stat('Vàng', short(state.gold), 'gold'), stat('TT', short(state.lumber), 'crys'), stat('Mạng', fmt(state.lives)),
-      (clockEl = h('span', { class: 'clock', text: clock() }))) : null;
     const count = { trade: state.offers.size, wild: state.wilds.size, team: myUnits(state).length, wave: nextWaveForBase(state).length };
     const tabs = h('div', { class: 'tabs' }, TABS.map(([k, t]) => h('button', { class: `tab ${tab === k ? 'on' : ''}`, onClick: () => { tab = k; dirty = true; render(true); if (bodyEl) bodyEl.scrollTop = 0; } },
       t, count[k] ? h('small', { text: ` ${count[k]}` }) : null)));
@@ -423,10 +413,9 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     }
     const body = bodyEl = h('div', { class: 'body' }, content);
     panel.className = `panel ${layout}`;
-    panel.replaceChildren(header, stats ?? '', tabs, body);
+    panel.replaceChildren(header, tabs, body);
     body.scrollTop = scroll;
   }
-  const clock = () => (state.summary ? `Đợt ${state.summary.wave} · ${state.summary.phase === 'wave' ? 'đánh' : 'nghỉ'} ${fmt(Math.ceil(secondsLeft(state) ?? 0))}s` : '');
 
   const onMove = e => { if (drag) { host.style.bottom = 'auto'; host.style.left = `${Math.max(0, e.clientX - drag.dx)}px`; host.style.top = `${Math.max(0, e.clientY - drag.dy)}px`; } };
   const onUp = () => { drag = null; };
@@ -442,7 +431,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     unpatch();
     socket?.removeEventListener('message', onMessage);
     socket?.removeEventListener('close', onClose);
-    clearInterval(timer);
     clearTimeout(pending);
     observers.forEach(o => o.disconnect());
     window.removeEventListener('pointermove', onMove);
@@ -453,7 +441,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 
   window[NS] = { toggle, destroy };
   patch();
-  timer = setInterval(() => { if (clockEl) clockEl.textContent = clock(); }, 500);
   render(true);
 
   fetch(`${DATA_URL}overlay.json`, { credentials: 'omit', cache: 'no-cache' })

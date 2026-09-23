@@ -114,7 +114,7 @@ test('bookmarklet: chỉ đọc, bắt socket rồi trả getter, hiển thị t
   const text = () => root.querySelector('.panel').textContent;
   assert.match(text(), /S1/);
   assert.match(text(), /Có sẵn/);
-  assert.match(text(), /Vàng\s*5k/);
+  assert.doesNotMatch(text(), /Vàng/, 'không lặp lại chỉ số game đã hiện');
   assert.ok(root.querySelector('.trade.is-ok'), 'slot trade được phải được đánh dấu');
 
   const clickTab = name => [...root.querySelectorAll('button')].find(b => b.textContent.startsWith(name)).click();
