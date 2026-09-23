@@ -19,7 +19,7 @@ const NS = '__cutdHelper';
 const CSS = `
 :host{all:initial}
 *{box-sizing:border-box;margin:0;font:12.5px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-.panel{width:min(340px,calc(100vw - 24px));max-height:calc(100vh - 24px);display:flex;flex-direction:column;background:#0f1a2df5;color:#e6f2ff;border:1px solid #33496b;border-radius:12px;box-shadow:0 10px 30px #000a;overflow:hidden}
+.panel{width:min(360px,calc(100vw - 24px));max-height:calc(100vh - 24px);display:flex;flex-direction:column;background:#0f1a2df5;color:#e6f2ff;border:1px solid #33496b;border-radius:12px;box-shadow:0 10px 30px #000a;overflow:hidden}
 .top{display:flex;align-items:center;gap:6px;padding:6px 6px 6px 12px;cursor:move;user-select:none}
 .top b{color:#ffde8f;font-weight:700;letter-spacing:.2px}
 .grow{flex:1}
@@ -53,7 +53,7 @@ const CSS = `
 .pill{padding:1px 7px;border-radius:6px;font-size:11.5px;font-weight:700;background:#1b2a44;color:#8fb7e8;white-space:nowrap}
 .pill.ok{background:#1d3a2a;color:#9fd6a8}.pill.bad{background:#3d2226;color:#ff9c9c}.pill.warn{background:#3a3016;color:#ffde8f}.pill.mute{color:#6f8fb8}
 .hp{height:4px;background:#0b1526;border-radius:2px;overflow:hidden;margin-top:4px}.hp i{display:block;height:100%;background:#9fd6a8}
-.trade{display:grid;grid-template-columns:22px 1fr 12px 1fr auto;align-items:center;gap:6px;padding:6px 10px;border-left:3px solid transparent}
+.trade{display:grid;grid-template-columns:20px minmax(0,1fr) 10px minmax(0,1fr) auto;align-items:center;gap:6px;padding:6px 10px;border-left:3px solid transparent}
 .trade.is-ok{border-left-color:#5f9e6a}.trade.is-warn{border-left-color:#b69c62}
 .slot{color:#6f8fb8;font-size:11px;font-weight:700}
 .side{display:flex;align-items:center;gap:5px;min-width:0}.side .pt{width:28px;height:28px}.side .nm{flex:1}
@@ -176,12 +176,12 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   };
   const pill = (text, kind = '', tip) => h('span', { class: `pill ${kind}`, text, title: tip });
   // Tên (link wiki) + level nhỏ + chấm màu hệ + sao huyền thoại — 1 dòng, cắt bớt nếu dài.
-  const title = id => {
+  const title = (id, { noLevel = false } = {}) => {
     const u = U(id) ?? {};
     return h('div', { class: 'nm' },
       h('i', { class: 'dot', style: `background:${rgbOf(u.el)}`, title: db?.el[u.el]?.n ?? 'Không hệ' }),
       wikiUrl(id) ? h('a', { href: wikiUrl(id), text: u.n, title: 'Mở trên wiki' }) : h('span', { text: String(id ?? '?') }),
-      u.l ? h('small', { text: ` Lv${u.l}` }) : null,
+      u.l && !noLevel ? h('small', { text: ` Lv${u.l}` }) : null,
       u.L ? h('b', { class: 'leg', text: ' ★' }) : null);
   };
   // Mỗi con 1 dòng: [ảnh] [tên / dòng phụ] [nhãn bên phải]. Chi tiết nằm trong tooltip.
@@ -199,7 +199,9 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         : o.evolve ? pill(`+${short(o.evolve.cost)}g`, state.gold >= o.evolve.cost ? 'warn' : 'bad',
           `Nâng ${nameOf(o.evolve.unit.stage)} → ${o.evolve.steps.map(nameOf).join(' → ')}: ${fmt(o.evolve.cost)} vàng`)
         : pill('Chưa có', 'mute');
-      const side = id => h('div', { class: 'side', title: statsTip(id) }, img(id, 28), title(id));
+      // Tên 1 dòng, cấp độ xuống dòng dưới → tên không bị cắt cụt.
+      const side = id => h('div', { class: 'side', title: statsTip(id) }, img(id, 28),
+        h('div', { class: 'mid' }, title(id, { noLevel: true }), h('div', { class: 'sub', text: U(id)?.l ? `Lv${U(id).l}` : '' })));
       return h('div', { class: `trade ${o.ready.length ? 'is-ok' : o.evolve ? 'is-warn' : ''}` },
         h('span', { class: 'slot', text: `S${o.slot}` }), side(o.give), h('span', { class: 'arrow', text: '→' }), side(o.get), status);
     });
