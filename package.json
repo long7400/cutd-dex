@@ -12,7 +12,7 @@
     "prebuild": "node scripts/build.mjs",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test scripts/test/"
+    "test": "node --test \"scripts/test/*.test.mjs\""
   },
   "devDependencies": {
     "jsdom": "^25.0.1",
@@ -20,6 +20,6 @@
     "vite": "^5.4.0"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   }
 }

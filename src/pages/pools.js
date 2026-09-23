@@ -1,6 +1,6 @@
 import { html, pct } from '../lib/html.js';
 import { db, linkFor } from '../db.js';
-import { img, elColor, footer, ICON } from '../ui.js';
+import { img, elColor, footer } from '../ui.js';
 
 export default {
   title: () => 'Wild',
@@ -14,7 +14,7 @@ export default {
         const mid = elColor(p.element, 1), light = elColor(p.element, 0);
         return html`<section class="pool-card">
           <div class="pool-head">
-            <h3 style="color:${light}">${ICON[p.element] ?? '⭐'} ${db.elements[p.element]?.name ?? p.element}</h3>
+            <h3 style="color:${light}">${db.elements[p.element]?.name ?? p.element}</h3>
             <span class="badge">${p.entries.length} pet · Σw ${p.total}</span>
           </div>
           ${[...p.entries].sort((a, b) => b.weight - a.weight).map(e => {

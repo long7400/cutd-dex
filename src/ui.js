@@ -3,7 +3,6 @@ import { db, ix, portrait, label, linkFor, elementName } from './db.js';
 
 const rgb = a => `rgb(${a.join(',')})`;
 export const TAGS = { pet: 'Pet', wave: 'Quái đợt', wild: 'Wild', trade: 'Chỉ có qua trade', 'trade-give': 'Đem trade được', summon: 'Triệu hồi' };
-export const ICON = { fire: '🔥', water: '💧', grass: '🌿', lightning: '⚡', psychic: '🔮', fighter: '🥊', normal: '⭐' };
 
 export const img = (model, alt = '', cls = '', size = 64) =>
   html`<img class="${cls}" src="${portrait(model)}" alt="${alt}" width="${size}" height="${size}" loading="lazy" decoding="async">`;
@@ -42,23 +41,36 @@ export function statGrid(u) {
   return html`<div class="statgrid">${cells.map(([k, v, s]) => html`
     <div class="stat"><div class="k">${k}</div><div class="v">${v}</div>${s ? html`<div class="s">${s}</div>` : ''}</div>`)}
   </div>
-  ${u.splash ? html`<div class="note">💥 Đánh lan: bán kính ${num(u.splash.small_radius)}${u.splash.medium_radius ? ` · ${num(u.splash.medium_factor * 100)}% trong ${num(u.splash.medium_radius)}` : ''}${u.splash.small_factor ? ` · ${num(u.splash.small_factor * 100)}% vùng ngoài` : ''}</div>` : ''}
-  ${u.bounce ? html`<div class="note">🔁 Đánh nảy: tối đa ${u.bounce.targets} mục tiêu · tầm nảy ${num(u.bounce.radius)}${u.bounce.damage_loss ? ` · mất ${num(u.bounce.damage_loss * 100)}%/lần` : ''}</div>` : ''}`;
+  ${u.splash ? html`<div class="note">Đánh lan: bán kính ${num(u.splash.small_radius)}${u.splash.medium_radius ? ` · ${num(u.splash.medium_factor * 100)}% trong ${num(u.splash.medium_radius)}` : ''}${u.splash.small_factor ? ` · ${num(u.splash.small_factor * 100)}% vùng ngoài` : ''}</div>` : ''}
+  ${u.bounce ? html`<div class="note">Đánh nảy: tối đa ${u.bounce.targets} mục tiêu · tầm nảy ${num(u.bounce.radius)}${u.bounce.damage_loss ? ` · mất ${num(u.bounce.damage_loss * 100)}%/lần` : ''}</div>` : ''}`;
 }
 
+const EFFECT_KIND = {
+  damage: 'Sát thương', heal: 'Hồi máu', apply_modifier: 'Trạng thái', summon: 'Triệu hồi', health_loss: 'Mất máu',
+  force_attack_target: 'Taunt', destroy: 'Tiêu diệt', displace: 'Đẩy dời', set_health: 'Đặt máu', transform: 'Biến hình',
+  modify_resource: 'Tài nguyên', remove_modifier: 'Giải trạng thái', spawn_projectile: 'Đạn', destroy_self: 'Tự huỷ',
+};
+
 export function skillList(ids, open = false) {
-  if (!ids?.length) return html`<div class="dim">Không có kỹ năng</div>`;
+  if (!ids?.length) return html`<div class="sub" style="margin:0">—</div>`;
   return ids.map(id => {
     const s = db.abilities[id];
     if (!s) return '';
     const off = !s.available || s.inert;
-    return html`<details class="skill ${off ? 'off' : ''}" ${open ? html`open` : ''}>
-      <summary><span class="sname">⚡ ${s.name}</span><span class="trig">${s.inert ? 'Không có tác dụng' : s.summary}</span></summary>
-      ${s.inert ? html`<div class="meta">Trong ruleset hiện tại kỹ năng này chỉ gồm sát thương 0 và trạng thái rỗng (chưa được port) — thực tế không có hiệu ứng. Điều kiện gốc: ${s.summary}</div>`
-        : s.available ? html`
-        ${s.targeting ? html`<div class="meta">🎯 ${s.targeting}</div>` : ''}
-        <ol>${s.effects.map(e => html`<li>${e}</li>`)}</ol>` : html`<div class="meta">${s.reason ?? ''}</div>`}
-    </details>`;
+    return html`<div class="skill-card ${open ? 'open' : ''} ${off ? 'off' : ''}">
+      <div class="skill-head">
+        <span class="sname">${s.name}</span>
+        <span class="trig">${s.inert ? 'Không có tác dụng' : s.summary}</span>
+        ${s.cd ? html`<span class="badge">CD ${num(s.cd)}s</span>` : ''}
+        <span class="caret">▶</span>
+      </div>
+      <div class="skill-body">
+        ${s.inert ? html`<div class="meta">Trong ruleset hiện tại kỹ năng này chỉ có sát thương 0 và trạng thái rỗng (chưa được port) nên thực tế không có hiệu ứng. Điều kiện gốc: ${s.summary}</div>`
+          : s.available ? html`<ul>${s.effects.map(e => html`<li><b>${EFFECT_KIND[e.k] ?? e.k}</b> — <span class="desc">${e.t}</span></li>`)}</ul>
+            ${s.targeting ? html`<div class="meta">${s.targeting}</div>` : ''}`
+          : html`<div class="meta">${s.reason ?? s.summary}</div>`}
+      </div>
+    </div>`;
   });
 }
 

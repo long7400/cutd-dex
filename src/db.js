@@ -19,13 +19,6 @@ function index(d) {
   ix.unitList = Object.values(d.units);
   ix.researchById = new Map(d.research.map(r => [r.id, r]));
 
-  // unit → các đợt nó xuất hiện (để trang unit hiển thị "xuất hiện ở wave nào").
-  ix.wavesOf = new Map();
-  for (const set of d.waveSets) for (const w of set.waves) for (const g of w.groups) {
-    if (!ix.wavesOf.has(g.unit)) ix.wavesOf.set(g.unit, []);
-    const list = ix.wavesOf.get(g.unit);
-    if (!list.some(x => x.set === set.id && x.n === w.n)) list.push({ set: set.id, setName: set.name, n: w.n, count: g.count });
-  }
   // unit → recipe trade liên quan.
   ix.tradesOf = new Map();
   for (const slot of d.trade) for (const r of slot.recipes) for (const id of [r.give, r.get]) {

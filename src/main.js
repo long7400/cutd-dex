@@ -28,6 +28,8 @@ let current = null;
 
 history.scrollRestoration = 'manual';
 document.addEventListener('click', e => {
+  const head = e.target.closest?.('.skill-head');
+  if (head) { head.parentElement.classList.toggle('open'); return; }
   const a = e.target.closest?.('a[href^="#/"]');
   if (a && !e.defaultPrevented) navByClick = true;
 });
@@ -83,6 +85,6 @@ render().catch(fail);
 
 function fail(err) {
   console.error(err);
-  app.innerHTML = toString(html`<main><div class="empty">Không tải được dữ liệu 😢<br><small>${err.message}</small><br>
+  app.innerHTML = toString(html`<main><div class="empty">Không tải được dữ liệu<br><small>${err.message}</small><br>
     <button class="chip" onclick="location.reload()">Tải lại</button></div></main>`);
 }

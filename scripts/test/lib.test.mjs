@@ -80,8 +80,8 @@ test('describer: dịch theo bảng của game + mô tả điều kiện/modifie
   assert.equal(a.name, 'Flame Strike');
   assert.equal(a.summary, 'Khi đánh trúng · Xác suất 33%');
   assert.match(a.targeting, /up to 3 targets/);
-  assert.equal(a.effects[0], 'Gây 50 + 1,5 × triggering attack damage sát thương');
-  assert.equal(a.effects[1], '+25% attack speed · −3 Armor · Bất tử (miễn sát thương) · trong 2s');
+  assert.equal(a.effects[0].t, 'Gây 50 + 1,5 × triggering attack damage sát thương');
+  assert.equal(a.effects[1].t, '+25% attack speed · −3 Armor · Bất tử (miễn sát thương) · trong 2s');
 });
 
 test('diffCatalog: phát hiện thêm/xoá/đổi chỉ số', () => {

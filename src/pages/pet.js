@@ -4,16 +4,6 @@ import { img, elBadge, catchBadge, legBadge, statGrid, skillList, researchIcons,
 
 const sid = id => id.replace(/^unit_/, '');
 
-export function appearances(id) {
-  const waves = ix.wavesOf.get(id) ?? [];
-  const trades = ix.tradesOf.get(id) ?? [];
-  if (!waves.length && !trades.length) return '';
-  return html`<div class="appear">
-    ${waves.length ? html`<div>⚔ Xuất hiện làm quái: ${waves.slice(0, 12).map(w => html`<a class="badge" href="#/waves/${w.set}/${w.n}">${w.setName} · đợt ${w.n} ×${w.count}</a> `)}${waves.length > 12 ? html`<span class="dim">+${waves.length - 12}</span>` : ''}</div>` : ''}
-    ${trades.map(t => html`<div>🔄 Trade slot ${t.slot}: ${t.give === id ? html`đổi đi lấy ${unitChip(t.get)}` : html`nhận được khi đổi ${unitChip(t.give)}`}</div>`)}
-  </div>`;
-}
-
 export function stageCard(u, { cost = null, highlight = false } = {}) {
   const sell = Math.floor((u.book ?? 0) * (db.game.rules.sellGold ?? 0));
   return html`<article class="stage-card ${u.evo ? '' : 'final'} ${highlight ? 'hl' : ''}" id="s-${sid(u.id)}">
@@ -28,7 +18,6 @@ export function stageCard(u, { cost = null, highlight = false } = {}) {
       </div>
       ${statGrid(u)}
       ${skillList(u.skills)}
-      ${appearances(u.id)}
     </div>
   </article>`;
 }

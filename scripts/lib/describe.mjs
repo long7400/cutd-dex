@@ -185,13 +185,13 @@ export function createDescriber(catalog, i18n = {}) {
       summary: [
         ...kinds.map(k => d(TRIGGER[k]) || k),
         a.autocast ? u('Autocast') : '',
-        a.cooldown_ticks ? u('{0} cooldown', secs(a.cooldown_ticks)) : '',
         a.trigger?.interval_ticks ? u('every {0}', secs(a.trigger.interval_ticks)) : '',
         ...(a.conditions ?? []).map(condition),
         a.delivery?.delay_ticks ? u('{0} delay', secs(a.delivery.delay_ticks)) : '',
       ].filter(Boolean).join(' · '),
       targeting: targeting(a.targeting),
-      effects: live.map(e => effect(e)),
+      cd: a.cooldown_ticks ? a.cooldown_ticks / TICKS_PER_SECOND : undefined,
+      effects: live.map(e => ({ k: e.kind, t: effect(e) })),
       available: true,
     };
   }

@@ -1,7 +1,7 @@
 import { html, toString, short, debounce } from '../lib/html.js';
 import { buildIndex } from '../lib/search.js';
 import { db } from '../db.js';
-import { img, elBadge, catchBadge, legBadge, footer, ICON } from '../ui.js';
+import { img, elBadge, catchBadge, legBadge, footer } from '../ui.js';
 
 // State bộ lọc sống ở module → quay lại trang vẫn giữ nguyên.
 export const filters = { q: '', el: 'all', kind: 'all', sort: 'name' };
@@ -67,7 +67,7 @@ function card(p) {
       </div>
     </div>
     <div class="mini-chain">${shown.map((id, i) => html`${i ? html`<span class="arr">›</span>` : ''}${img(db.units[id].model, db.units[id].name, '', 26)}`)}${p.stages.length > 6 ? html`<span class="more">+${p.stages.length - 6}</span>` : ''}${p.branching ? html`<span class="more" title="Có nhánh tiến hóa">⑂</span>` : ''}</div>
-    <div class="statrow"><span>💰 <b>${p.book}</b></span><span>Max HP <b>${short(p.hpMax)}</b></span><span>DPS <b>${short(p.dpsMax)}</b></span><span>→ <b>${final?.name}</b></span></div>
+    <div class="statrow"><span>Giá <b>${p.book}</b></span><span>Max HP <b>${short(p.hpMax)}</b></span><span>DPS <b>${short(p.dpsMax)}</b></span><span>→ <b>${final?.name}</b></span></div>
   </a>`;
 }
 
@@ -88,7 +88,7 @@ export default {
         <input type="search" placeholder="Tìm pet, dạng tiến hóa, kỹ năng… (chịu gõ sai)" value="${filters.q}" data-q autocomplete="off" aria-label="Tìm kiếm">
         <div class="chips">
           ${chip('el', 'all', 'Mọi hệ', filters.el === 'all')}
-          ${Object.keys(db.elements).filter(e => groups.byEl.has(e)).map(e => chip('el', e, `${ICON[e] ?? ''} ${db.elements[e].name}`, filters.el === e))}
+          ${Object.keys(db.elements).filter(e => groups.byEl.has(e)).map(e => chip('el', e, db.elements[e].name, filters.el === e))}
         </div>
         <div class="chips">
           ${chip('kind', 'all', `Tất cả (${db.pets.length})`, filters.kind === 'all')}
