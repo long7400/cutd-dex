@@ -17,6 +17,7 @@ import { toWebp } from './lib/image.mjs';
 import { extractClient, validateClient, bundlePathFrom } from './lib/client.mjs';
 import { createResolver } from './lib/game.mjs';
 import { diffCatalog } from './lib/diff.mjs';
+import { SAFE_NAME, validateCatalog, containedPath } from './lib/validate.mjs';
 import { build, buildOverlay, PATHS } from './build.mjs';
 
 const BASE = (process.env.CUTD_BASE ?? 'https://m.cutd.site').replace(/\/$/, '');
@@ -27,9 +28,18 @@ const ASSET_DIRS = { portraits: join(ROOT, 'public/portraits'), research: join(R
 const ASSET_SIZE = { skills: 96 };
 const CONCURRENCY = 8;
 
-const c = (code, s) => (process.stdout.isTTY ? `\x1b[${code}m${s}\x1b[0m` : String(s));
+// Mọi chuỗi in ra log đều có thể chứa dữ liệu từ server → bỏ ký tự điều khiển/xuống dòng và vô hiệu "::"
+// ở đầu dòng, để server không giả được lệnh workflow của GitHub Actions (::set-output, ::add-mask…).
+const clean = v => String(v).replace(/[\x00-\x1f\x7f]/g, '?').replace(/::/g, ': :');
+const log = (...a) => console.log(a.map(clean).join(' '));
+const c = (code, s) => (process.stdout.isTTY ? `\x1b[${code}m${clean(s)}\x1b[0m` : clean(s));
 const info = s => console.log(c(36, s)), ok = s => console.log(c(32, s)), warn = s => console.log(c(33, s));
 const t0 = performance.now();
+
+// Lỗi có thể mang nguyên văn dữ liệu server (vd JSON.parse trích đoạn body) → lọc trước khi in.
+const die = err => { console.error(`✗ sync thất bại: ${clean(err?.message ?? err)}`); process.exit(1); };
+process.on('uncaughtException', die);
+process.on('unhandledRejection', die);
 
 const state = readJSON(STATE, {});
 state.assets ??= {};
@@ -37,21 +47,13 @@ const stateBefore = JSON.stringify(sortKeys(state));
 let oldRaw = readJSON(PATHS.catalog);
 let client = readJSON(PATHS.client);
 
-function validateCatalog(raw) {
-  const cat = raw?.catalog;
-  const bad = [];
-  if (typeof raw?.catalog_hash !== 'string') bad.push('catalog_hash');
-  for (const k of ['species', 'abilities', 'modifiers', 'display_names']) if (!Array.isArray(cat?.[k]) || !cat[k].length) bad.push(k);
-  if ((cat?.species?.filter(s => s.catchable).length ?? 0) < 10) bad.push('catchable<10');
-  return bad;
-}
 
 // ① Kiểm tra thay đổi (2 request nhỏ, song song).
 info(`① Kiểm tra ${BASE} …`);
 const [htmlRes, catRes] = await Promise.all([
-  request(`${BASE}/`, { validator: client && !FORCE ? state.html : undefined }),
+  request(`${BASE}/`, { validator: client && !FORCE ? state.html : undefined, maxBytes: 1024 * 1024 }),
   // Chỉ tin ETag khi file local đúng là bản đã tải kèm ETag đó (file bị sửa tay/hỏng → tải lại).
-  request(`${BASE}/catalog`, { validator: oldRaw && !FORCE && state.catalogHash === oldRaw.catalog_hash ? state.catalog : undefined }),
+  request(`${BASE}/catalog`, { validator: oldRaw && !FORCE && state.catalogHash === oldRaw.catalog_hash ? state.catalog : undefined, maxBytes: 32 * 1024 * 1024 }),
 ]);
 
 let raw = oldRaw, catalogChanged = false;
@@ -62,7 +64,7 @@ if (catRes.notModified) {
   const bad = validateCatalog(fresh);
   if (bad.length) throw new Error(`Catalog mới không hợp lệ (${bad.join(', ')}) — giữ nguyên bản cũ.`);
   catalogChanged = fresh.catalog_hash !== oldRaw?.catalog_hash;
-  console.log(`   catalog: ${fresh.catalog_hash.slice(0, 16)}… ${catalogChanged ? c(33, '(MỚI)') : '(không đổi)'}`);
+  log(`   catalog: ${fresh.catalog_hash.slice(0, 16)}… ${catalogChanged ? '(MỚI)' : '(không đổi)'}`);
   raw = fresh;
   state.catalog = catRes.validator;
   state.catalogHash = fresh.catalog_hash;
@@ -78,7 +80,7 @@ if (htmlRes.notModified) {
     warn('   ⚠ Không thấy bundle JS trong index.html — game đổi cấu trúc? Giữ client.json cũ.');
   } else if (bundle !== state.bundle || !client || FORCE) {
     info(`② Bundle mới ${bundle} → bóc dữ liệu client…`);
-    const js = (await request(BASE + bundle, { timeout: 60_000 })).text();
+    const js = (await request(BASE + bundle, { timeout: 60_000, maxBytes: 32 * 1024 * 1024 })).text();
     const fresh = extractClient(js);
     const problems = validateClient(fresh);
     if (problems.length) {
@@ -91,23 +93,25 @@ if (htmlRes.notModified) {
     }
     state.bundle = bundle;
   } else {
-    console.log(`   bundle: ${bundle} (không đổi)`);
+    log(`   bundle: ${bundle} (không đổi)`);
   }
 }
 
 // ③ Ảnh cần thiết: portrait của mọi species (theo đúng logic client) + icon research.
 const resolver = createResolver(raw.catalog, client);
 const wanted = new Map();
+const want = (dir, name, url) => { if (SAFE_NAME.test(name)) wanted.set(`${dir}/${name}.webp`, url(name)); };
 for (const s of raw.catalog.species) {
   const model = resolver.modelOf(s.id);
-  if (model) wanted.set(`portraits/${model}.webp`, `/resources/art/portraits/${model}.png`);
+  if (model) want('portraits', model, m => `/resources/art/portraits/${m}.png`);
 }
-for (const r of raw.catalog.research ?? []) wanted.set(`research/${r.id}.webp`, `/resources/art/ui/research-icons-v1/${r.id}.png`);
+for (const r of raw.catalog.research ?? []) want('research', r.id, id => `/resources/art/ui/research-icons-v1/${id}.png`);
 for (const icon of new Set(['icon-ability', ...Object.values(client.abilityIcon ?? {})])) {
-  wanted.set(`skills/${icon}.webp`, `/resources/art/ui/monster-dock/${icon}.png`);
+  want('skills', icon, i => `/resources/art/ui/monster-dock/${i}.png`);
 }
 
-const localPath = key => join(ROOT, 'public', key);
+// Chốt chặn thứ 2: đường dẫn cuối cùng bắt buộc nằm trong public/<portraits|research|skills>/.
+const localPath = key => containedPath(join(ROOT, 'public'), Object.values(ASSET_DIRS), key);
 
 // Migrate 1 lần: PNG đã có sẵn → WebP tại chỗ (không tải lại), giữ ETag của bản gốc.
 let migrated = 0;
@@ -135,7 +139,7 @@ info(`③ Ảnh: cần ${wanted.size}, kiểm tra ${todo.length}${revalidate ? '
 let fetched = 0, unchanged = 0;
 const results = await mapLimit(todo, CONCURRENCY, async ([key, url]) => {
   const have = existsSync(localPath(key));
-  const res = await request(BASE + url, { validator: have ? state.assets[key] : undefined, retries: 2 });
+  const res = await request(BASE + url, { validator: have ? state.assets[key] : undefined, retries: 2, maxBytes: 4 * 1024 * 1024 });
   if (res.notModified) { unchanged++; return; }
   writeAtomic(localPath(key), await toWebp(res.body, { size: ASSET_SIZE[key.split('/')[0]] }));
   state.assets[key] = res.validator; // ETag của PNG gốc trên server
@@ -143,7 +147,7 @@ const results = await mapLimit(todo, CONCURRENCY, async ([key, url]) => {
 });
 const failed = results.map((r, i) => (r.ok ? null : `${todo[i][0]} (${r.error.message})`)).filter(Boolean);
 console.log(`   ↓ ${fetched} tải mới · ${unchanged} không đổi (304)${failed.length ? c(33, ` · ${failed.length} lỗi`) : ''}`);
-if (failed.length) warn(`   ${failed.slice(0, 10).join('\n   ')}`);
+for (const f of failed.slice(0, 10)) warn(`   ${f}`);
 
 // Dọn ảnh không còn dùng — có guard chống xoá nhầm khi dữ liệu bóc ra bất thường.
 for (const [dirKey, dir] of Object.entries(ASSET_DIRS)) {
@@ -167,7 +171,7 @@ if (catalogChanged && oldRaw) {
   const s = entry.summary;
   info(`④ Thay đổi: +${s.unitsAdded} / −${s.unitsRemoved} unit · ${s.statChanges} chỉ số · ${s.abilityChanges} skill · mục: ${s.sections.join(', ') || '—'}`);
   for (const it of entry.items.filter(x => x.kind === 'unit+' || x.kind === 'unit-').slice(0, 20)) {
-    console.log(`   ${it.kind === 'unit+' ? c(32, '+') : c(33, '−')} ${it.name}`);
+    log(`   ${it.kind === 'unit+' ? '+' : '−'} ${it.name}`);
   }
 }
 if (catalogChanged || FORCE || !existsSync(PATHS.catalog)) writeJSON(PATHS.catalog, raw, { pretty: true });
@@ -183,7 +187,8 @@ ok(`✓ Xong — ${db.meta.counts.pets} pet · ${db.meta.counts.units} unit · $
 output(catalogChanged || clientChanged || fetched > 0 || migrated > 0);
 
 function output(changed) {
-  if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed}\nhash=${raw?.catalog_hash?.slice(0, 12) ?? ''}\n`);
+  const hash = /^[0-9a-f]+$/.test(raw?.catalog_hash ?? '') ? raw.catalog_hash.slice(0, 12) : 'unknown';
+  if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed ? 'true' : 'false'}\nhash=${hash}\n`);
 }
 
 function sortKeys(o) {

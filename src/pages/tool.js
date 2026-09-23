@@ -5,7 +5,7 @@ import { footer } from '../ui.js';
 const SOURCE = 'https://github.com/long7400/cutd-dex/blob/main/tool/overlay.js';
 
 // Code trỏ dữ liệu về đúng site đang mở trang này (GitHub Pages hoặc localhost khi dev).
-const consoleCode = () => tool.code.replace('"__CUTD_DATA_URL__"', JSON.stringify(new URL('.', location.href).href));
+const consoleCode = () => tool.code.replace('"__CUTD_DATA_URL__"', () => JSON.stringify(new URL('.', location.origin + location.pathname).href));
 const bookmarklet = () => `javascript:${encodeURIComponent(consoleCode())}`;
 
 export default {

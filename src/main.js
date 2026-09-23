@@ -87,5 +87,6 @@ render().catch(fail);
 function fail(err) {
   console.error(err);
   app.innerHTML = toString(html`<main><div class="empty">Không tải được dữ liệu<br><small>${err.message}</small><br>
-    <button class="chip" onclick="location.reload()">Tải lại</button></div></main>`);
+    <button class="chip" data-reload>Tải lại</button></div></main>`);
+  app.querySelector('[data-reload]')?.addEventListener('click', () => location.reload());
 }

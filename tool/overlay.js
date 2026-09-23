@@ -55,11 +55,11 @@ tr.me td{color:#ffde8f}
 `;
 
 (() => {
-  if (window[NS]) { window[NS].toggle(); return; }
   if (!/(^|\.)cutd\.site$/.test(location.hostname)) {
     alert('CUTD Helper: mở trang game (cutd.site) rồi bấm bookmark này.');
     return;
   }
+  if (window[NS]) { window[NS].toggle(); return; }
   if (!/^(https:\/\/|http:\/\/localhost[:/])/.test(DATA_URL)) return;
 
   const SAFE_ID = /^[a-z0-9_-]+$/i;

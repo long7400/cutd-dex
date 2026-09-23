@@ -60,3 +60,17 @@ Workflow `Sync & Deploy` chạy mỗi 2 tiếng (và khi push / bấm tay):
 | Portrait mọi species | map trực tiếp → model của dạng nông nhất trong gia phả → hash FNV-1a trong danh sách model cùng hệ |
 | Mô tả kỹ năng | port hàm mô tả của client + bảng dịch vi chính thức; bỏ skill hệ thống, gộp `shared_execution_id` |
 | Thời gian | 32 tick/giây (`1/32` trong client) |
+
+## Bảo mật
+
+Dữ liệu từ server game được coi là **không tin cậy**:
+
+- Không `eval` bundle của game — dùng parser literal riêng, bỏ key `__proto__`/`constructor`.
+- Hash, id, tên model phải khớp whitelist (`[A-Za-z0-9_-]`) trước khi dùng làm tên file; đường dẫn ghi ảnh bị khoá trong `public/<dir>/`.
+- Giới hạn dung lượng mọi response; ảnh phải đúng chữ ký PNG, giới hạn pixel trước khi đưa vào `sharp`.
+- Log được lọc ký tự điều khiển và `::` để server không giả được lệnh workflow; CI bọc bước sync bằng `::stop-commands::`.
+- Wiki: mọi chuỗi qua `html` tagged template (escape), màu ép kiểu số, bản build có **CSP** `script-src 'self'`.
+
+CI/CD: action ghim theo commit SHA, `permissions: {}` mặc định + quyền tối thiểu từng job, token không nằm trên đĩa khi xử lý dữ liệu lạ,
+`npm ci --ignore-scripts`, `npm audit --audit-level=high` chặn deploy. Bookmarklet: xem trang **Công cụ** của wiki.
+`scripts/test/security.test.mjs` giữ các điểm trên không bị hồi quy.

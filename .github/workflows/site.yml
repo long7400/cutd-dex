@@ -10,57 +10,81 @@ on:
         description: 'Bỏ qua cache, tải + kiểm tra lại toàn bộ'
         type: boolean
         default: false
-permissions:
-  contents: write
-  pages: write
-  id-token: write
+
+# Mặc định không có quyền gì; từng job xin đúng quyền nó cần.
+permissions: {}
+
 concurrency:
   group: site
   cancel-in-progress: false
+
+# Bảo mật:
+#  • Action ghim theo commit SHA (tag có thể bị chiếm và trỏ sang code khác).
+#  • npm ci --ignore-scripts: không chạy install script của dependency (sharp/esbuild dùng binary dựng sẵn).
+#  • Dữ liệu từ server game KHÔNG bao giờ được chèn thẳng vào lệnh shell bằng ${{ }} — chỉ đi qua env.
 jobs:
   # Push bằng GITHUB_TOKEN KHÔNG kích hoạt workflow khác → sync và deploy phải nằm chung 1 workflow.
   sync:
     if: github.event_name != 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: write
     outputs:
       changed: ${{ steps.sync.outputs.changed }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false # token không nằm trên đĩa trong lúc xử lý dữ liệu lạ
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - id: sync
-        run: node scripts/sync.mjs ${{ inputs.force && '--force' || '' }}
+        env:
+          FORCE: ${{ inputs.force && '--force' || '' }}
+        run: |
+          # Tắt xử lý lệnh workflow (::…::) trong log của bước này — log có chứa dữ liệu từ server.
+          STOP="$(openssl rand -hex 16)"
+          echo "::stop-commands::${STOP}"
+          node scripts/sync.mjs $FORCE
+          echo "::${STOP}::"
       - name: Commit nếu có thay đổi
+        env:
+          HASH: ${{ steps.sync.outputs.hash }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           git add -A data public
           if git diff --cached --quiet; then echo "Không có gì mới."; exit 0; fi
+          case "$HASH" in *[!0-9a-f]*|'') HASH=unknown ;; esac
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "chore(data): game update $(date -u '+%F %H:%M') — ${{ steps.sync.outputs.hash }}"
-          git push
+          git commit -m "chore(data): game update $(date -u '+%F %H:%M') — ${HASH}"
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main
 
   build:
     needs: sync
     if: always() && needs.sync.result != 'failure' && (github.event_name == 'push' || needs.sync.outputs.changed == 'true' || inputs.force)
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: main # lấy luôn commit data vừa push ở job sync
-      - uses: actions/setup-node@v5
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
+      - run: npm audit --audit-level=high
       - run: npm run build
       - run: npm test
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: dist
 
@@ -68,9 +92,12 @@ jobs:
     needs: build
     if: always() && needs.build.result == 'success'
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

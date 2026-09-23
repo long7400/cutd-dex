@@ -1,5 +1,7 @@
 import { literalsMatching, enclosingObject } from './literal.mjs';
 
+const SAFE_NAME = /^[A-Za-z0-9_-]{1,80}$/;
+
 // Bóc dữ liệu tĩnh mà client web (m.cutd.site) nhúng trong bundle:
 //  - models:  [{key, affinity, sourceScale}]  danh sách model 3D + hệ
 //  - unitModel: {unit_hXXX: modelKey}          map unit → model (portrait)
@@ -22,14 +24,21 @@ export function extractClient(js) {
     literalsMatching(js, /\{ability_a[0-9a-z]{3}_unit_h[0-9a-z]{3}:`/).filter(o => o && typeof o === 'object'),
   );
 
+  // Chỉ giữ giá trị đúng dạng mong đợi: tên model/id dùng làm tên file + URL, màu là số 0–255.
+  const safe = v => typeof v === 'string' && SAFE_NAME.test(v);
+  const byte = v => (Number.isFinite(v) ? Math.max(0, Math.min(255, Math.round(v))) : 0);
+  const colors = elementColors && Object.fromEntries(Object.entries(elementColors)
+    .filter(([k, v]) => SAFE_NAME.test(k) && Array.isArray(v) && v.length === 3 && v.every(Array.isArray))
+    .map(([k, v]) => [k, v.map(rgb => [0, 1, 2].map(i => byte(rgb[i])))]));
   return {
-    models: models?.map(m => ({ key: m.key, affinity: m.affinity, scale: m.sourceScale })) ?? [],
-    unitModel: unitModel ?? {},
-    elementColors,
+    models: (models ?? []).filter(m => safe(m?.key) && safe(m?.affinity))
+      .map(m => ({ key: m.key, affinity: m.affinity, scale: Number.isFinite(m.sourceScale) ? m.sourceScale : 1 })),
+    unitModel: Object.fromEntries(Object.entries(unitModel ?? {}).filter(([k, v]) => safe(k) && safe(v))),
+    elementColors: colors && Object.keys(colors).length ? colors : null,
     i18n: i18n ?? {},
     abilityIcon: Object.fromEntries(Object.entries(abilityIcon ?? {})
       .map(([id, path]) => [id, String(path).split('/').pop()])
-      .filter(([, name]) => /^[\w-]+$/.test(name))),
+      .filter(([id, name]) => safe(id) && safe(name))),
   };
 }
 

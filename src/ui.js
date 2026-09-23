@@ -1,7 +1,8 @@
 import { html, num, pct, short } from './lib/html.js';
 import { db, ix, portrait, label, linkFor, elementName } from './db.js';
 
-const rgb = a => `rgb(${a.join(',')})`;
+const byte = v => (Number.isFinite(v) ? Math.max(0, Math.min(255, Math.round(v))) : 0);
+const rgb = a => `rgb(${[0, 1, 2].map(i => byte(a?.[i])).join(',')})`;
 export const TAGS = { pet: 'Pet', wave: 'Quái đợt', wild: 'Wild', trade: 'Chỉ có qua trade', 'trade-give': 'Đem trade được', summon: 'Triệu hồi' };
 
 export const img = (model, alt = '', cls = '', size = 64) =>

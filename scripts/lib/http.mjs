@@ -12,9 +12,14 @@ export class HttpError extends Error {
   }
 }
 
+export class TooLarge extends Error {
+  constructor(url, size, max) { super(`${url} quá lớn (${size} > ${max} byte)`); }
+}
+
 export const stats = { requests: 0, notModified: 0, bytes: 0, retries: 0 };
 
-export async function request(url, { validator, timeout = 30_000, retries = 3 } = {}) {
+// maxBytes: chặn server trả về dữ liệu khổng lồ (DoS bộ nhớ) — đọc theo luồng, vượt ngưỡng là huỷ.
+export async function request(url, { validator, timeout = 30_000, retries = 3, maxBytes = 8 * 1024 * 1024 } = {}) {
   for (let attempt = 0; ; attempt++) {
     try {
       const headers = { 'user-agent': UA };
@@ -31,7 +36,16 @@ export async function request(url, { validator, timeout = 30_000, retries = 3 } 
         err.retryAfter = Number(res.headers.get('retry-after')) || 0;
         throw err;
       }
-      const body = Buffer.from(await res.arrayBuffer());
+      const declared = Number(res.headers.get('content-length'));
+      if (declared > maxBytes) throw new TooLarge(url, declared, maxBytes);
+      const chunks = [];
+      let size = 0;
+      for await (const chunk of res.body) {
+        size += chunk.length;
+        if (size > maxBytes) throw new TooLarge(url, size, maxBytes);
+        chunks.push(chunk);
+      }
+      const body = Buffer.concat(chunks);
       stats.bytes += body.length;
       return {
         notModified: false,
@@ -44,7 +58,7 @@ export async function request(url, { validator, timeout = 30_000, retries = 3 } 
         },
       };
     } catch (e) {
-      const retryable = e instanceof HttpError ? e.retryable : true; // lỗi mạng/timeout → thử lại
+      const retryable = e instanceof HttpError ? e.retryable : !(e instanceof TooLarge); // lỗi mạng/timeout → thử lại
       if (!retryable || attempt >= retries) throw e;
       stats.retries++;
       const wait = e.retryAfter ? e.retryAfter * 1000 : 500 * 2 ** attempt + Math.random() * 250;

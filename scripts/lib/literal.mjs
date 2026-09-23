@@ -68,7 +68,9 @@ export function parseLiteral(src, start = 0) {
       ws();
       if (src[i] !== ':') fail('expected :');
       i++;
-      out[k] = value();
+      const v = value();
+      // Không để key đặc biệt đổi prototype của object kết quả.
+      if (k !== '__proto__' && k !== 'constructor' && k !== 'prototype') out[k] = v;
       ws();
       if (src[i] === ',') { i++; ws(); if (src[i] === '}') { i++; return out; } continue; }
       if (src[i] === '}') { i++; return out; }
