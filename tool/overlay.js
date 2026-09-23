@@ -116,6 +116,36 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const seen = new WeakSet();
 
   const acks = new Map();
+  let suspect = new Set();
+  const skillProbe = { fired: 0, selfHit: 0, selfDmg: 0, otherHit: 0, otherDmg: 0, samples: [] };
+  const cut = v => (typeof v === 'number' && Number.isFinite(v) ? v : typeof v === 'string' ? v.slice(0, 48) : undefined);
+  function sampleEffect(e) {
+    if (skillProbe.samples.length >= 40) return;
+    const out = {};
+    for (const field of ['kind', 'content_id', 'tick', 'entity_collection', 'entity_id', 'source_collection', 'source_id', 'target_collection', 'target_id', 'amount']) {
+      const v = cut(e[field]);
+      if (v !== undefined) out[field] = v;
+    }
+    skillProbe.samples.push(out);
+  }
+  function probeEffects(list) {
+    if (!Array.isArray(list) || !suspect.size) return;
+    const fired = new Set();
+    for (const e of list) {
+      if (e?.kind !== 'ability_triggered' || !suspect.has(e.content_id)) continue;
+      skillProbe.fired++;
+      fired.add(`${e.tick}:${e.source_id ?? e.entity_id}`);
+      sampleEffect(e);
+    }
+    if (!fired.size) return;
+    for (const e of list) {
+      if ((e?.kind !== 'unit_damaged' && e?.kind !== 'damage') || !fired.has(`${e.tick}:${e.source_id}`)) continue;
+      const amount = Number.isFinite(e.amount) ? e.amount : 0;
+      if (e.target_id === e.source_id && e.target_collection === e.source_collection) { skillProbe.selfHit++; skillProbe.selfDmg += amount; }
+      else { skillProbe.otherHit++; skillProbe.otherDmg += amount; }
+      sampleEffect(e);
+    }
+  }
   let dead = false;
   const diag = { start: performance.now(), hello: null, firstMsg: null, keyframe: null, firstWild: null, firstUnit: null, longTaskMs: 0, longTasks: 0 };
   const now = () => performance.now();
@@ -136,6 +166,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     }
     if (!isGameMessage(msg)) return false;
     diag.firstMsg ??= now();
+    if (msg.type !== 'room_summary') { try { probeEffects(msg.effects); } catch { } }
     if (msg.type === 'base_keyframe') { diag.keyframe ??= now(); autoHook(); }
     if (applyMessage(state, msg)) {
       if (state.wilds.size) diag.firstWild ??= now();
@@ -652,8 +683,13 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       p.found ? h('div', { class: 'kv' }, h('span', { text: 'Hàm có sẵn' }), h('b', { text: p.fns.join(', ') || 'không có' })) : null,
       p.found ? h('div', { class: 'kv' }, h('span', { text: 'Entity trong game' }), h('b', { text: `${p.entities} · ${p.keys.join(' ')}` })) : null,
       p.found && p.toolWild ? h('div', { class: 'kv' }, h('span', { text: `Pet ${p.toolWild}` }), h('b', { text: p.toolWildFound ? 'khớp' : `không khớp (game: ${p.sampleWild ?? '—'})` })) : null,
+      h('div', { class: 'sec', text: 'Kiểm kỹ năng chí mạng / choáng' }),
+      h('div', { class: 'kv', title: 'Đánh 1 đợt có con Chí mạng / Choáng (Hitmonlee, Charmeleon, Pichu…). Đếm từ sự kiện trận server gửi: mỗi lần kỹ năng kích hoạt, sát thương đi vào chính con pet hay vào quái' },
+        h('span', { text: 'Kích hoạt' }), h('b', { text: skillProbe.fired ? `${fmt(skillProbe.fired)} lần` : 'chưa thấy' })),
+      skillProbe.fired ? h('div', { class: 'kv hl' }, h('span', { text: 'Sát thương cùng lúc' }),
+        h('b', { text: `tự trúng ${fmt(skillProbe.selfHit)} (${short(skillProbe.selfDmg)}) · vào quái ${fmt(skillProbe.otherHit)} (${short(skillProbe.otherDmg)})` })) : null,
       h('div', { class: 'bar-row' }, h('button', { class: 'chip', text: 'Chép kết quả kiểm tra', onClick: e => {
-        navigator.clipboard?.writeText(JSON.stringify({ v: VERSION, ...p }, null, 1)).then(() => { e.target.textContent = 'Đã chép'; }, () => { e.target.textContent = 'Không chép được'; });
+        navigator.clipboard?.writeText(JSON.stringify({ v: VERSION, ...p, skillProbe: { ...skillProbe, suspect: suspect.size } }, null, 1)).then(() => { e.target.textContent = 'Đã chép'; }, () => { e.target.textContent = 'Không chép được'; });
       } })),
     ];
     if (!r) return [empty('Bấm bookmark ở SẢNH trước khi vào phòng, tool sẽ đo từ lúc vào trận tới lúc có pet.'), probeRows];
@@ -859,6 +895,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   getJSON('/catalog', 32 * 1024 * 1024)
     .then(raw => {
       gameCat = buildGameCatalog(raw);
+      suspect = new Set((raw.catalog?.abilities ?? []).filter(a => a?.trigger?.kind === 'on_hit' && a.targeting?.kind === 'self'
+        && (a.effects ?? []).some(e => e?.kind === 'damage' && !e.target && !e.targeting)).map(a => a.id).filter(id => typeof id === 'string'));
       try { live = analyzeCatalog(raw.catalog); } catch { live = null; }
       liveHash = typeof raw.catalog_hash === 'string' && /^[0-9a-f]{12,64}$/.test(raw.catalog_hash) ? raw.catalog_hash : null;
       gameCatReady = true; mergeGameCatalog();

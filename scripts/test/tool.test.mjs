@@ -552,6 +552,33 @@ test('bookmarklet: Xếp đội — 1 lệnh / lần, chờ game xác nhận, b�
   w.__cutdHelper.destroy();
 });
 
+test('bookmarklet: Kiểm kỹ năng — đếm sát thương khi Chí mạng kích hoạt vào chính con pet hay vào quái (chỉ đọc)', async t => {
+  const { w, log, code, FakeWS } = setupDom();
+  t.after(() => w.close());
+  const crit = readJSON(PATHS.catalog).catalog.abilities.find(a => a.trigger?.kind === 'on_hit' && a.targeting?.kind === 'self' && a.effects.some(e => e.kind === 'damage')).id;
+  w.eval(code);
+  const ws = new FakeWS();
+  ws.addEventListener('message', e => e.data);
+  const emit = m => ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
+  emit(summary);
+  await tick(0);
+  emit(keyframe([{ id: 1, stage_id: scenario.c, owner_id: 11, health: 5, max_health: 10, active: true }]));
+  await tick(300);
+  emit({ type: 'base_delta', tick: 120, from_tick: 100, base: { base_id: 7, lives: 30, gold: 1, lumber: 0 }, unit_ids_removed: [], creep_ids_removed: [], wild_ids_removed: [], effects: [
+    { kind: 'ability_triggered', content_id: crit, tick: 120, source_collection: 'unit', source_id: 1, target_collection: 'creep', target_id: 9 },
+    { kind: 'unit_damaged', tick: 120, source_collection: 'unit', source_id: 1, target_collection: 'unit', target_id: 1, amount: 400 },
+    { kind: 'damage', tick: 120, source_collection: 'unit', source_id: 1, target_collection: 'creep', target_id: 9, amount: 100 },
+    { kind: 'damage', tick: 121, source_collection: 'unit', source_id: 2, target_collection: 'creep', target_id: 9, amount: 999 },
+  ] });
+  await tick(1200);
+  const root = log.roots[0];
+  [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith('Đo tải')).click();
+  const text = root.querySelector('.panel').textContent;
+  assert.match(text, /Kích hoạt1 lần/);
+  assert.match(text, /tự trúng 1 \(400\) · vào quái 1 \(100\)/);
+  assert.equal(log.sent, 0);
+});
+
 test('bookmarklet: bản web — tắt tool trước khi vào trận thì gỡ bẫy', t => {
   const { w, code } = setupDom('https://m.cutd.site/');
   t.after(() => w.close());

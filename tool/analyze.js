@@ -92,7 +92,8 @@ export function analyzeCatalog(catalog) {
   const inPool = new Set();
   const roots = new Set((catalog.wild?.pools ?? []).flatMap(p => (p.entries ?? []).map(e => e.stage_id)).filter(id => out.has(id)));
   for (const s of species) if (s.catchable && out.has(s.id)) roots.add(s.id);
-  const queue = [...roots];
+  const traded = (catalog.trade?.slots ?? []).flatMap(s => (s?.recipes ?? []).map(r => r?.offered_stage_id)).filter(id => out.has(id));
+  const queue = [...roots, ...traded];
   while (queue.length) {
     const id = queue.pop();
     if (inPool.has(id)) continue;
