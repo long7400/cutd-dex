@@ -282,43 +282,57 @@ test('bookmarklet: nút Bắt/Tiến hóa/Trade gọi đúng hàm game, chỉ kh
   assert.equal(log.sent, 0, 'không tự gửi gì qua socket');
 });
 
-test('bookmarklet: camera bằng chuột = giữ W/A/S/D trên canvas, luôn nhả phím', async t => {
+test('bookmarklet: giữ chuột rồi kéo = kéo bản đồ (giữ W/A/S/D), không làm game hiểu nhầm là bấm', async t => {
   const { w, log, code } = setupDom();
   t.after(() => w.close());
-  w.document.hasFocus = () => true;
   const canvas = w.document.getElementById('GameCanvas');
-  const keys = new Set(), seen = [];
+  const keys = new Set(), seen = [], gameGot = [];
   canvas.addEventListener('keydown', e => { keys.add(e.code); seen.push(e.code); });
   canvas.addEventListener('keyup', e => keys.delete(e.code));
+  canvas.addEventListener('mouseup', () => gameGot.push('mouseup'));
+  canvas.addEventListener('click', () => gameGot.push('click'));
   w.eval(code);
-  const move = (x, y) => w.document.dispatchEvent(new w.MouseEvent('pointermove', { clientX: x, clientY: y, bubbles: true }));
-  const mouse = (type, x, y) => w.document.dispatchEvent(new w.MouseEvent(type, { clientX: x, clientY: y, button: 1, bubbles: true, cancelable: true }));
+  const fire = (type, x, y, button = 0, buttons = button === 0 ? 1 : 4) =>
+    canvas.dispatchEvent(new w.MouseEvent(type, { clientX: x, clientY: y, button, buttons: type === 'mouseup' || type === 'click' ? 0 : buttons, bubbles: true, cancelable: true }));
 
-  // Mép phải → D; mép trên-trái → W + A; về giữa → nhả hết.
-  move(w.innerWidth - 5, 400);
-  assert.deepEqual([...keys], ['KeyD']);
-  move(3, 3);
-  assert.deepEqual([...keys].sort(), ['KeyA', 'KeyW']);
-  move(500, 400);
+  // Bấm thường (không kéo) → game nhận đủ, không phím nào bị giữ.
+  fire('mousedown', 500, 400); fire('mouseup', 500, 400); fire('click', 500, 400);
+  assert.deepEqual(gameGot, ['mouseup', 'click']);
   assert.equal(keys.size, 0);
 
-  // Giữ chuột giữa + kéo lên → W; thả → nhả.
-  mouse('mousedown', 500, 400);
-  move(500, 300);
+  // Giữ trái kéo sang trái → giữ D (bản đồ trôi theo tay); kéo lên → giữ S.
+  gameGot.length = 0;
+  fire('mousedown', 500, 400);
+  fire('mousemove', 495, 400);
+  assert.equal(keys.size, 0, 'chưa quá 8px thì chưa kéo');
+  fire('mousemove', 480, 400);
+  assert.deepEqual([...keys], ['KeyD']);
+  fire('mousemove', 480, 370);
+  assert.deepEqual([...keys], ['KeyS']);
+  await tick(150);
+  assert.equal(keys.size, 0, 'dừng tay → dừng camera');
+  fire('mousemove', 520, 370);
+  assert.deepEqual([...keys], ['KeyA']);
+  fire('mouseup', 520, 370); fire('click', 520, 370);
+  assert.equal(keys.size, 0, 'thả chuột → nhả phím');
+  assert.deepEqual(gameGot, [], 'kéo xong thì game không nhận cú thả (không bị hiểu là chạm sàn)');
+
+  // Chuột giữa cũng kéo được.
+  fire('mousedown', 500, 400, 1);
+  fire('mousemove', 500, 430, 1);
   assert.deepEqual([...keys], ['KeyW']);
-  mouse('mouseup', 500, 300);
+  fire('mouseup', 500, 430, 1);
   assert.equal(keys.size, 0);
 
-  // Tắt "Mép" → đưa chuột ra mép không làm gì.
-  const root = log.roots[0];
-  [...root.querySelectorAll('button')].find(b => b.textContent === 'Mép').click();
-  move(w.innerWidth - 5, 400);
+  // Chuột phải không đụng tới.
+  fire('mousedown', 500, 400, 2, 2); fire('mousemove', 560, 400, 2, 2);
   assert.equal(keys.size, 0);
+  fire('mouseup', 560, 400, 2);
 
-  // Đang giữ phím mà tắt tool → phải nhả.
-  mouse('mousedown', 500, 400);
-  move(620, 400);
-  assert.deepEqual([...keys], ['KeyD']);
+  // Đang kéo mà tắt tool → nhả hết phím.
+  fire('mousedown', 500, 400);
+  fire('mousemove', 540, 400);
+  assert.deepEqual([...keys], ['KeyA']);
   w.__cutdHelper.destroy();
   assert.equal(keys.size, 0, 'tắt tool phải nhả mọi phím');
   assert.ok(seen.every(k => ['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(k)), 'chỉ được giữ phím camera');
