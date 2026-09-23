@@ -14,7 +14,7 @@ const CAM_FILE = 'overlay.js';
 const CAM_CODES = ['KeyW', 'KeyA', 'KeyS', 'KeyD'];
 const PRIMARY_SELECTOR = 'button.authored-node[data-node="Primary"]';
 const GAME_OBJECTS = new Set(['session', 'interaction', 'store', 'cc']);
-const ALLOWED = { session: new Set(['catchWild', 'evolveCreature', 'tradePet']), interaction: new Set(['selectEntity']) };
+const ALLOWED = { session: new Set(['catchWild', 'evolveCreature', 'tradePet', 'moveCreature']), interaction: new Set(['selectEntity']) };
 const BANNED_IDENTIFIERS = new Set(['eval', 'Function', 'Reflect', 'XMLHttpRequest', 'importScripts', 'Worker', 'SharedWorker',
   'localStorage', 'sessionStorage', 'indexedDB', 'MouseEvent', 'PointerEvent', 'CustomEvent', 'Event', 'TouchEvent', 'Proxy']);
 const BANNED_PROPERTIES = new Set(['innerHTML', 'outerHTML', 'insertAdjacentHTML', 'write', 'writeln', 'cookie', 'sendBeacon',

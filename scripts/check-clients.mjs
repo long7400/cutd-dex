@@ -13,6 +13,8 @@ const SIGNATURES = {
     ['session.catchWild', /catchWild\(\w\)\{return this\.dispatch\(/],
     ['session.evolveCreature', /evolveCreature\(\w,\w\)\{/],
     ['session.tradePet', /tradePet\(\w,\w\)\{return this\.dispatch\(/],
+    ['session.moveCreature (Xếp đội)', /moveCreature\(\w,\w\)\{return this\.dispatch\(\{type:`move_unit`/],
+    ['store.ground (khung sân cho Xếp đội)', /get ground\(\)\{return this\._ground\}/],
     ['interaction.selectEntity', /selectEntity\(\w,\w\)\{\w\.entities\.has\(\w\)/],
     ['id entity u12/w3/t1', /\{Unit:`u`,Creep:`c`,Wild:`w`,TradeOffer:`t`/],
     ['nút HTML data-node (phím F)', /dataset\.node=\w\.name/],
@@ -23,6 +25,7 @@ const SIGNATURES = {
     ['session.catchWild', /catchWild/],
     ['session.evolveCreature', /evolveCreature/],
     ['session.tradePet', /tradePet/],
+    ['session.moveCreature (Xếp đội)', /moveCreature/],
     ['interaction.selectEntity', /selectEntity/],
   ],
 };

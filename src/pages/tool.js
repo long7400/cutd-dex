@@ -65,6 +65,7 @@ export default {
 
           <li><b>Wild:</b> toàn bộ sinh vật hoang dã trên bãi — giá bắt (đủ tiền không), tỉ lệ bắt, DPS tối đa cả cây, cây nào đang có trade cần.</li>
           <li><b>Đội hình:</b> lính của mày — máu, giá bán, các nhánh tiến hóa kèm giá, con nào đem trade được ngay.</li>
+          <li><b>Xếp đội</b> (tab Đội, lúc chuẩn bị): dàn đội từ phía quái vào — <b>TANK</b> hàng đầu → <b>CẬN</b> (đấu sĩ / phép tầm ngắn) → <b>BUFF</b> (hào quang / hồi máu) → <b>XA</b> (tầm &gt; 300) cuối; con mạnh nhất mỗi hàng đứng giữa đường quái. Chống spam: gửi từng lệnh một, chờ game xác nhận rồi mới gửi tiếp (~0,3 giây / con), con đã đúng chỗ thì bỏ qua, game từ chối là dừng, xếp xong khoá 4 giây, bấm lại giữa chừng để dừng.</li>
           <li><b>Đợt tới:</b> quái sắp tới căn cứ — tổng máu, số mạng mất nếu lọt, loại đòn khắc chế giáp của nó.</li>
           <li><b>Phòng:</b> mạng, vàng, tinh thể, số quái của từng nhà.</li>
           <li><b>Đo tải:</b> bấm bookmark ở sảnh rồi mới vào phòng — tool đo vào trận bao lâu mới có pet và chậm ở khâu nào (server, tải file hay máy), có nút chép báo cáo.</li>

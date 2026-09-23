@@ -105,6 +105,20 @@ export function tradePet(g, ent, offerSlot) {
   return null;
 }
 
+export function moveCreature(g, ent, pos) {
+  if (typeof g.session.moveCreature !== 'function') return { fail: 'fn' };
+  const seq = g.session.moveCreature(ent, { x: pos.x, y: pos.y });
+  return Number.isInteger(seq) ? { seq } : { fail: 'rule' };
+}
+
+export function groundOf(g) {
+  const gr = g?.store?.ground;
+  const a = gr?.arena;
+  if (!a || ![a.originX, a.originY, a.width, a.height].every(Number.isFinite)) return null;
+  const path = Array.isArray(gr.path) && gr.path.length >= 2 && gr.path.every(p => Number.isFinite(p?.x) && Number.isFinite(p?.y)) ? gr.path.map(p => ({ x: p.x, y: p.y })) : null;
+  return { arena: { originX: a.originX, originY: a.originY, width: a.width, height: a.height }, path };
+}
+
 export const clientKind = () => (window.cc?.director ? 'cocos' : document.getElementById('GameCanvas') ? 'cocos-loading' : 'web');
 
 export function probe(toolWildKey) {
@@ -113,7 +127,7 @@ export function probe(toolWildKey) {
   if (!g) return out;
   out.found = true;
   out.fns = [typeof g.session.catchWild === 'function' && 'catchWild', typeof g.session.evolveCreature === 'function' && 'evolveCreature',
-    typeof g.session.tradePet === 'function' && 'tradePet'].filter(Boolean);
+    typeof g.session.tradePet === 'function' && 'tradePet', typeof g.session.moveCreature === 'function' && 'moveCreature'].filter(Boolean);
   let i = 0;
   for (const [id, ent] of g.store.entities) {
     out.entities++;

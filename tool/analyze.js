@@ -67,7 +67,7 @@ export function analyzeCatalog(catalog) {
       traps: {}, unlocks: [], peak: null, power: 0, stageTier: null, path: [], kit: [],
       stats: {
         hp: s.max_health ?? 0, dps: round(((s.attack_damage ?? 0) * 32) / Math.max(1, s.attack_cooldown_ticks ?? 32), 1),
-        a: s.attack_type ?? 'normal', at: s.armor_type ?? 'normal', ar: s.armor || undefined, ms: s.move_speed || undefined,
+        a: s.attack_type ?? 'normal', at: s.armor_type ?? 'normal', ar: s.armor || undefined, ms: s.move_speed || undefined, rg: s.attack_range || undefined,
         lk: s.leak_free ? undefined : s.leak_lives || undefined, L: s.legendary ? 1 : undefined, k: s.catchable ? 1 : undefined,
         f: find(s.id), el: affinity.get(find(s.id)) ?? undefined,
       },

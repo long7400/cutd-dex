@@ -152,3 +152,43 @@ export function bestAttacks(db, armorType) {
 export function nextWaveForBase(s) {
   return (s.summary?.nextWave ?? []).filter(g => g.target == null || g.target === s.baseId);
 }
+
+const ROW_AT = [-240, -120, 0, 140];
+
+export function formationRow(u) {
+  if (!u) return 1;
+  const far = (u.rg ?? 0) > 300;
+  if ((u.ar ?? 0) >= 15 || (u.r ?? []).includes('tank') || (!far && (u.kt ? u.kt[0] === 'tank' : (u.hp ?? 0) / Math.max(1, u.ed ?? u.dps ?? 0) >= 18))) return 0;
+  if ((u.r ?? []).some(r => r === 'aura' || r === 'sustain')) return 2;
+  return far ? 3 : 1;
+}
+
+export function formation(members, ground, { gap = 80, lineGap = 60, margin = 48 } = {}) {
+  const a = ground?.arena;
+  if (!a || !(a.width > 0) || !(a.height > 0)) return [];
+  let dx = 0, dy = 1;
+  const p = ground.path;
+  if (p?.length >= 2) {
+    const len = Math.hypot(p[1].x - p[0].x, p[1].y - p[0].y);
+    if (len > 0) { dx = (p[1].x - p[0].x) / len; dy = (p[1].y - p[0].y) / len; }
+  }
+  const cx = a.originX + a.width / 2, cy = a.originY + a.height / 2;
+  const across = Math.abs(dy) * a.width + Math.abs(dx) * a.height - 2 * margin;
+  const perLine = Math.max(1, Math.floor(across / gap) + 1);
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  const out = [];
+  for (let row = 0; row < ROW_AT.length; row++) {
+    const list = members.filter(m => m.row === row).sort((x, y) => y.score - x.score);
+    list.forEach((m, i) => {
+      const idx = i % perLine;
+      const slot = idx % 2 ? (idx + 1) / 2 : -idx / 2;
+      const along = ROW_AT[row] + Math.floor(i / perLine) * lineGap;
+      out.push({
+        key: m.key, row,
+        x: Math.round(clamp(cx + dx * along - dy * slot * gap, a.originX + margin, a.originX + a.width - margin)),
+        y: Math.round(clamp(cy + dy * along + dx * slot * gap, a.originY + margin, a.originY + a.height - margin)),
+      });
+    });
+  }
+  return out;
+}

@@ -156,7 +156,7 @@ export function build({ raw, client, changelog = [] }) {
       groundOnly: !!s.attack_ground_only,
       splash: s.attack_splash ?? null,
       auras: an.auras, eff: an.eff, pctHit: an.pct || null, roles: an.roles, unsure: an.unsure,
-      peak: an.peak, power: an.power, unlocks: an.unlocks, stageTier: an.stageTier, path: an.path,
+      peak: an.peak, power: an.power, unlocks: an.unlocks, stageTier: an.stageTier, path: an.path, kit: an.kit,
       bounce: s.attack_bounce ?? null,
       armor: s.armor ?? 0,
       armorType: s.armor_type ?? 'normal',
@@ -283,12 +283,12 @@ export function buildOverlay(db) {
   for (const x of Object.values(db.units)) {
     u[x.id] = {
       n: x.name, l: x.level ?? undefined, m: x.model, el: x.el, hp: x.hp, dps: x.dps, a: x.atk, at: x.armorType,
-      ar: x.armor || undefined, c: x.catch || undefined, b: x.book || undefined, L: x.legendary ? 1 : undefined,
+      ar: x.armor || undefined, rg: x.range || undefined, c: x.catch || undefined, b: x.book || undefined, L: x.legendary ? 1 : undefined,
       k: x.catchable ? 1 : undefined, lk: x.leak || undefined, f: x.family, p: x.pet ? slugOf.get(x.pet) : undefined,
       s: x.skills?.length ? x.skills.map(id => db.abilities[id]?.name).filter(Boolean) : undefined,
       e: x.evo?.length ? x.evo.filter(e => Number.isFinite(e.cost) && e.cost >= 0).map(e => [e.to, e.cost]) : undefined,
       ...overlayFields({
-        eff: x.eff, roles: x.roles ?? [], peak: x.peak ?? null, power: x.power ?? 0, unlocks: x.unlocks ?? [], stageTier: x.stageTier, path: x.path ?? [],
+        eff: x.eff, roles: x.roles ?? [], peak: x.peak ?? null, power: x.power ?? 0, unlocks: x.unlocks ?? [], stageTier: x.stageTier, path: x.path ?? [], kit: x.kit ?? [],
         traps: Object.fromEntries((x.evo ?? []).filter(e => e.trap).map(e => [e.to, e.trap])),
       }),
     };

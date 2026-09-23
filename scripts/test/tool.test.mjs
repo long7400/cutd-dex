@@ -1,7 +1,7 @@
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM, VirtualConsole } from 'jsdom';
-import { createState, applyMessage, tradeOptions, evolvePath, nextWaveForBase, myUnits } from '../../tool/logic.js';
+import { createState, applyMessage, tradeOptions, evolvePath, nextWaveForBase, myUnits, formation, formationRow } from '../../tool/logic.js';
 import { buildTool } from '../build-tool.mjs';
 import { build, buildOverlay, PATHS } from '../build.mjs';
 import { readJSON } from '../lib/fsx.mjs';
@@ -64,6 +64,31 @@ test('logic: dữ liệu rác không làm vỡ', () => {
   for (const m of [null, 1, 'x', [], { type: 'base_keyframe' }, { type: 'base_keyframe', base: 5 }, { type: 'room_summary', bases: 'x' }]) {
     assert.doesNotThrow(() => applyMessage(s, m));
   }
+});
+
+test('logic: xếp đội — TANK gần phía quái nhất, XA ở cuối, mạnh nhất ở giữa, luôn trong sân', () => {
+  const arena = { originX: 1000, originY: 2384, width: 1216, height: 1312 };
+  const down = { arena, path: [{ x: 1608, y: 2192 }, { x: 1608, y: 3552 }] };
+  const members = [
+    { key: 'u1', row: 3, score: 5 }, { key: 'u2', row: 0, score: 900 }, { key: 'u3', row: 0, score: 100 },
+    { key: 'u4', row: 1, score: 50 }, { key: 'u5', row: 2, score: 1 }, { key: 'u6', row: 0, score: 500 },
+  ];
+  const at = f => Object.fromEntries(f.map(m => [m.key, m]));
+  const p = at(formation(members, down));
+  assert.ok(p.u2.y < p.u4.y && p.u4.y < p.u5.y && p.u5.y < p.u1.y, 'từ phía quái vào: TANK → CẬN → BUFF → XA');
+  assert.equal(p.u2.x, 1608, 'tank máu nhất đứng giữa đường quái');
+  assert.equal(p.u2.y, p.u3.y);
+  assert.ok(p.u6.x !== p.u3.x && Math.abs(p.u6.x - 1608) === 80, 'tank thứ 2 đứng cạnh');
+  for (const m of Object.values(p)) assert.ok(m.x >= arena.originX && m.x <= arena.originX + arena.width && m.y >= arena.originY && m.y <= arena.originY + arena.height);
+  const up = at(formation(members, { arena, path: [...down.path].reverse() }));
+  assert.ok(up.u2.y > up.u1.y, 'quái đi ngược → đội quay theo');
+  const many = formation(Array.from({ length: 40 }, (_, i) => ({ key: `u${i}`, row: 0, score: i })), down);
+  assert.equal(new Set(many.map(m => `${m.x},${m.y}`)).size, 40, 'đông quá thì xuống hàng, không chồng');
+  assert.deepEqual(formation(members, null), []);
+  assert.equal(formationRow({ hp: 5000, ed: 100 }), 0);
+  assert.equal(formationRow({ hp: 100, ed: 50, r: ['aura'] }), 2);
+  assert.equal(formationRow({ hp: 100, ed: 50, rg: 600 }), 3);
+  assert.equal(formationRow({ hp: 100, ed: 50, rg: 90 }), 1);
 });
 
 function setupDom(url = 'https://cutd.site/?room=TEST') {
@@ -462,6 +487,67 @@ test('bookmarklet: bản web — dán từ sảnh → móc session/interaction l
   await tick(1500);
   assert.equal(w.document.querySelectorAll('iframe').length, 0, 'đã móc từ sảnh → không mở khung');
   assert.equal(log.sent, 0);
+});
+
+test('bookmarklet: Xếp đội — 1 lệnh / lần, chờ game xác nhận, bỏ con đã đúng chỗ, từ chối thì dừng, chỉ lúc chuẩn bị', async t => {
+  const { w, log, code, FakeWS } = setupDom('https://m.cutd.site/?room=805A6070');
+  t.after(() => w.close());
+  w.document.getElementById('GameCanvas').remove();
+  w.eval(code);
+  const byRow = r => Object.keys(overlay.u).find(id => overlay.u[id].l && formationRow(overlay.u[id]) === r);
+  const [tank, melee, ranged] = [byRow(0), byRow(1), byRow(3)];
+  w.eval(`
+    window.__moves = [];
+    window.Session = class { constructor(store) { this.nextSequence = 1; this.store = store; }
+      dispatch(c) { const s = this.nextSequence; this.nextSequence += 1; window.__moves.push(c); return s; }
+      moveCreature(e, to) { return this.dispatch(['move', e.id, to.x, to.y]); }
+      catchWild() {} evolveCreature() {} tradePet() {} }
+    window.Interaction = class { constructor() { this._selectedEntityId = null; } selectEntity() {} tapGround() {} clearSelection() {} }
+    const arena = { originX: 0, originY: 384, width: 1216, height: 1312 };
+    const entities = new Map([
+      ['u1', { id: 'u1', kind: 'creature', wireId: 1, contentId: ${JSON.stringify(ranged)}, pos: { x: 608, y: 1040 } }],
+      ['u2', { id: 'u2', kind: 'creature', wireId: 2, contentId: ${JSON.stringify(tank)}, pos: { x: 608, y: 1040 } }],
+      ['u3', { id: 'u3', kind: 'creature', wireId: 3, contentId: ${JSON.stringify(melee)}, pos: { x: 608, y: 920 } }],
+    ]);
+    window.__session = new Session({ entities, ground: { arena, path: [{ x: 608, y: 192 }, { x: 608, y: 1552 }] } });
+    window.__interaction = new Interaction();
+  `);
+  const ws = new FakeWS();
+  ws.addEventListener('message', e => e.data);
+  const emit = m => ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
+  emit(summary);
+  await tick(0);
+  emit(keyframe([1, 2, 3].map(id => ({ id, stage_id: w.__session.store.entities.get(`u${id}`).contentId, owner_id: 11, health: 10, max_health: 10, active: true }))));
+  await tick(1200);
+  const root = log.roots[0];
+  [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith('Đội')).click();
+  const btn = () => [...root.querySelectorAll('.bar-row button')].find(b => /Xếp đội|Dừng/.test(b.textContent));
+  assert.ok(btn() && !btn().disabled);
+  assert.match(root.querySelector('.bar-row').textContent, /TANK 1.*CẬN 1.*XA 1/);
+  btn().click();
+  await tick(50);
+  assert.equal(w.__moves.length, 0, 'click do script → bỏ qua');
+  trustedClick(w, btn());
+  await tick(50);
+  assert.equal(w.__moves.length, 1, 'chỉ gửi 1 lệnh rồi chờ xác nhận');
+  assert.deepEqual([...w.__moves[0]], ['move', 'u2', 608, 800], 'tank lên hàng đầu giữa đường quái');
+  assert.match(btn().textContent, /Dừng/);
+  await tick(500);
+  assert.equal(w.__moves.length, 1, 'chưa có xác nhận → không gửi tiếp');
+  emit({ type: 'command_ack', sequence: 1, accepted: true, tick: 101 });
+  await tick(450);
+  assert.equal(w.__moves.length, 2, 'u3 đã đúng chỗ → bỏ, sang u1');
+  assert.deepEqual([...w.__moves[1]].slice(0, 2), ['move', 'u1']);
+  assert.equal(w.__moves[1][3], 1180, 'tay dài ở cuối');
+  emit({ type: 'command_ack', sequence: 2, accepted: false, reason: 'orders_closed', tick: 102 });
+  await tick(200);
+  assert.match(root.querySelector('.toast').textContent, /orders closed/);
+  assert.ok(btn().disabled, 'vừa xếp → khoá vài giây chống spam');
+  assert.equal(log.sent, 0, 'tool không tự gửi socket');
+  emit({ ...summary, phase: 'wave' });
+  await tick(4200);
+  assert.ok(btn().disabled && /chuẩn bị/.test(btn().title), 'trong đợt → khoá');
+  w.__cutdHelper.destroy();
 });
 
 test('bookmarklet: bản web — tắt tool trước khi vào trận thì gỡ bẫy', t => {

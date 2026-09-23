@@ -1,9 +1,9 @@
 import {
   createState, applyMessage, isGameMessage, myUnits, tradeOptions, offersForFamily,
-  bestAttacks, nextWaveForBase, buildGameCatalog,
+  bestAttacks, nextWaveForBase, buildGameCatalog, formation, formationRow,
 } from './logic.js';
 import * as web from './web-input.js';
-import { findGame, findEntity, selectEntity, catchWild, evolveCreature, tradePet, probe, clientKind, armWebCapture, disarmWebCapture, webCaptured, webTouched, forgetWebCapture } from './game-bridge.js';
+import { findGame, findEntity, selectEntity, catchWild, evolveCreature, tradePet, moveCreature, groundOf, probe, clientKind, armWebCapture, disarmWebCapture, webCaptured, webTouched, forgetWebCapture } from './game-bridge.js';
 import { realm, gameDoc } from './realm.js';
 import { analyzeCatalog, overlayFields, powerTier } from './analyze.js';
 
@@ -115,6 +115,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   let savedDesc = null, patchedWin = null;
   const seen = new WeakSet();
 
+  const acks = new Map();
   const diag = { start: performance.now(), hello: null, firstMsg: null, keyframe: null, firstWild: null, firstUnit: null, longTaskMs: 0, longTasks: 0 };
   const now = () => performance.now();
 
@@ -125,6 +126,11 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     if (msg?.type === 'server_hello') {
       diag.hello ??= now();
       if (Number.isInteger(msg.base_id)) ownBase = msg.base_id;
+      return true;
+    }
+    if (msg?.type === 'command_ack' && Number.isInteger(msg.sequence)) {
+      acks.set(msg.sequence, { ok: msg.accepted === true, reason: typeof msg.reason === 'string' ? msg.reason.slice(0, 80) : '' });
+      if (acks.size > 64) acks.delete(acks.keys().next().value);
       return true;
     }
     if (!isGameMessage(msg)) return false;
@@ -264,6 +270,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     rule: 'Không hợp lệ (sai nhánh / sai slot / con đã đổi / chưa đủ vàng / đang trong đợt) — thử lại sau khi panel cập nhật.',
     data: 'Chưa tải xong dữ liệu của game — đợi 1–2 giây.',
     other: 'Đang xem căn cứ của người khác — về nhà mình để thao tác.',
+    wave: 'Chỉ xếp được lúc chuẩn bị (game khoá lệnh trong đợt).',
     hook: 'Bản web chưa móc được hàm game — tool tự móc sau vài giây trong trận (hoặc bấm "Móc").',
   };
   const isWeb = () => clientKind() === 'web';
@@ -316,6 +323,79 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       onClick: e => runAction(e, kind, key, arg, expect),
     });
   };
+
+  const ROWS = [['TANK', 'k-tank', 'Hàng đầu: máu / giáp dày'], ['CẬN', 'k-atk', 'Hàng 2: đấu sĩ cận chiến / phép tầm ngắn'], ['BUFF', 'k-buff', 'Hàng 3: hào quang / hồi máu'], ['XA', 'k-cc', 'Hàng cuối: tay dài (tầm > 300)']];
+  const MOVE_GAP = 300, ACK_WAIT = 1500, ARRANGE_COOLDOWN = 4000, IN_PLACE = 24;
+  let arranging = null, arrangeReady = 0;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  async function waitAck(seq) {
+    for (let t = 0; t < ACK_WAIT; t += 50) {
+      if (acks.has(seq)) return acks.get(seq);
+      await wait(50);
+    }
+    return null;
+  }
+  function arrangePlan(g) {
+    const ground = groundOf(g);
+    if (!ground) return null;
+    const members = myUnits(state).filter(u => u.active).map(u => {
+      const d = U(u.stage);
+      const row = formationRow(d);
+      return { key: `u${u.id}`, stage: u.stage, row, score: row === 0 ? (d?.hp ?? 0) : (d?.ed ?? d?.dps ?? 0) };
+    });
+    return formation(members, ground).map(m => ({ ...m, stage: members.find(x => x.key === m.key).stage }));
+  }
+  async function arrange(e) {
+    e.stopPropagation();
+    e.currentTarget.blur();
+    if (!realClick(e)) return;
+    if (arranging) { arranging.stop = true; return; }
+    if (performance.now() < arrangeReady) return;
+    let fail = blockReason();
+    const g = fail ? null : findGame();
+    if (!fail && !g) fail = 'game';
+    if (!fail && state.summary?.phase !== 'planning') fail = 'wave';
+    const plan = fail ? null : arrangePlan(g);
+    if (!fail && !plan) fail = 'fn';
+    toast = fail ? FAIL[fail] : '';
+    if (fail) { dirty = true; render(true); return; }
+    const run = arranging = { done: 0, n: plan.length, stop: false };
+    dirty = true; render(true);
+    for (const m of plan) {
+      if (run.stop || state.summary?.phase !== 'planning' || findGame() !== g) break;
+      const found = findEntity(g, m.key);
+      if (!found || found.ent.contentId !== m.stage) { run.n--; continue; }
+      const pos = found.ent.pos;
+      if (pos && Math.hypot(pos.x - m.x, pos.y - m.y) <= IN_PLACE) { run.n--; continue; }
+      const r = moveCreature(g, found.ent, m);
+      if (r.fail) { toast = FAIL[r.fail]; break; }
+      const ack = await waitAck(r.seq);
+      if (!ack) { toast = 'Game chưa xác nhận lệnh — dừng xếp để tránh spam.'; break; }
+      if (!ack.ok) { toast = `Game từ chối: ${ack.reason.replace(/_/g, ' ') || 'không rõ'} — đã dừng.`; break; }
+      run.done++;
+      dirty = true; render(true);
+      await wait(MOVE_GAP);
+    }
+    arranging = null;
+    arrangeReady = performance.now() + ARRANGE_COOLDOWN;
+    setTimeout(() => { dirty = true; render(true); }, ARRANGE_COOLDOWN + 50);
+    dirty = true; render(true);
+  }
+  function arrangeBar() {
+    const mine = myUnits(state).filter(u => u.active);
+    const count = [0, 0, 0, 0];
+    for (const u of mine) count[formationRow(U(u.stage))]++;
+    const blocked = blockReason() ?? (state.summary?.phase !== 'planning' ? 'wave' : null);
+    const cooling = !arranging && performance.now() < arrangeReady;
+    return h('div', { class: 'bar-row' },
+      h('button', {
+        class: `chip ${arranging ? 'on' : ''}`, tabindex: '-1', disabled: !arranging && (!!blocked || cooling || !mine.length),
+        text: arranging ? `Dừng ${arranging.done}/${arranging.n}` : 'Xếp đội',
+        title: arranging ? 'Bấm để dừng' : blocked ? FAIL[blocked] : cooling ? 'Chờ vài giây rồi xếp lại' : 'Dàn đội từ phía quái vào: TANK → CẬN → BUFF → XA. Gửi từng lệnh một, chờ game xác nhận, con đã đúng chỗ thì bỏ qua.',
+        onClick: arrange,
+      }),
+      h('span', { class: 'kit' }, ROWS.map(([t, c, tip], i) => count[i] ? h('b', { class: c, text: `${t} ${count[i]}`, title: tip }) : null)));
+  }
 
   const CAM_KEYS = { up: ['KeyW', 'w'], down: ['KeyS', 's'], left: ['KeyA', 'a'], right: ['KeyD', 'd'] };
   const held = new Map();
@@ -479,7 +559,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     if (!mine.length) return empty('Chưa có lính (hoặc đang chờ dữ liệu).');
     const wanted = new Map();
     for (const o of state.offers.values()) wanted.set(o.give, [...(wanted.get(o.give) ?? []), o]);
-    return [legend(), ...mine.sort((a, b) => powerOf(b.stage) - powerOf(a.stage) || (U(b.stage)?.ed ?? 0) - (U(a.stage)?.ed ?? 0)).map(u => {
+    return [arrangeBar(), legend(), ...mine.sort((a, b) => powerOf(b.stage) - powerOf(a.stage) || (U(b.stage)?.ed ?? 0) - (U(a.stage)?.ed ?? 0)).map(u => {
       const evo = U(u.stage)?.e ?? [];
       const trades = wanted.get(u.stage) ?? [];
       return pickable(row(u.stage,
