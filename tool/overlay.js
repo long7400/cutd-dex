@@ -191,7 +191,7 @@ tr.me td{color:#ffde8f}
       catch: (a, b) => (b.u.c ?? 0) - (a.u.c ?? 0),
     };
     wilds.sort(sorters[wildSort]);
-    const sortBtn = (k, t) => h('button', { class: `chip ${wildSort === k ? 'on' : ''}`, text: t, onClick: () => { wildSort = k; dirty = true; } });
+    const sortBtn = (k, t) => h('button', { class: `chip ${wildSort === k ? 'on' : ''}`, text: t, onClick: () => { wildSort = k; dirty = true; render(true); } });
     return [
       h('div', { class: 'row' }, sortBtn('value', 'Đáng bắt'), sortBtn('cheap', 'Rẻ nhất'), sortBtn('catch', 'Dễ bắt'),
         h('span', { class: 'dim', text: `${wilds.length} con · vàng ${fmt(state.gold)}` })),
