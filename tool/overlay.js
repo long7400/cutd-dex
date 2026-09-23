@@ -84,6 +84,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .act{all:unset;cursor:pointer;padding:2px 8px;border-radius:6px;font-size:11.5px;font-weight:700;background:#1b2a44;color:#8fb7e8;white-space:nowrap;border:1px solid transparent}
 .act.ok{background:#1d3a2a;color:#9fd6a8;border-color:#2f5c40}.act.bad{background:#3d2226;color:#ff9c9c;border-color:#5c2f35}
 .act:hover{filter:brightness(1.25)}.act:disabled{opacity:.5;cursor:wait}
+.webnote{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:6px 10px;padding:6px 10px;border-radius:8px;background:#1b2a44;color:#8fb7e8;font-size:12px}
+.webnote a{text-decoration:none}
 .toast{margin:6px 10px;padding:6px 10px;border-radius:8px;background:#3d2226;color:#ff9c9c;font-size:12px}
 [hidden]{display:none!important}
 `;
@@ -191,7 +193,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       else if (k === 'text') el.textContent = String(v);
       else if (k === 'style') el.style.cssText = v;
       else if (k === 'onClick') el.addEventListener('click', v);
-      else if (k === 'href') { if (/^https?:\/\//.test(v)) { el.href = v; el.target = '_blank'; el.rel = 'noopener noreferrer'; } }
+      else if (k === 'href') { if (/^https?:\/\//.test(v)) { el.href = v; if (!props.sameTab) el.target = '_blank'; el.rel = 'noopener noreferrer'; } }
+      else if (k === 'sameTab') { /* xử lý cùng href */ }
       else if (k === 'src') { if (String(v).startsWith(DATA_URL)) el.src = v; }
       else el.setAttribute(k, String(v));
     }
@@ -578,7 +581,13 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     } catch (err) {
       content = h('p', { class: 'empty bad', text: `Lỗi hiển thị: ${err?.message ?? err}` });
     }
-    const body = bodyEl = h('div', { class: 'body' }, toast ? h('p', { class: 'toast', text: toast }) : null, content);
+    // Bản m.cutd.site: không bấm hộ được → gợi ý mở đúng phòng này trên cutd.site (cùng server, cùng phòng).
+    const room = new URLSearchParams(location.search).get('room');
+    const webNote = clientKind() === 'web' ? h('div', { class: 'webnote' },
+      h('span', { text: 'Bản web: xem thông tin + camera được, nút Bắt/Tiến hóa/Trade chỉ chạy trên cutd.site.' }),
+      room && /^[A-Za-z0-9]{4,16}$/.test(room)
+        ? h('a', { class: 'chip on', href: `https://cutd.site/?room=${room}`, sameTab: true, text: 'Mở phòng này trên cutd.site' }) : null) : null;
+    const body = bodyEl = h('div', { class: 'body' }, webNote, toast ? h('p', { class: 'toast', text: toast }) : null, content);
     panel.className = `panel ${layout}`;
     panel.replaceChildren(header, tabs, body);
     body.scrollTop = scroll;

@@ -50,6 +50,7 @@ export default {
         <h2>Có gì</h2>
         <ul class="steps">
           <li><b>Trade:</b> 7 slot đang mở — nhận con gì, cần đưa con gì; có sẵn lính thì có nút <b>Trade</b>, chưa có thì hiện lính nào tiến hóa tới được và tốn bao nhiêu vàng.</li>
+          <li><b>Hai bản game:</b> thông tin + camera chạy trên cả <code>cutd.site</code> lẫn <code>m.cutd.site</code>. Nút Bắt / Tiến hóa / Trade / chọn con chỉ chạy trên <code>cutd.site</code> (bản web đóng kín code game) — ở bản web panel có nút mở đúng phòng đó trên cutd.site.</li>
           <li><b>Nút thao tác nhanh:</b> <b>Bắt</b> ở tab Wild, <b>↑ tiến hóa</b> (mỗi nhánh 1 nút) ở tab Đội, <b>Trade</b> ở tab Trade/Đội. Bấm vào dòng để chọn con đó trong game.</li>
           <li><b>Wild:</b> toàn bộ sinh vật hoang dã trên bãi — giá bắt (đủ tiền không), tỉ lệ bắt, DPS tối đa cả cây, cây nào đang có trade cần.</li>
           <li><b>Đội hình:</b> lính của mày — máu, giá bán, các nhánh tiến hóa kèm giá, con nào đem trade được ngay.</li>

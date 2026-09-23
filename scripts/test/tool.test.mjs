@@ -399,3 +399,22 @@ test('bookmarklet: nhãn + đích của nút lấy từ catalog GAME, overlay gi
   for (const b of root.querySelectorAll('button.act')) { assert.ok(b.disabled, 'đang xem nhà khác → nút phải khoá'); trustedClick(w, b); }
   assert.equal(calls.length, n);
 });
+
+test('bookmarklet: bản m.cutd.site → khoá nút + link mở đúng phòng trên cutd.site', async t => {
+  const { w, log, code, FakeWS } = setupDom('https://m.cutd.site/?room=805A6070');
+  t.after(() => w.close());
+  w.document.getElementById('GameCanvas').remove(); // bản web không có #GameCanvas/cc
+  w.eval(code);
+  const ws = new FakeWS();
+  ws.addEventListener('message', e => e.data);
+  const emit = m => ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
+  emit(summary);
+  await tick(0);
+  emit(keyframe([{ id: 1, stage_id: scenario.c, owner_id: 11, health: 5, max_health: 10, active: true }]));
+  await tick(1200);
+  const root = log.roots[0];
+  const link = root.querySelector('.webnote a');
+  assert.equal(link?.href, 'https://cutd.site/?room=805A6070');
+  assert.ok(!link.target, 'mở trong tab hiện tại (tránh 2 kết nối cùng lúc)');
+  assert.ok([...root.querySelectorAll('button.act')].every(b => b.disabled), 'bản web: nút thao tác phải khoá');
+});
