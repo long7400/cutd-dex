@@ -4,11 +4,9 @@ import { footer } from '../ui.js';
 
 const SOURCE = 'https://github.com/long7400/cutd-dex/blob/main/tool/overlay.js';
 
-// Bookmarklet trỏ dữ liệu về đúng site đang mở trang này (GitHub Pages hoặc localhost khi dev).
-function bookmarklet() {
-  const dataUrl = new URL('.', location.href).href;
-  return `javascript:${encodeURIComponent(tool.code.replace('"__CUTD_DATA_URL__"', JSON.stringify(dataUrl)))}`;
-}
+// Code trỏ dữ liệu về đúng site đang mở trang này (GitHub Pages hoặc localhost khi dev).
+const consoleCode = () => tool.code.replace('"__CUTD_DATA_URL__"', JSON.stringify(new URL('.', location.href).href));
+const bookmarklet = () => `javascript:${encodeURIComponent(consoleCode())}`;
 
 export default {
   title: () => 'CUTD Helper',
@@ -28,6 +26,22 @@ export default {
           <a class="chip on bm" href="${bookmarklet()}" title="Kéo lên thanh bookmark">CUTD Helper</a>
           <button type="button" class="chip" data-copy>Chép link</button>
           <span class="dim small" data-copied></span>
+        </div>
+      </section>
+
+      <section class="tool-card">
+        <h2>Trình duyệt không chạy bookmark (Dia, Arc…)</h2>
+        <p class="sub" style="margin:10px 0 6px">Chạy đúng đoạn code đó bằng Console — áp dụng cho mọi trình duyệt nhân Chromium (Dia, Arc, Chrome, Edge, Brave…).</p>
+        <ol class="steps">
+          <li>Bấm <b>Chép code cho Console</b> bên dưới.</li>
+          <li>Mở tab game, bấm <b>Cmd + Option + J</b> (Windows: <b>Ctrl + Shift + J</b>) để mở Console.</li>
+          <li>Lần đầu dán, trình duyệt sẽ cảnh báo: gõ <code>allow pasting</code> rồi Enter.</li>
+          <li>Dán code (<b>Cmd/Ctrl + V</b>) → Enter. Panel hiện lên; đóng Console đi là chơi bình thường.</li>
+        </ol>
+        <p class="note small">Cảnh báo "đừng dán code lạ vào Console" là đúng — chỉ dán code chép từ chính trang này, và có thể đối chiếu SHA-256 bên dưới.</p>
+        <div class="chips">
+          <button type="button" class="chip on" data-copy-console>Chép code cho Console</button>
+          <span class="dim small" data-copied-console></span>
         </div>
       </section>
 
@@ -52,7 +66,8 @@ export default {
           <li>Phiên bản <code>${tool.version}</code> · SHA-256 <code class="hash">${tool.sha256}</code></li>
           <li>Mã nguồn: <a class="rootlink" href="${SOURCE}" target="_blank" rel="noopener noreferrer">tool/overlay.js</a></li>
         </ul>
-        <details class="codebox"><summary>Xem toàn bộ code bookmarklet</summary><pre>${tool.code}</pre></details>
+        <details class="codebox"><summary>Xem toàn bộ code (dán được thẳng vào Console)</summary><pre>${consoleCode()}</pre></details>
+        <p class="dim small">SHA-256 tính trên bản build trước khi chèn địa chỉ dữ liệu (<code>"__CUTD_DATA_URL__"</code>).</p>
       </section>
       ${footer()}
     </main>`;
@@ -62,6 +77,13 @@ export default {
       if (e.target.closest('.bm')) {
         e.preventDefault(); // bấm trên wiki không chạy — phải kéo lên thanh bookmark
         root.querySelector('[data-copied]').textContent = 'Kéo nút này lên thanh bookmark, đừng bấm ở đây.';
+      }
+      if (e.target.closest('[data-copy-console]')) {
+        const out = root.querySelector('[data-copied-console]');
+        navigator.clipboard?.writeText(consoleCode()).then(
+          () => { out.textContent = 'Đã chép — dán vào Console của tab game.'; },
+          () => { out.textContent = 'Trình duyệt chặn chép — mở "Xem toàn bộ code" bên dưới và chép tay.'; },
+        );
       }
       if (e.target.closest('[data-copy]')) {
         navigator.clipboard?.writeText(bookmarklet()).then(
