@@ -117,6 +117,21 @@ export function build({ raw, client, changelog = [] }) {
 
   for (const a of catalog.abilities) for (const e of a.effects ?? []) if (e.kind === 'summon' && e.species_id) tag(e.species_id, 'summon');
 
+  const abilityById = new Map(catalog.abilities.map(a => [a.id, a]));
+  const modifierById = new Map((catalog.modifiers ?? []).map(m => [m.id, m]));
+  const teamAuras = s => (s.abilities ?? []).flatMap(id => {
+    const a = abilityById.get(id);
+    if (a?.trigger?.kind !== 'aura' || a.targeting?.kind !== 'all_in_base' || a.targeting?.filter !== 'ally') return [];
+    let dmg = 1, spd = 1;
+    for (const e of a.effects ?? []) {
+      const m = e.kind === 'apply_modifier' ? modifierById.get(e.modifier_id) : null;
+      if (!m) continue;
+      dmg = Math.max(dmg, m.attack_damage_multiplier ?? 1);
+      spd = Math.max(spd, m.attack_speed_multiplier ?? 1);
+    }
+    return dmg > 1 || spd > 1 ? [[id.split('_')[1], round(dmg, 3), round(spd, 3)]] : [];
+  });
+
   const abilities = {};
   const units = {};
   for (const s of catalog.species) {
@@ -150,6 +165,7 @@ export function build({ raw, client, changelog = [] }) {
       projSpeed: s.attack_projectile_speed ?? null,
       groundOnly: !!s.attack_ground_only,
       splash: s.attack_splash ?? null,
+      auras: teamAuras(s),
       bounce: s.attack_bounce ?? null,
       armor: s.armor ?? 0,
       armorType: s.armor_type ?? 'normal',
@@ -275,6 +291,7 @@ export function buildOverlay(db) {
   for (const x of Object.values(db.units)) {
     u[x.id] = {
       n: x.name, l: x.level ?? undefined, m: x.model, el: x.el, hp: x.hp, dps: x.dps, a: x.atk, at: x.armorType,
+      au: x.auras?.length ? x.auras : undefined, ms: x.move || undefined, sp: x.splash || x.bounce ? 1 : undefined,
       ar: x.armor || undefined, c: x.catch || undefined, b: x.book || undefined, L: x.legendary ? 1 : undefined,
       k: x.catchable ? 1 : undefined, lk: x.leak || undefined, f: x.family, p: x.pet ? slugOf.get(x.pet) : undefined,
       s: x.skills?.length ? x.skills.map(id => db.abilities[id]?.name).filter(Boolean) : undefined,
@@ -284,7 +301,9 @@ export function buildOverlay(db) {
   return {
     v: db.meta.catalogHash.slice(0, 12), sell: db.game.rules.sellGold,
     el: Object.fromEntries(Object.entries(db.elements).map(([k, e]) => [k, { n: e.name, c: e.mid }])),
-    lb: db.labels, u, dmg: db.damage.table,
+    lb: db.labels, u, dmg: db.damage.table, ac: db.damage.armorCoefficient, lc: db.game.rules.legendaryCap,
+    rs: Object.fromEntries(db.research.map(r => [r.id, [r.el, r.kind, r.magnitude]])),
+    wv: Object.fromEntries(db.waveSets.map(set => [set.id, Object.fromEntries(set.waves.map(w => [w.n, w.groups.map(g => [g.unit, g.count])]))])),
   };
 }
 

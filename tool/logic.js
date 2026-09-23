@@ -152,3 +152,150 @@ export function bestAttacks(db, armorType) {
 export function nextWaveForBase(s) {
   return (s.summary?.nextWave ?? []).filter(g => g.target == null || g.target === s.baseId);
 }
+
+const TIERS = [[0.9, 'S+'], [0.75, 'S'], [0.55, 'A'], [0.35, 'B'], [0, 'C']];
+export const tierOf = rel => TIERS.find(([min]) => rel >= min)[1];
+
+const armorFactor = (db, armor) => (armor >= 0 ? 1 / (1 + (db.ac ?? 0.06) * armor) : 2 - 0.94 ** -armor);
+
+function threatsOf(s, db) {
+  const next = nextWaveForBase(s).filter(g => g.stage && db.u[g.stage]);
+  const pvp = next.some(g => g.source != null);
+  const list = next.map(g => ({ stage: g.stage, weight: g.count * (db.u[g.stage].hp ?? 1), wave: 0 }));
+  if (!pvp && next.length) {
+    const want = next.map(g => g.stage).sort().join();
+    let hit = null;
+    for (const [set, waves] of Object.entries(db.wv ?? {})) {
+      for (const [n, groups] of Object.entries(waves)) {
+        if (groups.map(([id]) => id).sort().join() !== want) continue;
+        const d = Math.abs(Number(n) - (s.summary?.wave ?? 0) - 1);
+        if (!hit || d < hit.d) hit = { set, n: Number(n), d };
+      }
+    }
+    if (hit) {
+      [[1, 0.6], [2, 0.4]].forEach(([ahead, w]) => {
+        for (const [id, count] of db.wv[hit.set][hit.n + ahead] ?? []) {
+          if (db.u[id]) list.push({ stage: id, weight: w * count * (db.u[id].hp ?? 1), wave: ahead });
+        }
+      });
+    }
+  }
+  return { pvp, list };
+}
+
+function researchBonus(s, db, el) {
+  let speed = 0, levels = 0;
+  for (const [id, level] of s.research) {
+    const r = db.rs?.[id];
+    if (!r || r[0] !== el || !(level > 0)) continue;
+    levels += level;
+    if (r[1] === 'attack_speed') speed += level * r[2];
+  }
+  return { speed, levels };
+}
+
+export function rateStages(s, db, stages) {
+  const { pvp, list: threats } = threatsOf(s, db);
+  const total = threats.reduce((n, t) => n + t.weight, 0);
+  const vsThreats = u => {
+    if (!total) return { mult: 1, armor: 1 };
+    let mult = 0, armor = 0;
+    for (const t of threats) {
+      const c = db.u[t.stage];
+      mult += (t.weight / total) * (db.dmg?.[u.a]?.[c.at] ?? 1);
+      armor += (t.weight / total) * armorFactor(db, c.ar ?? 0);
+    }
+    return { mult, armor };
+  };
+  const defense = id => {
+    const u = db.u[id];
+    if (!u) return 0;
+    const v = vsThreats(u);
+    return (u.dps ?? 0) * v.mult * v.armor * (1 + researchBonus(s, db, u.el).speed) * (u.sp ? 1.25 : 1);
+  };
+  const offense = id => {
+    const u = db.u[id];
+    return u ? (u.hp ?? 0) * (1 + (db.ac ?? 0.06) * Math.max(0, u.ar ?? 0)) * Math.max(1, u.lk ?? 1) * Math.min(1.5, (u.ms ?? 300) / 300) : 0;
+  };
+
+  const team = myUnits(s).filter(u => u.active && db.u[u.stage]);
+  const teamDps = team.reduce((n, u) => n + defense(u.stage), 0);
+  const hasLegend = team.some(u => db.u[u.stage].L);
+  const budget = s.gold + 2 * (ownerOf(s)?.income ?? 0);
+  const famBest = new Map();
+  for (const [id, u] of Object.entries(db.u)) if (u.f && (!famBest.has(u.f) || defense(id) > defense(famBest.get(u.f)))) famBest.set(u.f, id);
+  const reachable = (id, limit) => {
+    const cost = new Map([[id, 0]]), queue = [id];
+    while (queue.length) {
+      const cur = queue.shift();
+      for (const [next, c] of db.u[cur]?.e ?? []) {
+        const spent = cost.get(cur) + c;
+        if (Number.isFinite(spent) && spent <= limit && !(cost.get(next) <= spent)) { cost.set(next, spent); queue.push(next); }
+      }
+    }
+    return [...cost].reduce((best, [st, c]) => (defense(st) > defense(best[0]) ? [st, c] : best), [id, 0]);
+  };
+  const label = id => `${db.u[id].n}${db.u[id].l ? ` Lv${db.u[id].l}` : ''}`;
+
+  const out = new Map();
+  for (const id of new Set(stages)) {
+    const u = db.u[id];
+    if (!u) continue;
+    const reasons = [];
+    const now = defense(id);
+    const v = vsThreats(u);
+    if (total && v.mult >= 1.15) reasons.push(`Khắc giáp đợt tới ×${v.mult.toFixed(2)}`);
+    if (total && v.mult <= 0.8) reasons.push(`Bị giáp đợt tới khắc ×${v.mult.toFixed(2)}`);
+    const owned = team.some(t => t.stage === id);
+    const catchCost = owned ? 0 : (u.b ?? 0) / Math.max(u.c ?? 1, 0.05);
+    const [reach, reachCost] = reachable(id, Math.max(0, budget - catchCost));
+    const reachDef = defense(reach);
+    let power = now + 0.8 * Math.max(0, reachDef - now);
+    if (reach !== id && reachDef > now * 1.3) reasons.push(`Nâng được ngay: ${label(reach)} (${Math.round(reachCost)} vàng)`);
+    const top = famBest.get(u.f);
+    const topPath = top && top !== reach ? evolvePath(db, id, top) : null;
+    if (topPath) {
+      const base = Math.max(now, reachDef, 1e-9);
+      const bonus = base * 0.15 * Math.log2(1 + defense(top) / base) * (budget / (budget + topPath.cost + 1));
+      power += bonus;
+      if (bonus > base * 0.2) reasons.push(`Đỉnh cây: ${label(top)} (${Math.round(topPath.cost)} vàng)`);
+    }
+    const mine = team.findIndex(t => t.stage === id);
+    const others = team.filter((_, i) => i !== mine);
+    const othersDps = teamDps - (mine >= 0 ? now : 0);
+    let aura = 0;
+    for (const [code, dmg, spd] of u.au ?? []) {
+      const have = Math.max(1, ...others.flatMap(t => (db.u[t.stage].au ?? []).filter(a => a[0] === code).map(a => a[1] * a[2])));
+      const gain = dmg * spd - have;
+      if (gain > 0 && others.length) {
+        aura += gain * othersDps;
+        reasons.push(`+${Math.round((dmg * spd - 1) * 100)}% ${spd > 1 ? 'tốc đánh' : 'sát thương'} cho ${others.length} con`);
+      } else if (gain <= 0) reasons.push('Hào quang trùng — đội đã có');
+    }
+    const rb = researchBonus(s, db, u.el);
+    if (rb.levels) reasons.push(`Hợp nghiên cứu hệ ${db.el?.[u.el]?.n ?? u.el} (${rb.levels} cấp)`);
+    let trade = 0, tradeReason = null;
+    for (const o of s.offers.values()) {
+      if (!o.give || !o.get || !db.u[o.get]) continue;
+      const path = o.give === id ? { cost: 0 } : evolvePath(db, id, o.give);
+      if (!path) continue;
+      const gain = (defense(o.get) - defense(o.give)) * (s.gold / (s.gold + path.cost + 1));
+      if (gain > trade) {
+        trade = gain;
+        tradeReason = `Trade S${o.slot} → ${db.u[o.get].n}${path.cost ? ` (tiến hóa ${Math.round(path.cost)} vàng)` : ''}`;
+      }
+    }
+    if (tradeReason) reasons.push(tradeReason);
+    const blocked = !!(u.L && hasLegend && (db.lc ?? 1) <= 1 && !owned);
+    if (blocked) reasons.unshift('Đã có huyền thoại — không bắt thêm được');
+    out.set(id, { def: power + aura + trade, off: offense(id), reasons: reasons.slice(0, 4), blocked });
+  }
+  const maxDef = Math.max(1e-9, ...[...out.values()].map(r => r.def));
+  const maxOff = Math.max(1e-9, ...[...out.values()].map(r => r.off));
+  for (const r of out.values()) {
+    if (pvp && r.off / maxOff >= 0.6) r.reasons.push('Làm quái trâu (sang đánh đối thủ)');
+    r.score = pvp ? 0.7 * (r.def / maxDef) + 0.3 * (r.off / maxOff) : r.def / maxDef;
+    r.tier = r.blocked ? '—' : tierOf(r.score);
+  }
+  return { pvp, threats: threats.length, ratings: out };
+}

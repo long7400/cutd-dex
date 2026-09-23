@@ -119,6 +119,11 @@ test('bookmarklet: chỉ đọc, bắt socket rồi trả getter, hiển thị t
   const clickTab = name => [...root.querySelectorAll('button')].find(b => b.textContent.startsWith(name)).click();
   clickTab('Wild');
   assert.match(text(), new RegExp(overlay.u[scenario.a].n));
+  const tier = root.querySelector('.tier');
+  assert.ok(tier && /^(S\+|S|A|B|C|—)$/.test(tier.textContent), 'wild có huy hiệu hạng');
+  assert.match(tier.title, /Hạng .* · \d+\/100 \(PvE/);
+  clickTab('Đội');
+  assert.ok(root.querySelector('.row .tier'), 'đội có huy hiệu hạng');
   clickTab('Đợt');
   assert.match(text(), /×3/);
   assert.doesNotMatch(text(), /×9/, 'không hiện quái của nhà khác');

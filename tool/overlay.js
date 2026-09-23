@@ -1,6 +1,6 @@
 import {
   createState, applyMessage, isGameMessage, myUnits, tradeOptions, offersForFamily,
-  bestAttacks, nextWaveForBase, buildGameCatalog,
+  bestAttacks, nextWaveForBase, buildGameCatalog, rateStages,
 } from './logic.js';
 import * as web from './web-input.js';
 import { findGame, findEntity, selectEntity, catchWild, evolveCreature, tradePet, probe, clientKind, armWebCapture, disarmWebCapture, webCaptured, forgetWebCapture } from './game-bridge.js';
@@ -72,6 +72,9 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .act{all:unset;cursor:pointer;padding:2px 8px;border-radius:6px;font-size:11.5px;font-weight:700;background:#1b2a44;color:#8fb7e8;white-space:nowrap;border:1px solid transparent}
 .act.ok{background:#1d3a2a;color:#9fd6a8;border-color:#2f5c40}.act.bad{background:#3d2226;color:#ff9c9c;border-color:#5c2f35}
 .act:hover{filter:brightness(1.25)}.act:disabled{opacity:.5;cursor:wait}
+.tier{min-width:26px;text-align:center;padding:1px 6px;border-radius:6px;font-size:11.5px;font-weight:800;background:#1b2a44;color:#8fb7e8}
+.tier.t-sp{background:#ffde8f;color:#0b1526}.tier.t-s{background:#f0a35e;color:#0b1526}.tier.t-a{background:#1d3a2a;color:#9fd6a8}
+.tier.t-b{background:#1b2a44;color:#8fb7e8}.tier.t-c,.tier.t-x{background:transparent;color:#6f8fb8;border:1px solid #2a3d5c}
 .toast{margin:6px 10px;padding:6px 10px;border-radius:8px;background:#3d2226;color:#ff9c9c;font-size:12px}
 [hidden]{display:none!important}
 `;
@@ -366,6 +369,21 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     });
   }
 
+  const TIER_CLASS = { 'S+': 't-sp', S: 't-s', A: 't-a', B: 't-b', C: 't-c', '—': 't-x' };
+  let rating = null;
+  const ratingOf = stage => rating?.ratings.get(stage);
+  function rateAll() {
+    const stages = [...state.wilds.values(), ...myUnits(state)].map(x => x.stage).filter(Boolean);
+    rating = db && stages.length ? rateStages(state, db, stages) : null;
+  }
+  const tierPill = stage => {
+    const r = ratingOf(stage);
+    if (!r) return null;
+    const mode = rating.pvp ? 'PvP: thủ 70% + công 30%' : 'PvE: sức thủ vs 3 đợt tới';
+    return h('span', { class: `tier ${TIER_CLASS[r.tier]}`, text: r.tier,
+      title: `Hạng ${r.tier} · ${Math.round(r.score * 100)}/100 (${mode})${r.reasons.length ? `\n• ${r.reasons.join('\n• ')}` : ''}` });
+  };
+
   function viewWild() {
     const groups = new Map();
     for (const w of state.wilds.values()) { if (!groups.has(w.stage)) groups.set(w.stage, []); groups.get(w.stage).push(w.id); }
@@ -374,7 +392,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       return { stage, idList, count: idList.length, u, maxDps: famMax.get(u.f) ?? u.dps ?? 0, trades: offersForFamily(state, db, stage) };
     });
     const sorters = {
-      value: (a, b) => (b.u.L ?? 0) - (a.u.L ?? 0) || b.trades.length - a.trades.length || b.maxDps - a.maxDps,
+      value: (a, b) => Number(!!ratingOf(a.stage)?.blocked) - Number(!!ratingOf(b.stage)?.blocked)
+        || (ratingOf(b.stage)?.score ?? 0) - (ratingOf(a.stage)?.score ?? 0) || b.maxDps - a.maxDps,
       cheap: (a, b) => (a.u.b ?? 0) - (b.u.b ?? 0),
       catch: (a, b) => (b.u.c ?? 0) - (a.u.c ?? 0),
     };
@@ -385,7 +404,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         h('span', { class: 'muted', text: `${state.wilds.size} con` })),
       wilds.length ? wilds.map(({ stage, idList, count, u, maxDps, trades }) => pickable(row(stage,
         `bắt ${Math.round((u.c ?? 0) * 100)}% · max DPS ${short(maxDps)}`,
-        [count > 1 ? pill(`×${count}`, 'mute') : null,
+        [tierPill(stage), count > 1 ? pill(`×${count}`, 'mute') : null,
           trades.length ? pill('Trade', 'warn', trades.map(t => `S${t.slot}: cần ${nameOf(t.give)} → nhận ${nameOf(t.get)}`).join('\n')) : null,
           act(`Bắt ${short(u.b ?? 0)}g`, 'catch', `w${idList[0]}`, null, { stage }, (u.b ?? 0) <= state.gold ? 'ok' : 'bad', `Bắt 1 con ${nameOf(stage)}`)],
         { tip: `${statsTip(stage)}\nBấm để chọn trong game${count > 1 ? ' (bấm tiếp để đổi con)' : ''}` }), cycle(`w:${stage}`, idList.map(id => `w${id}`))))
@@ -398,13 +417,13 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     if (!mine.length) return empty('Chưa có lính (hoặc đang chờ dữ liệu).');
     const wanted = new Map();
     for (const o of state.offers.values()) wanted.set(o.give, [...(wanted.get(o.give) ?? []), o]);
-    return mine.sort((a, b) => (U(b.stage)?.dps ?? 0) - (U(a.stage)?.dps ?? 0)).map(u => {
+    return mine.sort((a, b) => (ratingOf(b.stage)?.score ?? 0) - (ratingOf(a.stage)?.score ?? 0) || (U(b.stage)?.dps ?? 0) - (U(a.stage)?.dps ?? 0)).map(u => {
       const evo = U(u.stage)?.e ?? [];
-        const trades = wanted.get(u.stage) ?? [];
+      const trades = wanted.get(u.stage) ?? [];
       const pct = u.maxHp ? Math.round((u.hp / u.maxHp) * 100) : 0;
       return pickable(row(u.stage,
         h('div', { class: 'hp', title: `${fmt(u.hp)} / ${fmt(u.maxHp)} HP` }, h('i', { style: `width:${Math.max(0, Math.min(100, pct))}%` })),
-        [!u.active ? pill('Gục', 'bad') : null,
+        [tierPill(u.stage), !u.active ? pill('Gục', 'bad') : null,
           trades.length ? act(`Trade S${trades[0].slot}`, 'trade', `u${u.id}`, trades[0].slot, { stage: u.stage, get: trades[0].get }, 'ok', `Đổi lấy ${nameOf(trades[0].get)}`) : null,
           evo.length ? evo.map(([to, cost]) => act(`↑${evo.length > 1 ? `${U(to)?.n ?? ''} ` : ''}${short(cost)}g`, 'evolve', `u${u.id}`, to, { stage: u.stage },
             cost <= state.gold ? 'ok' : 'bad', `Tiến hóa lên ${nameOf(to)}: ${fmt(cost)} vàng`)) : pill('Max', 'mute', 'Dạng cuối')],
@@ -554,6 +573,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       t, count[k] ? h('small', { text: ` ${count[k]}` }) : null)));
     let content;
     try {
+      if (!status && (tab === 'wild' || tab === 'team')) rateAll();
       content = status && tab !== 'diag' ? empty(status) : ({
         trade: viewTrade, wild: viewWild, team: viewTeam, wave: viewWave, players: viewPlayers, diag: viewDiag,
       })[tab]();
