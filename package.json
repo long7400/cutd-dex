@@ -6,15 +6,16 @@
   "scripts": {
     "sync": "node scripts/sync.mjs",
     "sync:force": "node scripts/sync.mjs --force",
-    "data": "node scripts/build.mjs",
-    "predev": "node scripts/build.mjs",
+    "data": "node scripts/build.mjs && node scripts/build-tool.mjs",
+    "predev": "node scripts/build.mjs && node scripts/build-tool.mjs",
     "dev": "vite",
-    "prebuild": "node scripts/build.mjs",
+    "prebuild": "node scripts/build.mjs && node scripts/build-tool.mjs",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test \"scripts/test/*.test.mjs\""
+    "test": "node --test --test-force-exit --test-timeout=120000 \"scripts/test/*.test.mjs\""
   },
   "devDependencies": {
+    "esbuild": "^0.21.5",
     "jsdom": "^25.0.1",
     "sharp": "^0.33.5",
     "vite": "^5.4.0"

@@ -242,6 +242,16 @@ table.dmg td.up { color: var(--green); font-weight: 700; } table.dmg td.down { c
 .rs-card .chip-list { margin-top: 8px; }
 .rs-card .chipu img { width: 28px; height: 28px; }
 
+/* tool */
+.tool-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 4px 18px 16px; margin-bottom: 16px; }
+.tool-card h2 { margin-top: 14px; }
+.steps { margin: 0 0 12px; padding-left: 20px; }
+.steps li { margin: 6px 0; }
+a.bm { cursor: grab; font-size: 15px; padding: 9px 18px; }
+.hash { word-break: break-all; }
+.codebox summary { cursor: pointer; color: var(--sub); }
+.codebox pre { max-height: 320px; overflow: auto; white-space: pre-wrap; word-break: break-all; background: var(--bg2); border: 1px solid var(--line); border-radius: 9px; padding: 10px; font-size: 11.5px; color: var(--sub); }
+
 /* changelog */
 .log { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 14px; }
 .log-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 6px; }

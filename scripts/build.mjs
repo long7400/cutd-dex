@@ -12,6 +12,7 @@ export const PATHS = {
   client: join(ROOT, 'data/client.json'),
   changelog: join(ROOT, 'data/changelog.json'),
   db: join(ROOT, 'src/data/db.json'),
+  overlay: join(ROOT, 'public/overlay.json'),
 };
 
 const ELEMENT_ORDER = ['normal', 'fire', 'water', 'grass', 'lightning', 'psychic', 'fighter'];
@@ -280,6 +281,26 @@ export function build({ raw, client, changelog = [] }) {
   };
 }
 
+// Data rút gọn cho CUTD Helper (bookmarklet). Chỉ là dữ liệu: tool đọc bằng JSON.parse, hiển thị bằng textContent.
+export function buildOverlay(db) {
+  const slugOf = new Map(db.pets.map(p => [p.id, p.slug]));
+  const u = {};
+  for (const x of Object.values(db.units)) {
+    u[x.id] = {
+      n: x.name, l: x.level ?? undefined, m: x.model, el: x.el, hp: x.hp, dps: x.dps, a: x.atk, at: x.armorType,
+      ar: x.armor || undefined, c: x.catch || undefined, b: x.book || undefined, L: x.legendary ? 1 : undefined,
+      k: x.catchable ? 1 : undefined, lk: x.leak || undefined, f: x.family, p: x.pet ? slugOf.get(x.pet) : undefined,
+      s: x.skills?.length ? x.skills.map(id => db.abilities[id]?.name).filter(Boolean) : undefined,
+      e: x.evo?.length ? x.evo.map(e => [e.to, e.cost]) : undefined,
+    };
+  }
+  return {
+    v: db.meta.catalogHash.slice(0, 12), sell: db.game.rules.sellGold,
+    el: Object.fromEntries(Object.entries(db.elements).map(([k, e]) => [k, { n: e.name, c: e.mid }])),
+    lb: db.labels, u, dmg: db.damage.table,
+  };
+}
+
 async function main() {
   const raw = readJSON(PATHS.catalog);
   const client = readJSON(PATHS.client);
@@ -290,6 +311,7 @@ async function main() {
   const t0 = performance.now();
   const db = build({ raw, client, changelog: readJSON(PATHS.changelog, []) });
   writeJSON(PATHS.db, db);
+  writeJSON(PATHS.overlay, buildOverlay(db));
   const m = db.meta.counts;
   console.log(`db.json: ${m.pets} pet · ${m.units} unit · ${m.abilities} skill · ${db.waveSets.reduce((s, w) => s + w.waves.length, 0)} đợt · ${db.research.length} research — ${(performance.now() - t0).toFixed(0)}ms`);
 }

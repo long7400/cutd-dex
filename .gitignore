@@ -3,3 +3,4 @@ dist
 .DS_Store
 src/data/
 *.tmp
+public/overlay.json

@@ -14,10 +14,11 @@ const ROUTES = {
   research: () => import('./pages/research.js'),
   rules: () => import('./pages/rules.js'),
   changelog: () => import('./pages/changelog.js'),
+  tool: () => import('./pages/tool.js'),
 };
 const NAV = [
   ['pets', 'Pets'], ['units', 'Sinh vật'], ['waves', 'Đợt quái'], ['trade', 'Trade'],
-  ['pools', 'Wild'], ['research', 'Nghiên cứu'], ['rules', 'Luật chơi'],
+  ['pools', 'Wild'], ['research', 'Nghiên cứu'], ['rules', 'Luật chơi'], ['tool', 'Công cụ'],
 ];
 const ACTIVE = { pet: 'pets', unit: 'units' };
 

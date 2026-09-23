@@ -6,6 +6,10 @@ import { existsSync } from 'node:fs';
 import { JSDOM, VirtualConsole } from 'jsdom';
 import { createServer } from 'vite';
 import { PATHS } from '../build.mjs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..');
 
 let server, dom, $, $$;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -20,6 +24,7 @@ async function go(hash) {
 }
 
 before(async () => {
+  if (!existsSync(join(ROOT, 'src/data/tool.json'))) await (await import('../build-tool.mjs')).buildTool();
   if (!existsSync(PATHS.db)) await import('../build.mjs').then(async m => {
     const { readJSON, writeJSON } = await import('../lib/fsx.mjs');
     writeJSON(PATHS.db, m.build({ raw: readJSON(PATHS.catalog), client: readJSON(PATHS.client) }));
@@ -105,7 +110,7 @@ test('trang Sinh vật: tìm theo mã unit', async () => {
 
 test('crawl mọi link nội bộ: không trang nào vỡ', async () => {
   const seen = new Set();
-  const queue = ['#/pets', '#/units', '#/waves', '#/waves/roster', '#/trade', '#/pools', '#/research', '#/rules', '#/changelog'];
+  const queue = ['#/pets', '#/units', '#/waves', '#/waves/roster', '#/trade', '#/pools', '#/research', '#/rules', '#/changelog', '#/tool'];
   const broken = [];
   while (queue.length) {
     const h = queue.shift();

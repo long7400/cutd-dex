@@ -17,7 +17,7 @@ import { toWebp } from './lib/image.mjs';
 import { extractClient, validateClient, bundlePathFrom } from './lib/client.mjs';
 import { createResolver } from './lib/game.mjs';
 import { diffCatalog } from './lib/diff.mjs';
-import { build, PATHS } from './build.mjs';
+import { build, buildOverlay, PATHS } from './build.mjs';
 
 const BASE = (process.env.CUTD_BASE ?? 'https://m.cutd.site').replace(/\/$/, '');
 const FORCE = process.argv.includes('--force');
@@ -178,6 +178,7 @@ writeJSON(STATE, sortKeys(state), { pretty: true });
 // ⑤ Build DB cho web.
 const db = build({ raw, client, changelog });
 writeJSON(PATHS.db, db);
+writeJSON(PATHS.overlay, buildOverlay(db));
 ok(`✓ Xong — ${db.meta.counts.pets} pet · ${db.meta.counts.units} unit · ${stats.requests} request (${stats.notModified}×304, ${stats.retries} retry) · ${(stats.bytes / 1024 / 1024).toFixed(2)}MB · ${((performance.now() - t0) / 1000).toFixed(1)}s`);
 output(catalogChanged || clientChanged || fetched > 0 || migrated > 0);
 
