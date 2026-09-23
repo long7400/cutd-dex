@@ -4,7 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const dir = dirname(fileURLToPath(import.meta.url));
-const catalog = JSON.parse(readFileSync(join(dir, 'catalog.json'), 'utf8')).catalog;
+const raw = JSON.parse(readFileSync(join(dir, 'catalog.json'), 'utf8'));
+const catalog = raw.catalog;
 const u2m = JSON.parse(readFileSync(join(dir, 'unit2model.json'), 'utf8'));
 const modelAffinity = JSON.parse(readFileSync(join(dir, 'model_affinity.json'), 'utf8'));
 const elementColors = JSON.parse(readFileSync(join(dir, 'element_colors.json'), 'utf8'));
@@ -247,6 +248,9 @@ const trade = catalog.trade.slots.map(slot => ({
 const data = {
   builtAt: new Date().toISOString(),
   tickRate: 32,
+  catalogHash: raw.catalog_hash,
+  rulesetVersion: raw.ruleset_version,
+  protocolVersion: raw.protocol_version,
   elements: Object.fromEntries(Object.entries(elementColors).map(([k, v]) => [
     k, { vn: EL_VN[k] ?? k, light: v[0], mid: v[1], dark: v[2] },
   ])),

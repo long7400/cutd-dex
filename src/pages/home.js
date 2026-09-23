@@ -1,4 +1,4 @@
-import { pets, img, elBadge, catchBadge, esc } from '../ui.js';
+import { pets, img, elBadge, catchBadge, esc, meta } from '../ui.js';
 
 export let filters = { q: '', el: 'all', kind: 'all', sort: 'name' };
 
@@ -67,7 +67,7 @@ function listHTML() {
     </select>
   </div>
   <div class="grid">${list.map(card).join('') || '<div class="empty">Không tìm thấy pet nào</div>'}</div>
-  <p class="footnote">Nguồn dữ liệu: m.cutd.site/catalog · Tick rate 32/s · Ảnh portrait gốc từ game.</p>`;
+  <p class="footnote">Dữ liệu game: <code>${esc(meta.catalogHash.slice(0, 12))}</code> · bóc lúc ${new Date(meta.builtAt).toLocaleString('vi-VN')} · tự cập nhật mỗi ngày qua GitHub Action · ảnh portrait gốc từ game.</p>`;
 }
 
 function elChip(e) {

@@ -5,6 +5,11 @@ export const pets = data.pets;
 export const trade = data.trade;
 export const pools = data.pools;
 export const elements = data.elements;
+export const meta = {
+  catalogHash: data.catalogHash ?? '',
+  builtAt: data.builtAt ?? '',
+  ruleset: data.rulesetVersion ?? '',
+};
 
 export const img = file => `images/${file ?? 'icon-list.png'}`;
 

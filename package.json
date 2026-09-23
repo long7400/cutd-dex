@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "data": "node scripts/build-data.mjs",
+    "update": "node scripts/scrape.mjs",
+    "update:force": "node scripts/scrape.mjs --force",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
