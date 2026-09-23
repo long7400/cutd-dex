@@ -106,9 +106,29 @@ test('trang Sinh vật: tìm theo mã unit', async () => {
   await sleep(200);
 });
 
+test('trang chủ: đủ các màn, không thanh nav chung, nút đúng đích, máy không WebGL vẫn có ảnh thay thế', async () => {
+  await go('#/');
+  assert.ok($('.home'), 'có trang chủ');
+  assert.ok(!$('.topbar'), 'trang chủ không dùng thanh nav chung');
+  assert.equal($('.h-copy .h-btn.primary').getAttribute('href'), 'https://m.cutd.site/');
+  assert.deepEqual($$('.h-copy .h-btn').map(a => a.textContent.trim()), ['Mở game', 'Tải tool', 'Mở wiki']);
+  assert.deepEqual($$('.h-final .h-btn').map(a => a.textContent.trim()), ['Mở game', 'Cài tool']);
+  assert.equal($$('.h-lines .line').length, 6, '6 dòng tiến hoá');
+  assert.equal($$('.h-forms .form').length, 3, 'mỗi dòng 3 dạng');
+  assert.equal($$('.h-mrow').length, 4, '4 đợt quái');
+  assert.ok($$('.h-mrow .pp').length >= 4, 'có gợi ý pet khắc');
+  assert.ok($('.home.no-gl'), 'không WebGL → dùng ảnh thay thế');
+  assert.match($('.h-pedimg').getAttribute('src'), /^portraits\/.+\.webp$/);
+  assert.match($('.h-caption .h-btn').getAttribute('href'), /^javascript:/, 'nút bookmarklet thật');
+  $$('.h-forms .form')[2].click();
+  assert.match($('.h-stat .nm').textContent, /Charizard/);
+  await go('#/pets');
+  assert.ok($('.topbar'), 'trang khác vẫn có thanh nav');
+});
+
 test('crawl mọi link nội bộ: không trang nào vỡ', async () => {
   const seen = new Set();
-  const queue = ['#/pets', '#/units', '#/waves', '#/waves/roster', '#/trade', '#/pools', '#/research', '#/rules', '#/changelog', '#/tool'];
+  const queue = ['#/', '#/pets', '#/units', '#/waves', '#/waves/roster', '#/trade', '#/pools', '#/research', '#/rules', '#/changelog', '#/tool'];
   const broken = [];
   while (queue.length) {
     const h = queue.shift();

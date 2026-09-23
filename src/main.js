@@ -3,6 +3,7 @@ import { html, toString } from './lib/html.js';
 import { loadDB } from './db.js';
 
 const ROUTES = {
+  home: () => import('./pages/home.js'),
   pets: () => import('./pages/pets.js'),
   pet: () => import('./pages/pet.js'),
   units: () => import('./pages/units.js'),
@@ -36,14 +37,15 @@ document.addEventListener('click', e => {
 });
 
 function parse() {
-  const [path, query = ''] = (location.hash.slice(1) || '/pets').split('?');
-  const [, name = 'pets', ...params] = path.split('/');
+  const [path, query = ''] = (location.hash.slice(1) || '/home').split('?');
+  const [, name = 'home', ...params] = path.split('/');
+  if (!name) return { name: 'home', params: [], query: new URLSearchParams(query) };
   return { name: Object.hasOwn(ROUTES, name) ? name : 'pets', params: params.map(p => { try { return decodeURIComponent(p); } catch { return ''; } }), query: new URLSearchParams(query) };
 }
 
 function topbar(active) {
   return html`<header class="topbar">
-    <a class="brand" href="#/pets"><img src="portraits/pet_xiaohuolong.webp" alt="" width="34" height="34"><span>CUTD <em>Wiki</em></span></a>
+    <a class="brand" href="#/"><img src="portraits/pet_xiaohuolong.webp" alt="" width="34" height="34"><span>CUTD <em>Wiki</em></span></a>
     <nav>${NAV.map(([k, l]) => html`<a class="navlink ${k === active ? 'on' : ''}" href="#/${k}">${l}</a>`)}</nav>
   </header>`;
 }
@@ -60,8 +62,8 @@ async function render() {
 
   const page = mod.default;
   const title = page.title?.(route) ?? '';
-  document.title = title ? `${title} · CUTD Wiki` : 'CUTD Wiki — Moonlit Court';
-  app.innerHTML = toString(html`${topbar(ACTIVE[route.name] ?? route.name)}${page.render(route)}`);
+  document.title = title ? `${title} · CUTD Wiki` : 'CUTD Dex — Moonlit Court';
+  app.innerHTML = toString(html`${page.chrome === false ? '' : topbar(ACTIVE[route.name] ?? route.name)}${page.render(route)}`);
   current = page;
   page.mount?.(app.querySelector('main') ?? app, route);
   app.dataset.route = key;

@@ -1,13 +1,13 @@
 import { defineConfig } from 'vite';
 
 const CSP = [
-  "default-src 'self'", "script-src 'self'", "style-src 'self' 'unsafe-inline'", "img-src 'self' data:",
-  "connect-src 'self'", "font-src 'self'", "object-src 'none'", "base-uri 'self'", "form-action 'none'",
+  "default-src 'self'", "script-src 'self'", "style-src 'self' 'unsafe-inline'", "img-src 'self' data: blob:",
+  "connect-src 'self' blob:", "font-src 'self'", "object-src 'none'", "base-uri 'self'", "form-action 'none'",
 ].join('; ');
 
 export default defineConfig(({ command }) => ({
   base: './',
-  build: { outDir: 'dist', chunkSizeWarningLimit: 700 },
+  build: { outDir: 'dist', chunkSizeWarningLimit: 700, assetsInlineLimit: file => (/\.(woff2?|ttf|otf)$/.test(file) ? false : undefined) },
   plugins: [{
     name: 'csp',
     transformIndexHtml: html => (command === 'build'

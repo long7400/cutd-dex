@@ -167,3 +167,24 @@ test('canary: nhận ra khi game đổi tên hàm tool dựa vào, và dạng k�
   const shapes = unknownShapes({ abilities: [{ id: 'x', status: 'executable', trigger: { kind: 'on_moon' }, effects: [{ kind: 'damage', magnitude: { basis: 'attack_damage' } }] }] });
   assert.deepEqual(shapes, ['trigger "on_moon" (vd x)']);
 });
+
+import { checkGlb } from '../art.mjs';
+import { showcaseModels } from '../../src/lib/showcase.js';
+import { SAFE_NAME } from '../lib/validate.mjs';
+
+test('art: chỉ nhận GLB v2 nhúng sẵn, từ chối file lạ / trỏ ra ngoài; tên model an toàn', () => {
+  const glb = json => {
+    const j = Buffer.from(JSON.stringify(json).padEnd(Math.ceil(JSON.stringify(json).length / 4) * 4, ' '));
+    const head = Buffer.alloc(20);
+    head.write('glTF', 0); head.writeUInt32LE(2, 4); head.writeUInt32LE(20 + j.length, 8); head.writeUInt32LE(j.length, 12); head.write('JSON', 16);
+    return Buffer.concat([head, j]);
+  };
+  assert.doesNotThrow(() => checkGlb(glb({ asset: { version: '2.0' }, buffers: [{ byteLength: 0 }] })));
+  assert.throws(() => checkGlb(glb({ asset: { version: '2.0' }, images: [{ uri: 'https://evil/x.png' }] })), /file ngoài/);
+  assert.throws(() => checkGlb(glb({ asset: { version: '2.0' }, buffers: [{ uri: 'data:application/octet-stream;base64,AA==' }] })), /file ngoài/);
+  assert.throws(() => checkGlb(Buffer.from('<html>not a model</html>')), /GLB/);
+  const db = JSON.parse(readFileSync(join(ROOT, 'src/data/db.json'), 'utf8'));
+  const models = showcaseModels(db);
+  assert.ok(models.length >= 20);
+  assert.ok(models.every(m => SAFE_NAME.test(m)));
+});
