@@ -1,6 +1,6 @@
 import { html, num } from '../lib/html.js';
-import { ix, unitFromParam } from '../db.js';
-import { img, elBadge, legBadge, researchIcons, unitChip, empty, footer, TAGS } from '../ui.js';
+import { ix, unitFromParam, label } from '../db.js';
+import { img, elBadge, elColor, legBadge, tierChip, researchIcons, unitChip, empty, footer, TAGS } from '../ui.js';
 import { stageCard } from './pet.js';
 
 export default {
@@ -14,38 +14,38 @@ export default {
     const evo = u.evo ?? [];
 
     return html`<main>
-      <a class="backlink" href="#/units">← Sinh vật</a>
-      <div class="detail-head">
-        ${img(u.model, u.name, 'big', 128)}
-        <div class="grow">
-          <h1>${u.name}${u.level != null ? html` <small class="dim">Lv ${u.level}</small>` : ''} ${legBadge(u, true)}</h1>
+      <a class="backlink mono" href="#/units">← Toàn bộ sinh vật</a>
+      <section class="hero" style="--c:${elColor(u.el)}">
+        <div class="hero-art">${img(u.model, u.name, '', 220)}</div>
+        <div class="hero-body">
+          <div class="mono">${u.level != null ? `Lv ${u.level} · ` : ''}đòn ${label(u.atk)} · giáp ${label(u.armorType)}</div>
+          <h1>${u.name} ${tierChip(u.stageTier, 'Hạng so với các con cùng tầm cấp')}</h1>
           <div class="tags">
-            ${elBadge(u.el)}
+            ${elBadge(u.el)} ${legBadge(u, true)}
             ${(u.tags ?? []).map(t => html`<span class="badge">${TAGS[t] ?? t}</span> `)}
-            ${u.catchable ? html`<span class="badge catch">Bắt được · ${num((u.catch ?? 0) * 100)}%</span>` : ''}
+            ${u.catchable ? html`<span class="badge up">Bắt được · ${num((u.catch ?? 0) * 100)}%</span>` : ''}
             ${u.killGold ? html`<span class="badge gold">Hạ được ${num(u.killGold)} vàng</span>` : ''}
-            ${u.leak ? html`<span class="badge">Lọt: −${u.leak} mạng</span>` : ''}
+            ${u.leak ? html`<span class="badge warn">Lọt: −${u.leak} mạng</span>` : ''}
           </div>
-          ${pet ? html`<p class="sub" style="margin:8px 0 0">Thuộc cây tiến hóa của <a class="rootlink" href="#/pet/${pet.slug}/${u.id.replace(/^unit_/, '')}">${pet.name} →</a></p>` : ''}
+          ${pet ? html`<p class="lead">Thuộc cây tiến hóa của <a class="rootlink" href="#/pet/${pet.slug}/${u.id.replace(/^unit_/, '')}">${pet.name} →</a></p>` : ''}
           ${researchIcons(u.research)}
         </div>
-      </div>
+      </section>
 
-      ${stageCard(u)}
+      <div class="timeline">${stageCard(u)}</div>
 
       ${from.length || evo.length ? html`<h2>Tiến hóa</h2>
         <div class="evo-links">
-          ${from.length ? html`<div><span class="dim">Từ:</span> ${from.map(id => unitChip(id))}</div>` : ''}
-          ${evo.length ? html`<div><span class="dim">Lên:</span> ${evo.map(e => unitChip(e.to, html` · ${num(e.cost)}g`))}</div>` : ''}
+          ${from.length ? html`<div><span class="mono">Từ</span> ${from.map(id => unitChip(id))}</div>` : ''}
+          ${evo.length ? html`<div><span class="mono">Lên</span> ${evo.map(e => unitChip(e.to, html` · ${num(e.cost)}g`))}</div>` : ''}
         </div>` : ''}
 
-      ${family.length ? html`<h2>Cùng gia phả (${family.length})</h2>
+      ${family.length ? html`<h2>Cùng gia phả <small class="mono">${family.length}</small></h2>
         <div class="chip-list">${family.map(x => unitChip(x.id))}</div>` : ''}
 
       ${u.notes?.length ? html`<h2>Ghi chú dữ liệu</h2>${u.notes.map(n => html`<p class="note">${n}</p>`)}` : ''}
-      <p class="dim">ID: <code>${u.id}</code> · model <code>${u.model}</code> · tầm phát hiện ${num(u.acquire)}</p>
+      <p class="mono dim idline">ID ${u.id} · model ${u.model} · tầm phát hiện ${num(u.acquire)}</p>
       ${footer()}
     </main>`;
   },
 };
-

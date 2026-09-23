@@ -1,7 +1,7 @@
-import { html, toString, short, debounce } from '../lib/html.js';
+import { html, toString, short, pct, debounce } from '../lib/html.js';
 import { buildIndex } from '../lib/search.js';
-import { db } from '../db.js';
-import { img, elBadge, catchBadge, legBadge, footer } from '../ui.js';
+import { db, ix } from '../db.js';
+import { img, elBadge, elColor, tierChip, pageHead, footer } from '../ui.js';
 
 const filters = { q: '', el: 'all', kind: 'all', sort: 'name' };
 
@@ -27,8 +27,10 @@ function prepare() {
 }
 
 const byName = (a, b) => collator.compare(a.name, b.name);
+const power = p => ix.lineById.get(p.id)?.solo.score ?? 0;
 const SORTS = {
   name: ['Tên A→Z', byName],
+  tier: ['Hạng cao nhất', (a, b) => power(b) - power(a) || byName(a, b)],
   catchHard: ['Khó bắt nhất', (a, b) => a.catch - b.catch || byName(a, b)],
   catchEasy: ['Dễ bắt nhất', (a, b) => b.catch - a.catch || byName(a, b)],
   cost: ['Giá bắt thấp nhất', (a, b) => a.book - b.book || byName(a, b)],
@@ -56,17 +58,23 @@ function results() {
 
 function card(p) {
   const final = db.units[p.finalId];
+  const line = ix.lineById.get(p.id);
   const shown = p.stages.slice(0, 6);
-  return html`<a class="pet-card ${p.legendary ? 'leg' : ''}" href="#/pet/${p.slug}">
-    <div class="row1">
-      ${img(p.model, p.name, 'portrait', 64)}
-      <div>
+  return html`<a class="pet-card ${p.legendary ? 'leg' : ''}" href="#/pet/${p.slug}" style="--c:${elColor(p.el)}">
+    <div class="pc-head">
+      <div class="pc-art">${img(p.model, p.name, '', 80)}${line ? tierChip(line.solo.tier, 'Hạng sức mạnh của cả dòng') : ''}</div>
+      <div class="pc-id">
         <div class="pname">${p.name}</div>
-        <div class="tags">${elBadge(p.el)} ${catchBadge(p.catch)} ${legBadge(p)}</div>
+        <div class="pc-tags">${elBadge(p.el)}<span class="mono">Bắt ${pct(p.catch, 0)}</span>${p.legendary ? html`<span class="mono gold">★ Huyền thoại</span>` : ''}</div>
       </div>
     </div>
-    <div class="mini-chain">${shown.map((id, i) => html`${i ? html`<span class="arr">›</span>` : ''}${img(db.units[id].model, db.units[id].name, '', 26)}`)}${p.stages.length > 6 ? html`<span class="more">+${p.stages.length - 6}</span>` : ''}${p.branching ? html`<span class="more" title="Có nhánh tiến hóa">⑂</span>` : ''}</div>
-    <div class="statrow"><span>Giá <b>${p.book}</b></span><span>Max HP <b>${short(p.hpMax)}</b></span><span>DPS <b>${short(p.dpsMax)}</b></span><span>→ <b>${final?.name}</b></span></div>
+    <div class="mini-chain">${shown.map((id, i) => html`${i ? html`<span class="arr">›</span>` : ''}${img(db.units[id].model, db.units[id].name, '', 28)}`)}${p.stages.length > 6 ? html`<span class="more">+${p.stages.length - 6}</span>` : ''}</div>
+    <div class="pc-stats">
+      <div><b>${p.book}</b><span>Giá bắt</span></div>
+      <div><b>${short(p.hpMax)}</b><span>Máu đỉnh</span></div>
+      <div><b class="gold">${short(p.dpsMax)}</b><span>DPS đỉnh</span></div>
+    </div>
+    <div class="pc-foot mono"><span>${p.stages.length} dạng${p.branching ? ' · rẽ nhánh' : ''}</span><span>→ ${final?.name}</span></div>
   </a>`;
 }
 
@@ -81,20 +89,19 @@ export default {
     const list = results();
     const chip = (attr, val, text, on) => html`<button type="button" class="chip ${on ? 'on' : ''}" data-${attr}="${val}">${text}</button>`;
     return html`<main>
-      <h1>Pokédex</h1>
-      <p class="sub">${db.pets.length} pet bắt được · ${groups.leg.length} huyền thoại · ${db.meta.counts.units} sinh vật trong game</p>
+      ${pageHead('Pokédex', { kick: `${db.pets.length} pet bắt được · ${groups.leg.length} huyền thoại · ${db.meta.counts.units} sinh vật trong game` })}
       <div class="controls">
-        <input type="search" placeholder="Tìm pet, dạng tiến hóa, kỹ năng… (chịu gõ sai)" value="${filters.q}" data-q autocomplete="off" aria-label="Tìm kiếm">
+        <input class="search" type="search" placeholder="Tìm pet, dạng tiến hóa, kỹ năng… (gõ sai vẫn ra)" value="${filters.q}" data-q autocomplete="off" aria-label="Tìm kiếm">
         <div class="chips">
           ${chip('el', 'all', 'Mọi hệ', filters.el === 'all')}
-          ${Object.keys(db.elements).filter(e => groups.byEl.has(e)).map(e => chip('el', e, db.elements[e].name, filters.el === e))}
+          ${Object.keys(db.elements).filter(e => groups.byEl.has(e)).map(e => chip('el', e, html`<i class="dot" style="--c:${elColor(e)}"></i>${db.elements[e].name}`, filters.el === e))}
         </div>
         <div class="chips">
           ${chip('kind', 'all', `Tất cả (${db.pets.length})`, filters.kind === 'all')}
           ${chip('kind', 'leg', `★ Huyền thoại (${groups.leg.length})`, filters.kind === 'leg')}
           ${chip('kind', 'normal', `Thường (${groups.normal.length})`, filters.kind === 'normal')}
           <select class="chip" data-sort aria-label="Sắp xếp">${Object.entries(SORTS).map(([k, [l]]) => html`<option value="${k}" ${filters.sort === k ? html`selected` : ''}>${l}</option>`)}</select>
-          <span class="badge count" id="result-count">${list.length}</span>
+          <span class="count mono"><b id="result-count">${list.length}</b> kết quả</span>
         </div>
       </div>
       <div id="home-grid" class="grid">${grid(list)}</div>

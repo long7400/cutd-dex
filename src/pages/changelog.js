@@ -1,6 +1,6 @@
 import { html, num } from '../lib/html.js';
 import { db, linkFor } from '../db.js';
-import { footer } from '../ui.js';
+import { pageHead, footer } from '../ui.js';
 
 const FIELD = {
   max_health: 'Máu', attack_damage: 'Sát thương', attack_cooldown_ticks: 'Hồi đòn (tick)', attack_range: 'Tầm',
@@ -19,8 +19,7 @@ export default {
   render() {
     const log = db.changelog ?? [];
     return html`<main>
-      <h1>Lịch sử cập nhật</h1>
-      <p class="sub">Mỗi lần game đổi catalog, bot tự so sánh bản cũ và bản mới rồi ghi lại ở đây.</p>
+      ${pageHead(html`Lịch sử <em>cập nhật</em>`, { lead: 'Mỗi lần game đổi catalog, bot tự so sánh bản cũ và bản mới rồi ghi lại ở đây.' })}
       ${log.length ? log.map(e => html`<section class="log">
         <div class="log-head">
           <b>${new Date(e.at).toLocaleString('vi-VN')}</b>
@@ -28,7 +27,7 @@ export default {
           ${e.prevRuleset ? html`<span class="badge">${e.prevRuleset} → ${e.ruleset}</span>` : ''}
         </div>
         <div class="tags">
-          ${e.summary.unitsAdded ? html`<span class="badge catch">+${e.summary.unitsAdded} sinh vật</span>` : ''}
+          ${e.summary.unitsAdded ? html`<span class="badge up">+${e.summary.unitsAdded} sinh vật</span>` : ''}
           ${e.summary.unitsRemoved ? html`<span class="badge warn">−${e.summary.unitsRemoved} sinh vật</span>` : ''}
           ${e.summary.statChanges ? html`<span class="badge">${e.summary.statChanges} thay đổi chỉ số</span>` : ''}
           ${e.summary.abilityChanges ? html`<span class="badge">${e.summary.abilityChanges} kỹ năng đổi</span>` : ''}

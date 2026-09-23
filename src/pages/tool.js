@@ -1,119 +1,59 @@
-import { html, num } from '../lib/html.js';
+import { html } from '../lib/html.js';
 import tool from '../data/tool.json';
-import { footer } from '../ui.js';
+import { DOWN, COPY } from '../lib/icons.js';
+import { pageHead, footer } from '../ui.js';
+import { videoMarkup, mountVideo } from './home/video.js';
 
 const SOURCE = 'https://github.com/long7400/cutd-dex/blob/main/tool/overlay.js';
-
-const consoleCode = () => tool.code;
-const bookmarklet = () => `javascript:${encodeURIComponent(consoleCode())}`;
+const bookmarklet = () => `javascript:${encodeURIComponent(tool.code)}`;
 
 export default {
   title: () => 'CUTD Helper',
   render() {
-    return html`<main>
-      <h1>CUTD Helper</h1>
-      <p class="sub">Bảng hỗ trợ nổi ngay trên màn hình game: xem trade, wild, đội hình, đợt tới — tra luôn dữ liệu wiki. Không cài extension, không tải file.</p>
+    return html`<main class="tool-page">
+      ${pageHead(html`CUTD <em>Helper</em>`, { lead: 'Bảng trợ lý nổi ngay trên màn hình game. Không cài extension, không tải file.' })}
 
-      <section class="tool-card">
-        <h2>Cài đặt</h2>
+      <section class="install">
+        <a class="h-btn primary bm" href="${bookmarklet()}" title="Kéo nút này lên thanh bookmark">${DOWN}CUTD Helper</a>
         <ol class="steps">
-          <li><b>Máy tính:</b> kéo nút dưới đây thả lên thanh bookmark (Ctrl/Cmd + Shift + B để hiện thanh bookmark).</li>
-          <li>Vào phòng game trên <code>cutd.site</code> hoặc <code>m.cutd.site</code> rồi bấm bookmark <b>CUTD Helper</b>. Bấm lần nữa để ẩn/hiện.</li>
-          <li><b>Điện thoại:</b> bấm "Chép link", tạo 1 bookmark bất kỳ, sửa URL thành nội dung vừa chép, đặt tên <b>CUTD Helper</b>. Trong game gõ "CUTD Helper" vào thanh địa chỉ rồi chọn bookmark đó.</li>
+          <li><b>Kéo</b> nút vàng lên thanh bookmark <span class="mono">Ctrl/⌘ + Shift + B để hiện thanh</span></li>
+          <li><b>Vào trận</b> trên m.cutd.site hoặc cutd.site</li>
+          <li><b>Bấm</b> bookmark. Bấm lần nữa để ẩn</li>
         </ol>
-        <div class="chips">
-          <a class="chip on bm" href="${bookmarklet()}" title="Kéo lên thanh bookmark">CUTD Helper</a>
-          <button type="button" class="chip" data-copy>Chép link</button>
-          <span class="dim small" data-copied></span>
+        <div class="alt">
+          <div><b>Điện thoại</b><span>Chép link → tạo bookmark bất kỳ → dán vào ô URL, đặt tên CUTD Helper.</span><button type="button" class="h-btn" data-copy>${COPY}Chép link</button></div>
+          <div><b>Dia, Arc…</b><span>Chép code → tab game mở Console (⌘⌥J / Ctrl⇧J) → dán → Enter. Lần đầu gõ <code>allow pasting</code>.</span><button type="button" class="h-btn" data-copy-console>${COPY}Chép code</button></div>
         </div>
+        <p class="mono copied" data-copied></p>
       </section>
 
-      <section class="tool-card">
-        <h2>Trình duyệt không chạy bookmark (Dia, Arc…)</h2>
-        <p class="sub" style="margin:10px 0 6px">Chạy đúng đoạn code đó bằng Console — áp dụng cho mọi trình duyệt nhân Chromium (Dia, Arc, Chrome, Edge, Brave…).</p>
-        <ol class="steps">
-          <li>Bấm <b>Chép code cho Console</b> bên dưới.</li>
-          <li>Mở tab game, bấm <b>Cmd + Option + J</b> (Windows: <b>Ctrl + Shift + J</b>) để mở Console.</li>
-          <li>Lần đầu dán, trình duyệt sẽ cảnh báo: gõ <code>allow pasting</code> rồi Enter.</li>
-          <li>Dán code (<b>Cmd/Ctrl + V</b>) → Enter. Panel hiện lên; đóng Console đi là chơi bình thường.</li>
-        </ol>
-        <p class="note small">Cảnh báo "đừng dán code lạ vào Console" là đúng — chỉ dán code chép từ chính trang này, và có thể đối chiếu SHA-256 bên dưới.</p>
-        <div class="chips">
-          <button type="button" class="chip on" data-copy-console>Chép code cho Console</button>
-          <span class="dim small" data-copied-console></span>
-        </div>
+      <section class="tool-demo" id="helper">
+        <h2>Làm được <em>gì</em></h2>
+        ${videoMarkup()}
+        <p class="more-feat">Thêm: đợt tới khắc đòn gì · phòng đối thủ · phím <b>F</b> bấm nút chính · giữ <b>Option</b> + kéo để xoay camera.</p>
       </section>
 
-      <section class="tool-card">
-        <h2>Có gì</h2>
-        <ul class="steps">
-          <li><b>Trade:</b> 7 slot đang mở — nhận con gì, cần đưa con gì; có sẵn lính thì có nút <b>Trade</b>, chưa có thì hiện lính nào tiến hóa tới được và tốn bao nhiêu vàng.</li>
-          <li><b>Hai bản game — tool tự nhận biết</b> (góc trên panel ghi <i>Cocos</i> hoặc <i>m. · …</i>), không cần đổi site. Nút Bắt / Tiến hóa / Trade và bấm dòng để chọn đều gọi thẳng hàm của game, chọn con theo id (kể cả khi lính đứng chồng):
-            <ul>
-              <li><code>cutd.site</code>: dùng được ngay.</li>
-              <li><code>m.cutd.site</code>: dán tool ở sảnh trước khi vào trận thì tự móc (panel ghi <i>m. · móc</i>). Dán giữa trận thì vài giây sau tool tự <b>Móc</b>: mở lại đúng trận trong khung để móc hàm game (muốn nhanh thì bấm nút Móc).</li>
-            </ul></li>
-          <li><b>Phím F (bản web m.cutd.site):</b> bấm con trên sàn rồi nhấn <b>F</b> = bấm nút chính của game ở dock (Bắt / Tiến hóa / Trade) — khỏi rê chuột. Chỉ nhận phím thật, bỏ qua khi đang gõ chat.</li>
-          <li><b>Nút thao tác nhanh:</b> <b>Bắt</b> ở tab Wild, <b>↑ tiến hóa</b> (mỗi nhánh 1 nút) ở tab Đội, <b>Trade</b> ở tab Trade/Đội. Bấm vào dòng để chọn con đó trong game.</li>
-          <li><b>Hạng S+ / S / A / B / C</b> ở tab Wild và Đội — chỉ tính sức mạnh của chính con pet (DPS thật đã cộng kỹ năng), không tính quái hay đồng đội:
-            <ul>
-              <li><b>Huy hiệu cạnh nút</b> = hạng <b>hiện tại</b>, so với các con cùng tầm cấp.</li>
-              <li><b>Dải ô màu</b> = hạng từng cấp tiến hóa từ bây giờ tới đỉnh (ô cuối là dạng mạnh nhất). Vd Staryu: ô đầu A, giữa C, cuối S+ → yếu giữa đường nhưng Lv100 rất mạnh.</li>
-              <li>Rê chuột: DPS hiện tại, dạng đỉnh + hạng + số vàng cần, kỹ năng mở ở cấp nào.</li>
-              <li><b>Nhãn vai trò</b>: <b>ATK</b> (sát thương) hoặc <b>TANK</b> (máu / giáp dày, xét ở dạng đỉnh) + kỹ năng đặc biệt kể cả khi lên cấp mới mở: <b>BUFF</b> hào quang cả đội, <b>CC</b> làm chậm, <b>HEAL</b> hồi máu, <b>NÉ</b>, <b>TAUNT</b> kéo quái, <b>BOSS</b> diệt boss, <b>AOE</b> đánh lan. Tab Wild lọc được theo ATK / TANK / Hỗ trợ.</li>
-            </ul></li>
-
-          <li><b>Wild:</b> toàn bộ sinh vật hoang dã trên bãi — giá bắt (đủ tiền không), tỉ lệ bắt, DPS tối đa cả cây, cây nào đang có trade cần.</li>
-          <li><b>Đội hình:</b> lính của mày — máu, giá bán, các nhánh tiến hóa kèm giá, con nào đem trade được ngay.</li>
-          <li><b>Xếp đội</b> (tab Đội, lúc chuẩn bị): dàn đội từ phía quái vào — <b>TANK</b> hàng đầu → <b>CẬN</b> (đấu sĩ / phép tầm ngắn) → <b>BUFF</b> (hào quang / hồi máu) → <b>XA</b> (tầm &gt; 300) cuối; con mạnh nhất mỗi hàng đứng giữa đường quái. Chống spam: gửi từng lệnh một, chờ game xác nhận rồi mới gửi tiếp (~0,3 giây / con), con đã đúng chỗ thì bỏ qua, game từ chối là dừng, xếp xong khoá 4 giây, bấm lại giữa chừng để dừng.</li>
-          <li><b>Đợt tới:</b> quái sắp tới căn cứ — tổng máu, số mạng mất nếu lọt, loại đòn khắc chế giáp của nó.</li>
-          <li><b>Phòng:</b> mạng, vàng, tinh thể, số quái của từng nhà.</li>
-          <li><b>Đo tải:</b> bấm bookmark ở sảnh rồi mới vào phòng — tool đo vào trận bao lâu mới có pet và chậm ở khâu nào (server, tải file hay máy), có nút chép báo cáo.</li>
-          <li><b>Camera bằng chuột:</b> giữ <b>Option (Alt)</b> + bấm-kéo trên sàn (dùng được trên trackpad), hoặc giữ <b>chuột giữa</b> rồi kéo — bản đồ trôi theo tay, dừng tay là dừng. Kéo chuột trái thường vẫn là thao tác của game. Tool chỉ "giữ" phím W/A/S/D thay mày.</li>
-          <li>Nút <b>▭ / ▯</b> trên thanh tiêu đề: đổi panel dọc ↔ thanh ngang dưới đáy màn hình. Rê chuột vào dòng để xem chi tiết.</li>
+      <section class="safe">
+        <h2>An <em>toàn</em></h2>
+        <ul>
+          <li><b>Chỉ làm khi mày bấm.</b> 1 cú bấm = 1 lệnh của chính game (Bắt / Tiến hóa / Trade / Xếp đội). Không tự mua, không đọc cookie hay bộ nhớ trình duyệt.</li>
+          <li><b>Code nằm trọn trong bookmark.</b> Không nạp script từ đâu khác; file dữ liệu wiki chỉ được đọc như chữ.</li>
         </ul>
-      </section>
-
-      <section class="tool-card">
-        <h2>An toàn</h2>
-        <ul class="steps">
-          <li>Toàn bộ code nằm sẵn trong bookmark (${num(Math.round(tool.bytes / 102.4) / 10)}KB). Không nạp script từ bất kỳ đâu nên không ai tráo được code.</li>
-          <li>Chỉ tải 1 file <b>dữ liệu</b> <code>overlay.json</code> từ wiki. File này chỉ được đọc như dữ liệu và hiển thị dạng chữ, không bao giờ bị chạy như code.</li>
-          <li><b>Chỉ hành động khi mày bấm:</b> nút Bắt / Tiến hóa / Trade gọi đúng hàm của game (như bấm nút trong game) — 1 cú bấm = 1 lệnh, khoá 0,6s chống bấm đúp, không tự mua. Riêng <b>Xếp đội</b> gửi lần lượt 1 lệnh di chuyển / con, chờ game xác nhận từng lệnh, hết lượt là dừng. Click do script khác tạo ra bị bỏ qua.</li>
-          <li>Bấm vào 1 dòng = chọn con đó trong game (chỉ đổi lựa chọn trên máy, không gửi gì).</li>
-          <li>Camera chuột chỉ giả lập đúng 4 phím W/A/S/D, luôn nhả phím khi dừng tay, thả chuột, mất focus hoặc tắt tool. Cú Option+kéo bị chặn trọn vẹn nên game không kẹt trạng thái.</li>
-          <li>Tên, giá, nhánh tiến hóa trên nút lấy từ <b>catalog của chính game</b> — file dữ liệu wiki có bị sửa cũng không đổi được nút làm gì. Đang xem nhà người khác thì nút tự khoá.</li>
-          <li>Không đọc/ghi cookie hay localStorage.</li>
-          <li>Build phân tích cú pháp (AST) và tự fail nếu code có <code>eval</code>, <code>innerHTML</code>, <code>socket.send</code>, <code>sendBeacon</code>, cookie/storage, nạp script ngoài, truy cập ngoặc vuông/gán biến để lách, hoặc gọi hàm game nào khác ngoài Bắt / Tiến hóa / Trade / Di chuyển / Chọn (bán, thả, chat… đều bị chặn). Mọi lệnh gọi vào game nằm trong 1 file duy nhất <code>tool/game-bridge.js</code>.</li>
-          <li>Phiên bản <code>${tool.version}</code> · dữ liệu chỉ lấy từ <code>${tool.dataUrl}</code> (khoá cứng trong code) và <code>/catalog</code> của chính game.</li>
-          <li>SHA-256 của đúng đoạn code mày nhận: <code class="hash">${tool.sha256}</code> — tự kiểm: clone repo, chạy <code>npm ci &amp;&amp; node scripts/build-tool.mjs</code> sẽ in ra đúng 16 ký tự đầu của mã băm này.</li>
-          <li>Mã nguồn: <a class="rootlink" href="${SOURCE}" target="_blank" rel="noopener noreferrer">tool/overlay.js</a></li>
-        </ul>
-        <details class="codebox"><summary>Xem toàn bộ code (dán được thẳng vào Console)</summary><pre>${consoleCode()}</pre></details>
-
+        <p class="mono hash">v${tool.version} · SHA-256 ${tool.sha256} · <a class="rootlink" href="${SOURCE}" target="_blank" rel="noopener noreferrer">mã nguồn</a></p>
       </section>
       ${footer()}
     </main>`;
   },
   mount(root) {
+    const cleanups = [];
+    this.unmount = () => { cleanups.splice(0).forEach(fn => { try { fn(); } catch { } }); };
+    mountVideo(root.querySelector('.tool-demo'), cleanups);
+    const say = t => { root.querySelector('[data-copied]').textContent = t; };
+    const copy = (text, ok) => navigator.clipboard?.writeText(text).then(() => say(ok), () => say('Trình duyệt chặn chép — kéo nút vàng lên thanh bookmark.'));
     root.addEventListener('click', e => {
-      if (e.target.closest('.bm')) {
-        e.preventDefault();
-        root.querySelector('[data-copied]').textContent = 'Kéo nút này lên thanh bookmark, đừng bấm ở đây.';
-      }
-      if (e.target.closest('[data-copy-console]')) {
-        const out = root.querySelector('[data-copied-console]');
-        navigator.clipboard?.writeText(consoleCode()).then(
-          () => { out.textContent = 'Đã chép — dán vào Console của tab game.'; },
-          () => { out.textContent = 'Trình duyệt chặn chép — mở "Xem toàn bộ code" bên dưới và chép tay.'; },
-        );
-      }
-      if (e.target.closest('[data-copy]')) {
-        navigator.clipboard?.writeText(bookmarklet()).then(
-          () => { root.querySelector('[data-copied]').textContent = 'Đã chép link bookmark.'; },
-          () => { root.querySelector('[data-copied]').textContent = 'Trình duyệt chặn chép — hãy kéo nút lên thanh bookmark.'; },
-        );
-      }
+      if (e.target.closest('.bm')) { e.preventDefault(); say('Kéo nút này lên thanh bookmark, đừng bấm ở đây.'); }
+      if (e.target.closest('[data-copy-console]')) copy(tool.code, 'Đã chép code — dán vào Console của tab game.');
+      if (e.target.closest('[data-copy]')) copy(bookmarklet(), 'Đã chép link bookmark.');
     });
   },
 };

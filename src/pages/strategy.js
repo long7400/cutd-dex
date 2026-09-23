@@ -1,6 +1,6 @@
 import { html, num, short } from '../lib/html.js';
 import { db, label } from '../db.js';
-import { img, elBadge, footer } from '../ui.js';
+import { img, elBadge, tierChip, pageHead, footer } from '../ui.js';
 
 const TIERS = ['S+', 'S', 'A', 'B', 'C'];
 const TIER_CLASS = { 'S+': 't-sp', S: 't-s', A: 't-a', B: 't-b', C: 't-c' };
@@ -23,7 +23,7 @@ const hardTrap = l => l.traps.find(([, , k]) => k === 'trap');
 
 function step(id, eff, cost, tag) {
   return html`<span class="step" title="${stageName(id)}${cost ? ` · ${num(cost)} vàng tiến hóa` : ''}">
-    ${img(unit(id)?.model, '', '', 38)}<b>${short(Math.round(eff))}${unit(id)?.stageTier ? html` <em class="stier ${TIER_CLASS[unit(id).stageTier]}" title="Hạng so với các con cùng tầm cấp">${unit(id).stageTier}</em>` : ''}</b><small>${tag || lvl(id)}</small></span>`;
+    ${img(unit(id)?.model, '', '', 38)}<b>${short(Math.round(eff))}${tierChip(unit(id)?.stageTier, 'Hạng so với các con cùng tầm cấp', 'sm')}</b><small>${tag || lvl(id)}</small></span>`;
 }
 
 function card(l, mode) {
@@ -38,7 +38,7 @@ function card(l, mode) {
         <div class="sname">${l.name}${l.legendary ? html` <span class="star">★</span>` : ''}</div>
         <div class="smeta">${elBadge(l.el)}<span class="atk">${label(l.atk)}</span>${l.catch < 0.5 ? html`<span class="rare">bắt ${Math.round(l.catch * 100)}%</span>` : ''}</div>
       </div>
-      <span class="sscore" title="Điểm ${mode.name}">${Math.round(l[mode.key].score * 100)}</span>
+      <span class="sscore mono" title="Điểm ${mode.name}">${Math.round(l[mode.key].score * 100)}</span>
     </div>
     <div class="chain" title="DPS thật (đã cộng kỹ năng) ở Lv1 → mốc 1.500 vàng → đỉnh; chữ nhỏ = hạng của dạng đó so với các con cùng tầm cấp">
       ${stops.map(([id, eff, cost, tag], i) => html`${i ? html`<span class="arr">›</span>` : ''}${step(id, eff, cost, tag)}`)}
@@ -96,21 +96,17 @@ export default {
     const cell = v => html`<td class="n ${v >= 1.15 ? 'up' : v <= 0.95 ? 'down' : ''}">×${v.toFixed(2)}</td>`;
 
     return html`<main class="strategy">
-      <div class="strat-hero">
-        <div>
-          <h1>Chiến thuật</h1>
-          <p class="sub">Hạng mỗi dòng pet theo <b>DPS thật</b> (chỉ số + kỹ năng + kỹ năng mở khi tiến hóa), vai trò trong đội và khắc chế theo chế độ.
-            Tự tính từ dữ liệu game (ruleset <code>${db.meta.ruleset}</code>). Huy hiệu hạng trong <a href="#/tool">CUTD Helper</a> dùng đúng bảng <b>Sức mạnh</b>.</p>
-        </div>
-        <div class="strat-switch">${Object.values(MODES).map(m => html`<a class="chip ${m.key === mode.key ? 'on' : ''}" href="#/strategy/${m.key}">${m.name}</a>`)}</div>
-      </div>
+      ${pageHead(html`Chiến <em>thuật</em>`, {
+        lead: html`Hạng mỗi dòng pet theo <b>DPS thật</b> (chỉ số + kỹ năng + kỹ năng mở khi tiến hóa), vai trò và khắc chế theo chế độ. Huy hiệu hạng trong <a class="rootlink" href="#/tool">CUTD Helper</a> dùng đúng bảng <b>Sức mạnh</b>.`,
+        aside: html`<div class="chips">${Object.values(MODES).map(m => html`<a class="chip ${m.key === mode.key ? 'on' : ''}" href="#/strategy/${m.key}">${m.name}</a>`)}</div>`,
+      })}
       <p class="note">${mode.note}</p>
 
       <section class="tierlist">
         ${TIERS.map(t => {
           const list = lines.filter(l => l[mode.key].tier === t).sort((a, b) => b[mode.key].score - a[mode.key].score);
           return list.length ? html`<div class="tier-row">
-            <div class="tier-label ${TIER_CLASS[t]}"><b>${t}</b><small>${TIER_NOTE[t]}</small><span>${list.length} dòng</span></div>
+            <div class="tier-label ${TIER_CLASS[t]}"><b>${t}</b><small>${TIER_NOTE[t]}</small><span class="mono">${list.length} dòng</span></div>
             <div class="tier-cards">${list.map(l => card(l, mode))}</div>
           </div>` : '';
         })}
@@ -142,7 +138,7 @@ export default {
 
       <h2>Vai trò</h2>
       <div class="roles-grid">${KEY_ROLES.filter(r => byRole[r]).map(r => html`<div class="role-box">
-        <h3><span class="rchip r-${r}">${roleName(r)}</span> <small>${byRole[r].length} dòng</small></h3>
+        <h3><span class="rchip r-${r}">${roleName(r)}</span> <small class="mono">${byRole[r].length} dòng</small></h3>
         <div class="mchips">${byRole[r].map(({ l, id, c }) => mini(l, c ? `từ ${lvl(id)}` : ''))}</div>
       </div>`)}</div>
 

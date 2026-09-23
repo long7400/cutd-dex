@@ -1,6 +1,6 @@
 import { html, num, pct } from '../lib/html.js';
 import { db, label } from '../db.js';
-import { footer } from '../ui.js';
+import { pageHead, footer } from '../ui.js';
 
 const yes = b => (b ? 'Có' : 'Không');
 
@@ -23,8 +23,7 @@ export default {
     ];
     const cellColor = m => (m > 1 ? 'up' : m < 1 ? 'down' : '');
     return html`<main>
-      <h1>Luật chơi</h1>
-      <p class="sub">Thông số lấy thẳng từ catalog của server (ruleset <code>${db.meta.ruleset}</code>, ${db.meta.tickRate} tick/giây).</p>
+      ${pageHead(html`Luật <em>chơi</em>`, { lead: html`Thông số lấy thẳng từ catalog của server (ruleset <code>${db.meta.ruleset}</code>, ${db.meta.tickRate} tick/giây).` })}
 
       <h2>Thông số chung</h2>
       <div class="kv">${rows.map(([a, b]) => html`<div><span>${a}</span><b>${b}</b></div>`)}</div>
@@ -52,10 +51,10 @@ export default {
       </table></div>
 
       <h2>Thu nhập</h2>
-      <div class="chips">${db.game.incomes.map(o => html`<span class="chip ${o.isDefault ? 'on' : ''}">${o.mode === 'kill_bounty' ? 'Thưởng hạ địch' : o.multiplier ? `Lãi · ×${o.multiplier}` : 'Lãi · mặc định'}</span>`)}</div>
+      <div class="chips">${db.game.incomes.map(o => html`<span class="badge ${o.isDefault ? 'gold' : ''}">${o.mode === 'kill_bounty' ? 'Thưởng hạ địch' : o.multiplier ? `Lãi · ×${o.multiplier}` : 'Lãi · mặc định'}</span>`)}</div>
 
       <h2>Bảng sát thương (loại đòn × loại giáp)</h2>
-      <p class="sub">Sát thương thực = sát thương × hệ số bảng × (1 − giảm do giáp).
+      <p class="lead">Sát thương thực = sát thương × hệ số bảng × (1 − giảm do giáp).
         Giảm do giáp = <code>giáp × ${k} / (1 + giáp × ${k})</code> — vd 10 giáp giảm ${pct((10 * k) / (1 + 10 * k))}, 50 giáp giảm ${pct((50 * k) / (1 + 50 * k))}.</p>
       <div class="table-wrap"><table class="dmg">
         <thead><tr><th>Đòn \\ Giáp</th>${d.armorTypes.map(a => html`<th class="n">${label(a)}</th>`)}</tr></thead>

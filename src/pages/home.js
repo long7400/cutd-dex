@@ -1,26 +1,18 @@
-import '@fontsource/big-shoulders-display/900';
-import '@fontsource/barlow/500';
-import '@fontsource/barlow/600';
-import '@fontsource/barlow/700';
-import '@fontsource/barlow/800';
-import '@fontsource/jetbrains-mono/700';
 import './home.css';
 import { html, toString, num } from '../lib/html.js';
 import { db, portrait, label } from '../db.js';
 import { evoLines, HERO_TEAM, HERO_CREEPS, COURT } from '../lib/showcase.js';
 import tool from '../data/tool.json';
+import { PLAY, DOWN, BOOK } from '../lib/icons.js';
+import { EL } from '../ui.js';
+import { videoMarkup, mountVideo } from './home/video.js';
 
 const GAME_URL = 'https://m.cutd.site/';
-const TIERS = ['C', 'B', 'A', 'S', 'S+'];
 const cls = t => ({ 'S+': 't-sp', S: 't-s', A: 't-a', B: 't-b', C: 't-c' })[t] ?? 't-c';
 const TC = { 'S+': '#ffde8f', S: '#ff9f43', A: '#9af0ce', B: '#9fbcd9', C: '#aec4d3' };
-const EL = { fire: '#ff9f43', water: '#5aa9ff', grass: '#9af0ce', lightning: '#ffd452', psychic: '#a98bff', fighter: '#ff7a5c', normal: '#e1d2a9' };
 const art = name => `art/${name}.glb`;
 const bookmarklet = () => `javascript:${encodeURIComponent(tool.code)}`;
 
-const PLAY = html`<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M6 3.5v13l11-6.5z"/></svg>`;
-const DOWN = html`<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3v10M5.5 8.5 10 13l4.5-4.5M4 17h12"/></svg>`;
-const BOOK = html`<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5c2.5-1 5-1 7 .5 2-1.5 4.5-1.5 7-.5V16c-2.5-1-5-1-7 .5-2-1.5-4.5-1.5-7-.5z"/><path d="M10 5v11.5"/></svg>`;
 
 function waves() {
   const set = db.waveSets.find(w => w.id === 'mode_survival') ?? db.waveSets[0];
@@ -37,35 +29,6 @@ function waves() {
   }).filter(Boolean);
 }
 
-function evoExample(lines) {
-  let best = null;
-  for (const l of lines) {
-    l.stages.forEach((s, i) => {
-      const p = l.stages[i - 1];
-      if (!p || p.model === s.model) return;
-      const gain = TIERS.indexOf(s.tier) - TIERS.indexOf(p.tier);
-      if (!best || gain > best.gain) best = { gain, p, s, next: l.stages[i + 1] };
-    });
-  }
-  if (!best) return null;
-  const { p, s, next } = best;
-  return {
-    from: { m: p.model, n: p.name, t: p.tier, lv: p.level, dps: p.dps },
-    to: { m: s.model, n: s.name, t: s.tier, lv: s.level, dps: s.dps, next: next ? next.cost - s.cost : 0 },
-    cost: s.cost - p.cost,
-  };
-}
-
-function tradeExample() {
-  const rank = t => TIERS.indexOf(t ?? 'C');
-  const all = (db.trade ?? []).flatMap(s => s.recipes.map(r => ({ slot: s.slot, give: db.units[r.give], get: db.units[r.get] }))).filter(x => x.give && x.get);
-  const best = all.sort((a, b) => (rank(b.get.stageTier) - rank(b.give.stageTier)) - (rank(a.get.stageTier) - rank(a.give.stageTier)))[0];
-  if (!best) return null;
-  const pack = u => ({ m: u.model, n: u.name, t: u.stageTier ?? 'C', lv: u.level });
-  const others = all.filter(x => x.slot === best.slot && x !== best).slice(0, 1).map(x => ({ ...pack(x.give), slot: x.slot }));
-  return { slot: best.slot, give: pack(best.give), get: pack(best.get), others };
-}
-
 export default {
   chrome: false,
   title: () => '',
@@ -74,7 +37,7 @@ export default {
     return html`<div class="home">
       <nav class="h-nav h-wrap">
         <a class="h-mark" href="#/">CUTD <b>DEX</b></a>
-        <a href="#/pets">Pets</a><a href="#/strategy">Chiến thuật</a><a href="#/waves">Đợt quái</a><a href="#/trade">Trade</a><a href="#/tool">Công cụ</a>
+        <a href="#/pets">Pets</a><a href="#/strategy">Chiến thuật</a><a href="#/waves">Đợt quái</a><a href="#/pools">Bắt &amp; Trade</a><a href="#/rules">Cơ chế</a><a href="#/tool">Công cụ</a>
       </nav>
 
       <section class="h-hero">
@@ -126,23 +89,7 @@ export default {
 
       <section class="h-band h-tool h-wrap" id="helper">
         <h2>Trợ lý <em>ngay trong trận.</em></h2>
-        <div class="h-video">
-          <div class="vstage">
-            <div class="vboard" style="background-image:url(art/top.webp)">
-              <div class="vlane" style="top:20%" data-row="0">TANK</div><div class="vlane" style="top:39%" data-row="1">CẬN</div><div class="vlane" style="top:58%" data-row="2">BUFF</div><div class="vlane" style="top:77%" data-row="3">XA</div>
-            </div>
-            <div class="vpanel">
-              <div class="top"><b>CUTD Helper</b><small>m. · móc</small></div>
-              <div class="vtabs"><span data-t="trade">Trade</span><span data-t="wild">Wild</span><span data-t="team">Đội</span><span data-t="wave">Đợt</span></div>
-              <div class="vbody"></div>
-            </div>
-            <canvas class="vfx"></canvas>
-            <div class="vtoast"></div>
-            <div class="vcursor"></div>
-          </div>
-          <div class="vctrl"><button class="vplay" type="button" aria-label="Tạm dừng">❚❚</button><div class="vbar"><i></i><div class="vmarks"></div></div></div>
-        </div>
-        <div class="h-caption"><span class="h-mono vcap"></span><a class="h-btn primary" href="${bookmarklet()}" title="Kéo nút này lên thanh bookmark">${DOWN}Kéo lên thanh bookmark</a></div>
+        ${videoMarkup(bookmarklet())}
       </section>
 
       <section class="h-final" style="background-image:url(art/finale.webp)">
@@ -215,14 +162,6 @@ export default {
       }
     }
 
-    const evo = evoExample(lines), trade = tradeExample();
-    if (evo && trade && 'IntersectionObserver' in window && 'ResizeObserver' in window) {
-      import('./home/demo.js').then(({ mountDemo }) => {
-        if (!home.isConnected) return;
-        const demo = mountDemo($('.h-video'), { img: portrait, evo, trade });
-        $('.vmarks').innerHTML = toString(demo.chapters.slice(1).map(c => html`<span style="left:${(c.start * 100).toFixed(2)}%"></span>`));
-        cleanups.push(() => demo.destroy());
-      });
-    } else $('.h-tool').hidden = true;
+    mountVideo($('#helper'), cleanups);
   },
 };

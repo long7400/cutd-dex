@@ -1,6 +1,13 @@
+import '@fontsource/big-shoulders-display/900';
+import '@fontsource/barlow/500';
+import '@fontsource/barlow/600';
+import '@fontsource/barlow/700';
+import '@fontsource/barlow/800';
+import '@fontsource/jetbrains-mono/700';
 import './style.css';
 import { html, toString } from './lib/html.js';
 import { loadDB } from './db.js';
+import { PLAY } from './lib/icons.js';
 
 const ROUTES = {
   home: () => import('./pages/home.js'),
@@ -17,11 +24,15 @@ const ROUTES = {
   changelog: () => import('./pages/changelog.js'),
   tool: () => import('./pages/tool.js'),
 };
-const NAV = [
-  ['pets', 'Pets'], ['units', 'Sinh vật'], ['waves', 'Đợt quái'], ['trade', 'Trade'],
-  ['pools', 'Wild'], ['strategy', 'Chiến thuật'], ['research', 'Nghiên cứu'], ['rules', 'Luật chơi'], ['tool', 'Công cụ'],
+const SECTIONS = [
+  ['pets', 'Pets', [['pets', 'Pet bắt được'], ['units', 'Toàn bộ sinh vật']]],
+  ['strategy', 'Chiến thuật'],
+  ['waves', 'Đợt quái'],
+  ['pools', 'Bắt & Trade', [['pools', 'Bãi hoang'], ['trade', 'Trade']]],
+  ['rules', 'Cơ chế', [['rules', 'Luật chơi'], ['research', 'Nghiên cứu'], ['changelog', 'Lịch sử cập nhật']]],
+  ['tool', 'Công cụ'],
 ];
-const ACTIVE = { pet: 'pets', unit: 'units' };
+const OWNER = { pet: 'pets', unit: 'pets', units: 'pets', trade: 'pools', research: 'rules', changelog: 'rules' };
 
 const app = document.getElementById('app');
 const scrolls = new Map();
@@ -43,10 +54,16 @@ function parse() {
   return { name: Object.hasOwn(ROUTES, name) ? name : 'pets', params: params.map(p => { try { return decodeURIComponent(p); } catch { return ''; } }), query: new URLSearchParams(query) };
 }
 
-function topbar(active) {
+function topbar(name) {
+  const sec = SECTIONS.find(([k]) => k === (OWNER[name] ?? name));
+  const subs = sec?.[2]?.some(([k]) => k === name) ? sec[2] : null;
   return html`<header class="topbar">
-    <a class="brand" href="#/"><img src="portraits/pet_xiaohuolong.webp" alt="" width="34" height="34"><span>CUTD <em>Wiki</em></span></a>
-    <nav>${NAV.map(([k, l]) => html`<a class="navlink ${k === active ? 'on' : ''}" href="#/${k}">${l}</a>`)}</nav>
+    <div class="bar">
+      <a class="brand" href="#/">CUTD <b>DEX</b></a>
+      <nav class="nav">${SECTIONS.map(([k, l]) => html`<a class="navlink ${k === sec?.[0] ? 'on' : ''}" href="#/${k}">${l}</a>`)}</nav>
+      <a class="h-btn primary play" href="https://m.cutd.site/" target="_blank" rel="noopener noreferrer">${PLAY}<span>Mở game</span></a>
+    </div>
+    ${subs ? html`<nav class="subnav">${subs.map(([k, l]) => html`<a class="sublink ${k === name ? 'on' : ''}" href="#/${k}">${l}</a>`)}</nav>` : ''}
   </header>`;
 }
 
@@ -62,8 +79,8 @@ async function render() {
 
   const page = mod.default;
   const title = page.title?.(route) ?? '';
-  document.title = title ? `${title} · CUTD Wiki` : 'CUTD Dex — Moonlit Court';
-  app.innerHTML = toString(html`${page.chrome === false ? '' : topbar(ACTIVE[route.name] ?? route.name)}${page.render(route)}`);
+  document.title = title ? `${title} · CUTD Dex` : 'CUTD Dex — Moonlit Court';
+  app.innerHTML = toString(html`${page.chrome === false ? '' : topbar(route.name)}${page.render(route)}`);
   current = page;
   page.mount?.(app.querySelector('main') ?? app, route);
   app.dataset.route = key;
@@ -89,6 +106,6 @@ render().catch(fail);
 function fail(err) {
   console.error(err);
   app.innerHTML = toString(html`<main><div class="empty">Không tải được dữ liệu<br><small>${err.message}</small><br>
-    <button class="chip" data-reload>Tải lại</button></div></main>`);
+    <button class="h-btn" data-reload>Tải lại</button></div></main>`);
   app.querySelector('[data-reload]')?.addEventListener('click', () => location.reload());
 }

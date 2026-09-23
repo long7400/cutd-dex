@@ -1,7 +1,7 @@
 import { html, toString, num, short, debounce } from '../lib/html.js';
 import { buildIndex } from '../lib/search.js';
 import { db, ix, label, linkFor } from '../db.js';
-import { img, elBadge, footer, TAGS } from '../ui.js';
+import { img, elBadge, tierChip, pageHead, footer, TAGS } from '../ui.js';
 
 const PAGE = 120;
 const state = { q: '', tag: 'all', el: 'all', sort: 'name', dir: 1, limit: PAGE };
@@ -44,7 +44,7 @@ function results() {
 function rows(list) {
   if (!list.length) return html`<tr><td colspan="${COLS.length + 2}" class="empty">Không có kết quả</td></tr>`;
   return list.slice(0, state.limit).map(u => html`<tr>
-    <td class="namecell"><a href="${linkFor(u.id)}">${img(u.model, u.name, '', 36)}<span><b>${u.name}</b>${u.level != null ? html` <small>Lv${u.level}</small>` : ''}${u.legendary ? html` <span class="legb-t">★</span>` : ''}</span></a></td>
+    <td class="namecell"><a href="${linkFor(u.id)}">${img(u.model, u.name, '', 36)}<span><b>${u.name}</b>${u.level != null ? html` <small>Lv${u.level}</small>` : ''}${u.legendary ? html` <span class="gold">★</span>` : ''}</span>${tierChip(u.stageTier, 'Hạng so với các con cùng tầm cấp', 'sm')}</a></td>
     <td>${elBadge(u.el)}</td>
     <td class="n">${short(u.hp)}</td>
     <td class="n" title="${label(u.atk)}">${u.dmgMin != null ? `${short(u.dmgMin)}–${short(u.dmgMax)}` : short(u.dmg)}</td>
@@ -57,7 +57,7 @@ function rows(list) {
   </tr>`);
 }
 
-const more = n => (n > state.limit ? html`<button type="button" class="chip" data-more>Hiện thêm (${n - state.limit} còn lại)</button>` : '');
+const more = n => (n > state.limit ? html`<button type="button" class="h-btn" data-more>Hiện thêm (${n - state.limit} còn lại)</button>` : '');
 
 export default {
   title: () => 'Sinh vật',
@@ -69,10 +69,9 @@ export default {
     const tagOrder = ['all', 'pet', 'wave', 'wild', 'trade', 'trade-give', 'summon', 'other'];
     const tagLabel = { all: 'Tất cả', other: 'Khác', ...TAGS };
     return html`<main>
-      <h1>Sinh vật</h1>
-      <p class="sub">Toàn bộ ${ix.unitList.length} species trong catalog: pet mọi cấp, quái các đợt, boss, unit trade…</p>
+      ${pageHead('Sinh vật', { kick: `${ix.unitList.length} loài trong catalog`, lead: 'Pet mọi cấp, quái các đợt, boss, con chỉ có qua trade. Bấm tiêu đề cột để sắp xếp.' })}
       <div class="controls">
-        <input type="search" placeholder="Tìm tên, kỹ năng, mã (h0gt)…" value="${state.q}" data-q autocomplete="off" aria-label="Tìm kiếm">
+        <input class="search" type="search" placeholder="Tìm tên, kỹ năng, mã (h0gt)…" value="${state.q}" data-q autocomplete="off" aria-label="Tìm kiếm">
         <div class="chips">${tagOrder.filter(t => tagCounts[t]).map(t => html`<button type="button" class="chip ${state.tag === t ? 'on' : ''}" data-tag="${t}">${tagLabel[t]} (${tagCounts[t]})</button>`)}</div>
         <div class="chips">
           <select class="chip" data-el aria-label="Hệ">
@@ -80,7 +79,7 @@ export default {
             ${Object.entries(db.elements).map(([k, e]) => html`<option value="${k}" ${state.el === k ? html`selected` : ''}>${e.name}</option>`)}
             <option value="none" ${state.el === 'none' ? html`selected` : ''}>Không hệ</option>
           </select>
-          <span class="badge count" id="u-count">${list.length}</span>
+          <span class="count mono"><b id="u-count">${list.length}</b> kết quả</span>
         </div>
       </div>
       <div class="table-wrap"><table class="units">

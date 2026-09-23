@@ -16,6 +16,7 @@ function index(d) {
   ix.petById = new Map(d.pets.map(p => [p.id, p]));
   ix.unitList = Object.values(d.units);
   ix.researchById = new Map(d.research.map(r => [r.id, r]));
+  ix.lineById = new Map((d.strategy?.lines ?? []).map(l => [l.id, l]));
 
   ix.tradesOf = new Map();
   for (const slot of d.trade) for (const r of slot.recipes) for (const id of [r.give, r.get]) {

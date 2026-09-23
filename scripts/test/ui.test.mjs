@@ -96,6 +96,23 @@ test('trang pet có rẽ nhánh hiển thị đủ nhánh', async () => {
   assert.ok($$('.stage-card').length >= 8);
 });
 
+test('nav gộp mục: 6 mục chính, tab con đúng mục, trang pet có hạng từ Chiến thuật', async () => {
+  await go('#/units');
+  assert.deepEqual($$('.navlink').map(a => a.textContent.trim()), ['Pets', 'Chiến thuật', 'Đợt quái', 'Bắt & Trade', 'Cơ chế', 'Công cụ']);
+  assert.equal($('.navlink.on').textContent.trim(), 'Pets');
+  assert.equal($('.sublink.on').getAttribute('href'), '#/units');
+  await go('#/research');
+  assert.equal($('.navlink.on').textContent.trim(), 'Cơ chế');
+  assert.deepEqual($$('.sublink').map(a => a.getAttribute('href')), ['#/rules', '#/research', '#/changelog']);
+  await go('#/pet/charmander');
+  assert.equal($$('.vt .tier').length, 3, 'hạng Sức mạnh / PvE / PvP');
+  assert.ok(!$('.subnav'), 'trang chi tiết không có tab con');
+  await go('#/tool');
+  assert.match($('.install .bm').getAttribute('href'), /^javascript:/);
+  assert.ok($('.tool-demo .h-video'), 'có video demo');
+  assert.ok(!$('.codebox'), 'bỏ phần chữ thừa');
+});
+
 test('trang Sinh vật: tìm theo mã unit', async () => {
   await go('#/units');
   const input = $('input[data-q]');
