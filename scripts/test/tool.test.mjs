@@ -385,7 +385,7 @@ test('bookmarklet: nhãn + đích của nút lấy từ catalog GAME, overlay gi
   assert.equal(calls.length, n);
 });
 
-test('bookmarklet: bản m.cutd.site chưa móc — tự nhận bản web, nút khoá kèm lý do "bấm Móc", không làm gì', async t => {
+test('bookmarklet: bản m.cutd.site dán giữa trận — nút khoá vài giây rồi tự Móc (mở lại trận trong khung)', async t => {
   const { w, log, code, FakeWS } = setupDom('https://m.cutd.site/?room=805A6070');
   t.after(() => w.close());
   w.document.getElementById('GameCanvas').remove();
@@ -403,7 +403,13 @@ test('bookmarklet: bản m.cutd.site chưa móc — tự nhận bản web, nút 
   assert.ok(acts.length && acts.every(b => b.disabled && /Móc/.test(b.title)), 'chưa móc → nút khoá, gợi ý bấm Móc');
   trustedClick(w, root.querySelector('.trade.pick .side'));
   assert.match(root.querySelector('.toast')?.textContent ?? '', /Móc/);
+  assert.equal(w.document.querySelectorAll('iframe').length, 0, 'chưa đủ vài giây → chưa tự móc');
+  await tick(1500);
+  const frames = w.document.querySelectorAll('iframe');
+  assert.equal(frames.length, 1, 'dán giữa trận → tự móc, không cần bấm');
+  assert.equal(frames[0].src, 'https://m.cutd.site/?room=805A6070');
   assert.equal(log.sent, 0);
+  w.__cutdHelper.destroy();
 });
 
 test('bookmarklet: bản web — dán từ sảnh → móc session/interaction lúc game tạo, gọi thẳng hàm game, gỡ bẫy sạch', async t => {
@@ -453,6 +459,8 @@ test('bookmarklet: bản web — dán từ sảnh → móc session/interaction l
   trustedClick(w, root.querySelector('.row.pick .mid'));
   assert.deepEqual([...w.__calls.at(-1)], ['select', 'w1']);
   assert.equal(w.__session.nextSequence, 3, 'số thứ tự do chính game tăng');
+  await tick(1500);
+  assert.equal(w.document.querySelectorAll('iframe').length, 0, 'đã móc từ sảnh → không mở khung');
   assert.equal(log.sent, 0);
 });
 

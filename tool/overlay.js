@@ -3,7 +3,7 @@ import {
   bestAttacks, nextWaveForBase, buildGameCatalog,
 } from './logic.js';
 import * as web from './web-input.js';
-import { findGame, findEntity, selectEntity, catchWild, evolveCreature, tradePet, probe, clientKind, armWebCapture, disarmWebCapture, webCaptured, forgetWebCapture } from './game-bridge.js';
+import { findGame, findEntity, selectEntity, catchWild, evolveCreature, tradePet, probe, clientKind, armWebCapture, disarmWebCapture, webCaptured, webTouched, forgetWebCapture } from './game-bridge.js';
 import { realm, gameDoc } from './realm.js';
 import { analyzeCatalog, overlayFields, powerTier } from './analyze.js';
 
@@ -76,8 +76,10 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .tier.t-sp{background:#ffde8f;color:#0b1526}.tier.t-s{background:#f0a35e;color:#0b1526}.tier.t-a{background:#1d3a2a;color:#9fd6a8}
 .tier.t-b{background:#1b2a44;color:#8fb7e8}.tier.t-c,.tier.t-x{background:transparent;color:#6f8fb8;border:1px solid #2a3d5c}
 .line2{display:flex;align-items:center;gap:6px;margin-top:3px;min-width:0}
-.ptw{position:relative;width:32px;height:32px}.ptw .hpbar{position:absolute;left:3px;right:3px;bottom:2px;height:3px;border-radius:2px;background:#0b1526cc;overflow:hidden}
-.ptw .hpbar i{display:block;height:100%;background:#9fd6a8}.ptw .hpbar.low i{background:#ff9c9c}.ptw.down img{filter:grayscale(1) brightness(.6)}
+.ptw{width:32px;height:32px}.ptw.down img{filter:grayscale(1) brightness(.6)}
+.hpw{display:inline-flex;align-items:center;gap:4px;flex-shrink:0;font-size:10.5px;font-weight:700;color:#9fd6a8}
+.hpw .hpb{width:40px;height:5px;border-radius:3px;background:#0b1526;overflow:hidden;box-shadow:inset 0 0 0 1px #243552}.hpw .hpb i{display:block;height:100%;background:#9fd6a8}
+.hpw.half{color:#ffde8f}.hpw.half .hpb i{background:#ffde8f}.hpw.low{color:#ff9c9c}.hpw.low .hpb i{background:#ff9c9c}.hpw.down{color:#6f8fb8}
 .strip{display:inline-flex;gap:2px;flex-shrink:0}.strip i{width:9px;height:9px;border-radius:2px;background:#4a6fa5}
 .strip i.t-sp{background:#ffde8f}.strip i.t-s{background:#f0a35e}.strip i.t-a{background:#5f9e6a}.strip i.t-c{background:transparent;box-shadow:inset 0 0 0 1px #3a5480}
 .rare{color:#ff9c9c;font-size:11px;font-weight:700}
@@ -127,7 +129,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     }
     if (!isGameMessage(msg)) return false;
     diag.firstMsg ??= now();
-    if (msg.type === 'base_keyframe') diag.keyframe ??= now();
+    if (msg.type === 'base_keyframe') { diag.keyframe ??= now(); autoHook(); }
     if (applyMessage(state, msg)) {
       if (state.wilds.size) diag.firstWild ??= now();
       if (state.units.size) diag.firstUnit ??= now();
@@ -234,10 +236,11 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   };
   const row = (id, sub, right, { cls = '', tip, portrait } = {}) => h('div', { class: `row ${cls}`, title: tip },
     portrait ?? img(id), h('div', { class: 'mid' }, title(id), sub ? h('div', { class: 'sub' }, sub) : null), h('div', { class: 'right' }, right));
-  const unitPortrait = u => {
+  const unitPortrait = u => h('div', { class: `ptw${u.active ? '' : ' down'}` }, img(u.stage));
+  const hpBar = u => {
     const pct = u.maxHp ? Math.max(0, Math.min(100, Math.round((u.hp / u.maxHp) * 100))) : 100;
-    return h('div', { class: `ptw${u.active ? '' : ' down'}`, title: u.active ? `${fmt(u.hp)} / ${fmt(u.maxHp)} HP` : 'Gục — trở lại đợt sau' }, img(u.stage),
-      pct < 100 || !u.active ? h('div', { class: `hpbar${pct < 35 ? ' low' : ''}` }, h('i', { style: `width:${pct}%` })) : null);
+    return h('span', { class: `hpw${!u.active ? ' down' : pct < 35 ? ' low' : pct < 70 ? ' half' : ''}`, title: u.active ? `${fmt(u.hp)} / ${fmt(u.maxHp)} HP` : 'Gục — trở lại đợt sau' },
+      h('span', { class: 'hpb' }, h('i', { style: `width:${u.active ? pct : 0}%` })), u.active ? short(u.hp) : 'gục');
   };
   const statsTip = id => {
     const u = U(id) ?? {};
@@ -261,7 +264,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     rule: 'Không hợp lệ (sai nhánh / sai slot / con đã đổi / chưa đủ vàng / đang trong đợt) — thử lại sau khi panel cập nhật.',
     data: 'Chưa tải xong dữ liệu của game — đợi 1–2 giây.',
     other: 'Đang xem căn cứ của người khác — về nhà mình để thao tác.',
-    hook: 'Bản web chưa móc được hàm game — bấm nút "Móc" trên panel (hoặc dán tool ở sảnh trước khi vào trận).',
+    hook: 'Bản web chưa móc được hàm game — tool tự móc sau vài giây trong trận (hoặc bấm "Móc").',
   };
   const isWeb = () => clientKind() === 'web';
   const blockReason = () => (!gameCatReady ? 'data' : isWeb() && !findGame() ? 'hook'
@@ -480,7 +483,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       const evo = U(u.stage)?.e ?? [];
       const trades = wanted.get(u.stage) ?? [];
       return pickable(row(u.stage,
-        h('div', { class: 'line2' }, strip(u.stage), kitChips(u.stage)),
+        h('div', { class: 'line2' }, hpBar(u), strip(u.stage), kitChips(u.stage)),
         [tierPill(u.stage),
           trades.length ? act(`⇄S${trades[0].slot}`, 'trade', `u${u.id}`, trades[0].slot, { stage: u.stage, get: trades[0].get }, 'ok', `Trade slot ${trades[0].slot}: đổi lấy ${nameOf(trades[0].get)}`) : null,
           evo.length ? evo.map(([to, cost]) => {
@@ -618,10 +621,10 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const kind = clientKind();
     const header = h('div', { class: 'top', title: `CUTD Helper v${VERSION} — chỉ gửi lệnh khi mày bấm nút Bắt/Tiến hóa/Trade` },
       h('b', { text: 'CUTD Helper' }),
-      kind === 'web' && !webCaptured() && !frame ? h('button', { class: 'chip on', text: 'Móc', title: 'Mở lại đúng trận này trong khung (game tự vào lại) để tool móc hàm game → chọn đúng con theo id, Bắt / Tiến hóa / Trade gọi thẳng hàm game. Game ở trang cũ sẽ tự ngắt.', onClick: hookViaFrame }) : null,
+      kind === 'web' && !webCaptured() && !frame ? h('button', { class: 'chip on', text: 'Móc', title: 'Tool tự móc sau khi vào trận vài giây; bấm để móc ngay. Mở lại đúng trận này trong khung (game tự vào lại) → chọn đúng con theo id, Bắt / Tiến hóa / Trade gọi thẳng hàm game.', onClick: hookViaFrame }) : null,
       kind === 'web' && !webCaptured() && !frame ? null : h('span', { class: 'pill mute', text: kind === 'web' ? (webCaptured() ? 'm. · móc' : 'm. · đang móc…') : kind === 'cocos' ? 'Cocos' : 'đang tải', title: kind === 'web'
         ? (webCaptured() ? 'Bản web: đã móc được hàm của game (dán tool từ sảnh) → bấm dòng/nút gọi thẳng hàm game như bản Cocos.'
-          : 'Bản web: chưa móc được hàm game (tool dán lúc trận đã dựng xong) → bấm "Móc" để dùng nút.')
+          : 'Bản web: đang mở lại trận trong khung để móc hàm game.')
         : 'Bản Cocos (cutd.site): bấm dòng/nút → tool gọi thẳng hàm của game.' }),
       h('span', { class: 'grow' }),
       h('button', { class: 'x', text: layout === 'h' ? '▯' : '▭', title: layout === 'h' ? 'Chuyển sang dọc' : 'Chuyển sang ngang', onClick: () => setLayout(layout === 'h' ? 'v' : 'h') }),
@@ -673,8 +676,14 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     listen(win);
     dirty = true; render(true);
   }
-  function hookViaFrame(e) {
-    if (!realClick(e) || frame || !isWeb() || findGame()) return;
+  let autoTimer = 0;
+  function autoHook() {
+    if (autoTimer || !isWeb() || realm.win !== window) return;
+    autoTimer = setTimeout(() => { if (!webTouched()) openFrame(); }, 2500);
+  }
+  function hookViaFrame(e) { if (realClick(e)) openFrame(); }
+  function openFrame() {
+    if (frame || !isWeb() || realm.win !== window || findGame()) return;
     frame = document.createElement('iframe');
     frame.src = location.href;
     frame.allow = 'fullscreen; autoplay';
@@ -706,6 +715,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     socket?.removeEventListener('message', onMessage);
     socket?.removeEventListener('close', onClose);
     clearTimeout(pending);
+    clearTimeout(autoTimer);
     observers.forEach(o => o.disconnect());
     window.removeEventListener('pointermove', onMove);
     window.removeEventListener('pointerup', onUp);

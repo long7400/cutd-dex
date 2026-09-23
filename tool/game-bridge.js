@@ -46,6 +46,7 @@ export function disarmWebCapture() {
 }
 
 export const webCaptured = () => !!(caught.nextSequence && caught._selectedEntityId);
+export const webTouched = () => !!(caught.nextSequence || caught._selectedEntityId);
 
 function webGame() {
   const s = caught.nextSequence, i = caught._selectedEntityId;
