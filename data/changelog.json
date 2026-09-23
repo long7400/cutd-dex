@@ -1,1 +1,20 @@
-[]
+[
+ {
+  "at": "2026-09-23T12:18:26.323Z",
+  "hash": "6292a9c019e33ce323aaba67c566708b933fddb7f053d0edc89f0302b58d9a81",
+  "prevHash": "70bc0dd034a602cec2565a6d9b093d297da591cd44a0b52948da22167f230c54",
+  "ruleset": "cutd-reference-12",
+  "summary": {
+   "unitsAdded": 0,
+   "unitsRemoved": 0,
+   "statChanges": 0,
+   "abilityChanges": 0,
+   "modifierChanges": 0,
+   "sections": [
+    "rules",
+    "modes"
+   ]
+  },
+  "items": []
+ }
+]

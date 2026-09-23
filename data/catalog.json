@@ -1,7 +1,7 @@
 {
  "protocol_version": "16",
  "ruleset_version": "cutd-reference-12",
- "catalog_hash": "70bc0dd034a602cec2565a6d9b093d297da591cd44a0b52948da22167f230c54",
+ "catalog_hash": "6292a9c019e33ce323aaba67c566708b933fddb7f053d0edc89f0302b58d9a81",
  "catalog": {
   "survival_roster": [
    [
@@ -1386,11 +1386,11 @@
    ],
    "initial_gold": 500,
    "initial_lumber": 0,
-   "initial_lives": 30,
+   "initial_lives": 40,
    "lives_options": [
-    20,
     30,
-    40
+    40,
+    50
    ],
    "max_players": 8,
    "creature_cap": 0,
@@ -1848,7 +1848,7 @@
     "wave_generation_depth": 3,
     "wave_source": "scripted",
     "opening_wild_count": 8,
-    "initial_lives": 30,
+    "initial_lives": 40,
     "survival": {
      "bounty_through_wave": 40,
      "waves": [
@@ -3098,7 +3098,7 @@
     "wave_generation_depth": 3,
     "wave_source": "scripted",
     "opening_wild_count": 8,
-    "initial_lives": 40,
+    "initial_lives": 50,
     "survival": {
      "bounty_through_wave": 40,
      "waves": [
@@ -4348,7 +4348,7 @@
     "wave_generation_depth": 3,
     "wave_source": "scripted",
     "opening_wild_count": 8,
-    "initial_lives": 20,
+    "initial_lives": 30,
     "survival": {
      "bounty_through_wave": 40,
      "waves": [
@@ -5598,7 +5598,7 @@
     "wave_generation_depth": 3,
     "wave_source": "scripted",
     "opening_wild_count": 8,
-    "initial_lives": 20,
+    "initial_lives": 30,
     "survival": {
      "bounty_through_wave": 40,
      "waves": [
