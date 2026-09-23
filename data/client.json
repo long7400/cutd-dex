@@ -1,0 +1,2554 @@
+{
+ "models": [
+  {
+   "key": "boss_bdwkabishou",
+   "affinity": "normal",
+   "scale": 1.617877411114514
+  },
+  {
+   "key": "boss_chaomeng",
+   "affinity": "psychic",
+   "scale": 1.0522510852781652
+  },
+  {
+   "key": "boss_galagala",
+   "affinity": "normal",
+   "scale": 0.8667345309601039
+  },
+  {
+   "key": "boss_jinmiaomiao",
+   "affinity": "normal",
+   "scale": 1.5962531927214973
+  },
+  {
+   "key": "boss_jiuwei_ice",
+   "affinity": "water",
+   "scale": 1.305544484205371
+  },
+  {
+   "key": "boss_kabishou",
+   "affinity": "normal",
+   "scale": 1.0889292334242267
+  },
+  {
+   "key": "boss_miaowahua",
+   "affinity": "grass",
+   "scale": 1.0310717508676221
+  },
+  {
+   "key": "boss_pangkeding",
+   "affinity": "normal",
+   "scale": 0.9127384770037519
+  },
+  {
+   "key": "boss_penhuolong",
+   "affinity": "fire",
+   "scale": 1.4475481887251689
+  },
+  {
+   "key": "boss_pikexi",
+   "affinity": "normal",
+   "scale": 1.094384419291111
+  },
+  {
+   "key": "monster_labaya",
+   "affinity": "grass",
+   "scale": 0.448637581025468
+  },
+  {
+   "key": "monster_lvmaochong",
+   "affinity": "grass",
+   "scale": 0.5187702163104344
+  },
+  {
+   "key": "monster_manaoshuimu",
+   "affinity": "water",
+   "scale": 0.5628210291413079
+  },
+  {
+   "key": "pet_aboguai",
+   "affinity": "normal",
+   "scale": 0.8637995605202173
+  },
+  {
+   "key": "pet_aboshe",
+   "affinity": "normal",
+   "scale": 0.4768111676101683
+  },
+  {
+   "key": "pet_aerzhousi",
+   "affinity": "normal",
+   "scale": 0.970973528912036
+  },
+  {
+   "key": "pet_allmaolada",
+   "affinity": "normal",
+   "scale": 0.9022921712371001
+  },
+  {
+   "key": "pet_allmiaomiao",
+   "affinity": "normal",
+   "scale": 0.4689141200912452
+  },
+  {
+   "key": "pet_anheichaomeng",
+   "affinity": "psychic",
+   "scale": 0.9238366576006575
+  },
+  {
+   "key": "pet_banjilasi",
+   "affinity": "normal",
+   "scale": 0.8460947007190109
+  },
+  {
+   "key": "pet_baobaoding",
+   "affinity": "normal",
+   "scale": 0.39738843994597317
+  },
+  {
+   "key": "pet_baolilong",
+   "affinity": "water",
+   "scale": 1.1857719563736693
+  },
+  {
+   "key": "pet_baolilong_ys",
+   "affinity": "water",
+   "scale": 1.1857719563736693
+  },
+  {
+   "key": "pet_bibiniao",
+   "affinity": "normal",
+   "scale": 0.5945827107605066
+  },
+  {
+   "key": "pet_biketini",
+   "affinity": "fire",
+   "scale": 0.8000337461747379
+  },
+  {
+   "key": "pet_bobo",
+   "affinity": "normal",
+   "scale": 0.3789102127596487
+  },
+  {
+   "key": "pet_boerkainien",
+   "affinity": "fire",
+   "scale": 0.6610194773650324
+  },
+  {
+   "key": "pet_changweihuohu",
+   "affinity": "fire",
+   "scale": 0.5059715514037554
+  },
+  {
+   "key": "pet_chaojiakuangxi",
+   "affinity": "normal",
+   "scale": 0.7937825342755901
+  },
+  {
+   "key": "pet_chaomeng",
+   "affinity": "psychic",
+   "scale": 0.7015007060968187
+  },
+  {
+   "key": "pet_chengjiehupa",
+   "affinity": "psychic",
+   "scale": 0.4642983225901933
+  },
+  {
+   "key": "pet_cijiabei",
+   "affinity": "water",
+   "scale": 0.6327787029396825
+  },
+  {
+   "key": "pet_dabiniao",
+   "affinity": "normal",
+   "scale": 0.5764033365377247
+  },
+  {
+   "key": "pet_dagangshe",
+   "affinity": "normal",
+   "scale": 0.9604627805820491
+  },
+  {
+   "key": "pet_daidaishou",
+   "affinity": "water",
+   "scale": 0.990557629419694
+  },
+  {
+   "key": "pet_daikeshou",
+   "affinity": "water",
+   "scale": 0.7287728154391273
+  },
+  {
+   "key": "pet_daiouqixisi",
+   "affinity": "psychic",
+   "scale": 0.8400639981557653
+  },
+  {
+   "key": "pet_dakelaiyi",
+   "affinity": "psychic",
+   "scale": 0.8150366128371154
+  },
+  {
+   "key": "pet_dashebei",
+   "affinity": "water",
+   "scale": 0.5121558664364694
+  },
+  {
+   "key": "pet_dayanshe",
+   "affinity": "normal",
+   "scale": 0.9953544921423123
+  },
+  {
+   "key": "pet_dujiaoxiniu",
+   "affinity": "normal",
+   "scale": 0.722562778319441
+  },
+  {
+   "key": "pet_feitiantanglang",
+   "affinity": "grass",
+   "scale": 0.5905260602877439
+  },
+  {
+   "key": "pet_fengsugou",
+   "affinity": "fire",
+   "scale": 1.0058500829038777
+  },
+  {
+   "key": "pet_fengwang",
+   "affinity": "fire",
+   "scale": 1.0902217769434313
+  },
+  {
+   "key": "pet_gaiouka",
+   "affinity": "water",
+   "scale": 1.7467029649453032
+  },
+  {
+   "key": "pet_galagala",
+   "affinity": "normal",
+   "scale": 0.5778230206400692
+  },
+  {
+   "key": "pet_gedaya",
+   "affinity": "water",
+   "scale": 0.6253213323631956
+  },
+  {
+   "key": "pet_genggui",
+   "affinity": "psychic",
+   "scale": 0.6419829910384701
+  },
+  {
+   "key": "pet_guaguapaowa",
+   "affinity": "water",
+   "scale": 0.2902127726334115
+  },
+  {
+   "key": "pet_guaili",
+   "affinity": "fighter",
+   "scale": 0.6511364618219219
+  },
+  {
+   "key": "pet_guatouwa",
+   "affinity": "water",
+   "scale": 0.4449996533744818
+  },
+  {
+   "key": "pet_guisi",
+   "affinity": "psychic",
+   "scale": 0.6015381749193023
+  },
+  {
+   "key": "pet_guisitong",
+   "affinity": "psychic",
+   "scale": 0.7154864749772979
+  },
+  {
+   "key": "pet_guladuo",
+   "affinity": "normal",
+   "scale": 1.1728732378582956
+  },
+  {
+   "key": "pet_hakelong",
+   "affinity": "normal",
+   "scale": 0.7275114869407637
+  },
+  {
+   "key": "pet_haoli",
+   "affinity": "fighter",
+   "scale": 0.6663545850917898
+  },
+  {
+   "key": "pet_huashiyilong",
+   "affinity": "normal",
+   "scale": 0.7451313932687768
+  },
+  {
+   "key": "pet_huashiyilong_ys",
+   "affinity": "normal",
+   "scale": 1.2847092987392703
+  },
+  {
+   "key": "pet_hudi",
+   "affinity": "psychic",
+   "scale": 0.625473828225849
+  },
+  {
+   "key": "pet_huohuli",
+   "affinity": "fire",
+   "scale": 0.3704025583353463
+  },
+  {
+   "key": "pet_huokonglong",
+   "affinity": "fire",
+   "scale": 0.6401083127033664
+  },
+  {
+   "key": "pet_huoyanji",
+   "affinity": "fire",
+   "scale": 0.6756350923627958
+  },
+  {
+   "key": "pet_huoyanniao",
+   "affinity": "fire",
+   "scale": 0.8637834800829284
+  },
+  {
+   "key": "pet_huozhiji",
+   "affinity": "fire",
+   "scale": 0.43450626127077036
+  },
+  {
+   "key": "pet_jiaherenwa",
+   "affinity": "water",
+   "scale": 0.6334202549188629
+  },
+  {
+   "key": "pet_jiaherenwa_ys",
+   "affinity": "water",
+   "scale": 0.6334202549188629
+  },
+  {
+   "key": "pet_jidongniao",
+   "affinity": "water",
+   "scale": 1.1433467874412837
+  },
+  {
+   "key": "pet_jiefanghupa",
+   "affinity": "psychic",
+   "scale": 1.0779615930604636
+  },
+  {
+   "key": "pet_jienigui",
+   "affinity": "water",
+   "scale": 0.39514869154757254
+  },
+  {
+   "key": "pet_jilaqi",
+   "affinity": "psychic",
+   "scale": 0.5661039341733205
+  },
+  {
+   "key": "pet_jiuwei_ice",
+   "affinity": "water",
+   "scale": 0.8703629894702473
+  },
+  {
+   "key": "pet_juqiantanglang",
+   "affinity": "grass",
+   "scale": 0.6517824957040169
+  },
+  {
+   "key": "pet_juzhaoguai",
+   "affinity": "water",
+   "scale": 0.7655794627846507
+  },
+  {
+   "key": "pet_kabishou",
+   "affinity": "normal",
+   "scale": 0.7259528222828177
+  },
+  {
+   "key": "pet_kadigou",
+   "affinity": "fire",
+   "scale": 0.5758099478827424
+  },
+  {
+   "key": "pet_kailudiou",
+   "affinity": "water",
+   "scale": 1.0831133037912668
+  },
+  {
+   "key": "pet_kaixi",
+   "affinity": "psychic",
+   "scale": 0.6881987136953399
+  },
+  {
+   "key": "pet_kalakala",
+   "affinity": "normal",
+   "scale": 0.37141644278125135
+  },
+  {
+   "key": "pet_kamigui",
+   "affinity": "water",
+   "scale": 0.5942928587157117
+  },
+  {
+   "key": "pet_kedaya",
+   "affinity": "water",
+   "scale": 0.466565303629332
+  },
+  {
+   "key": "pet_keleiseliya",
+   "affinity": "psychic",
+   "scale": 0.8342251634550335
+  },
+  {
+   "key": "pet_kuailong",
+   "affinity": "normal",
+   "scale": 0.7357368543322682
+  },
+  {
+   "key": "pet_ladiousi",
+   "affinity": "psychic",
+   "scale": 0.822138612005239
+  },
+  {
+   "key": "pet_ladiyasi",
+   "affinity": "psychic",
+   "scale": 0.900429612908225
+  },
+  {
+   "key": "pet_lapulasi",
+   "affinity": "water",
+   "scale": 0.7602184891609244
+  },
+  {
+   "key": "pet_leigong",
+   "affinity": "lightning",
+   "scale": 1.0507737615640445
+  },
+  {
+   "key": "pet_leiqiu",
+   "affinity": "lightning",
+   "scale": 0.512078338085289
+  },
+  {
+   "key": "pet_liekongzuo",
+   "affinity": "normal",
+   "scale": 1.0227614268192795
+  },
+  {
+   "key": "pet_liekongzuo_ys",
+   "affinity": "normal",
+   "scale": 1.0227821060955884
+  },
+  {
+   "key": "pet_lieyanma",
+   "affinity": "fire",
+   "scale": 1.2485430939367244
+  },
+  {
+   "key": "pet_lioulu",
+   "affinity": "fighter",
+   "scale": 0.49615587497456176
+  },
+  {
+   "key": "pet_liuwei_ice",
+   "affinity": "water",
+   "scale": 0.49456824591317083
+  },
+  {
+   "key": "pet_liyuwang",
+   "affinity": "water",
+   "scale": 0.4337658946338537
+  },
+  {
+   "key": "pet_lizhuangji",
+   "affinity": "fire",
+   "scale": 0.5636254521513474
+  },
+  {
+   "key": "pet_lukaliou",
+   "affinity": "fighter",
+   "scale": 0.6866672613661948
+  },
+  {
+   "key": "pet_luoqiya",
+   "affinity": "psychic",
+   "scale": 1.336882267918648
+  },
+  {
+   "key": "pet_manafei",
+   "affinity": "water",
+   "scale": 0.5298088831007254
+  },
+  {
+   "key": "pet_maolaoda",
+   "affinity": "normal",
+   "scale": 0.9399147837153673
+  },
+  {
+   "key": "pet_menghuan",
+   "affinity": "psychic",
+   "scale": 0.4720461544863247
+  },
+  {
+   "key": "pet_miaomiao",
+   "affinity": "normal",
+   "scale": 0.512824354959359
+  },
+  {
+   "key": "pet_miaowacao",
+   "affinity": "grass",
+   "scale": 0.7936980121829427
+  },
+  {
+   "key": "pet_miaowahua",
+   "affinity": "grass",
+   "scale": 0.6873812127685385
+  },
+  {
+   "key": "pet_miaowazhongzi",
+   "affinity": "grass",
+   "scale": 0.4414865205376505
+  },
+  {
+   "key": "pet_michunjie",
+   "affinity": "psychic",
+   "scale": 0.6416876283598492
+  },
+  {
+   "key": "pet_michunwa",
+   "affinity": "psychic",
+   "scale": 0.43911874891038893
+  },
+  {
+   "key": "pet_minilong",
+   "affinity": "normal",
+   "scale": 0.45859945147670733
+  },
+  {
+   "key": "pet_mushougong",
+   "affinity": "grass",
+   "scale": 0.41531869587731973
+  },
+  {
+   "key": "pet_pangding",
+   "affinity": "normal",
+   "scale": 0.392983556128958
+  },
+  {
+   "key": "pet_pangkeding",
+   "affinity": "normal",
+   "scale": 0.6084923180025014
+  },
+  {
+   "key": "pet_penhuolong",
+   "affinity": "fire",
+   "scale": 0.9650321258167796
+  },
+  {
+   "key": "pet_penhuolong_ys",
+   "affinity": "fire",
+   "scale": 0.9650321258167796
+  },
+  {
+   "key": "pet_pibaobao",
+   "affinity": "normal",
+   "scale": 0.3480912463511678
+  },
+  {
+   "key": "pet_pikaqiu",
+   "affinity": "lightning",
+   "scale": 0.3883678963928466
+  },
+  {
+   "key": "pet_pikexi",
+   "affinity": "normal",
+   "scale": 0.5836716989859783
+  },
+  {
+   "key": "pet_pipi",
+   "affinity": "normal",
+   "scale": 0.44998106623263073
+  },
+  {
+   "key": "pet_piqiu",
+   "affinity": "lightning",
+   "scale": 0.39202294639355556
+  },
+  {
+   "key": "pet_s_banjilasi",
+   "affinity": "normal",
+   "scale": 0.9843802248460408
+  },
+  {
+   "key": "pet_s_baolilong",
+   "affinity": "water",
+   "scale": 1.2301800216179115
+  },
+  {
+   "key": "pet_s_baolilong_ys",
+   "affinity": "water",
+   "scale": 1.2301799299623588
+  },
+  {
+   "key": "pet_s_chaomeng_y",
+   "affinity": "psychic",
+   "scale": 0.7836753889965644
+  },
+  {
+   "key": "pet_s_genggui",
+   "affinity": "psychic",
+   "scale": 0.8540425454367538
+  },
+  {
+   "key": "pet_s_huashiyilong",
+   "affinity": "normal",
+   "scale": 1.1800286342124144
+  },
+  {
+   "key": "pet_s_huashiyilong_ys",
+   "affinity": "normal",
+   "scale": 1.1800286342124144
+  },
+  {
+   "key": "pet_s_hudi",
+   "affinity": "psychic",
+   "scale": 1.0456074264569366
+  },
+  {
+   "key": "pet_s_huoyanji",
+   "affinity": "fire",
+   "scale": 1.1445755700897258
+  },
+  {
+   "key": "pet_s_juqiantanglang",
+   "affinity": "grass",
+   "scale": 0.8278424387240326
+  },
+  {
+   "key": "pet_s_lukaliou",
+   "affinity": "fighter",
+   "scale": 0.845497788805146
+  },
+  {
+   "key": "pet_s_miaowahua",
+   "affinity": "grass",
+   "scale": 1.05316814920154
+  },
+  {
+   "key": "pet_s_penhuolong_x",
+   "affinity": "fire",
+   "scale": 1.1501839747846814
+  },
+  {
+   "key": "pet_s_penhuolong_x_ys",
+   "affinity": "fire",
+   "scale": 1.1501839747846814
+  },
+  {
+   "key": "pet_s_shuijiangui",
+   "affinity": "water",
+   "scale": 0.7721048360742244
+  },
+  {
+   "key": "pet_s_xiyiwang",
+   "affinity": "grass",
+   "scale": 1.00102645954315
+  },
+  {
+   "key": "pet_senlinxiyi",
+   "affinity": "grass",
+   "scale": 0.8430733425653978
+  },
+  {
+   "key": "pet_shajilasi",
+   "affinity": "normal",
+   "scale": 0.6495717087176252
+  },
+  {
+   "key": "pet_shandianniao",
+   "affinity": "lightning",
+   "scale": 1.0201492458423427
+  },
+  {
+   "key": "pet_shilabi",
+   "affinity": "grass",
+   "scale": 0.5487513403314888
+  },
+  {
+   "key": "pet_shuangdanwasi",
+   "affinity": "normal",
+   "scale": 0.625647300420049
+  },
+  {
+   "key": "pet_shuijiangui",
+   "affinity": "water",
+   "scale": 0.6362066536871277
+  },
+  {
+   "key": "pet_shuijun",
+   "affinity": "water",
+   "scale": 1.1941232609170902
+  },
+  {
+   "key": "pet_shuiyueyu",
+   "affinity": "water",
+   "scale": 0.4146204780856807
+  },
+  {
+   "key": "pet_wanli",
+   "affinity": "fighter",
+   "scale": 0.4413404904923786
+  },
+  {
+   "key": "pet_wasidan",
+   "affinity": "normal",
+   "scale": 0.4120519253631939
+  },
+  {
+   "key": "pet_xiaohuolong",
+   "affinity": "fire",
+   "scale": 0.4779976477069675
+  },
+  {
+   "key": "pet_xiaohuoma",
+   "affinity": "fire",
+   "scale": 0.776273292081957
+  },
+  {
+   "key": "pet_xiaokabishou",
+   "affinity": "normal",
+   "scale": 0.5254425626341159
+  },
+  {
+   "key": "pet_xiemi",
+   "affinity": "grass",
+   "scale": 0.8610089227740814
+  },
+  {
+   "key": "pet_xiyiwang",
+   "affinity": "grass",
+   "scale": 0.6637730942535504
+  },
+  {
+   "key": "pet_xz_jiaherenwa",
+   "affinity": "water",
+   "scale": 0.6639962916904012
+  },
+  {
+   "key": "pet_xz_jiaherenwa_s",
+   "affinity": "water",
+   "scale": 1.2813682087674763
+  },
+  {
+   "key": "pet_xz_pikaqiu",
+   "affinity": "lightning",
+   "scale": 0.45146802919968265
+  },
+  {
+   "key": "pet_yandi",
+   "affinity": "fire",
+   "scale": 0.8355582276801646
+  },
+  {
+   "key": "pet_yaohuohonghu",
+   "affinity": "fire",
+   "scale": 0.6214338744670652
+  },
+  {
+   "key": "pet_yongjila",
+   "affinity": "psychic",
+   "scale": 0.7007958048955492
+  },
+  {
+   "key": "pet_youjilasi",
+   "affinity": "normal",
+   "scale": 0.5684989183121505
+  },
+  {
+   "key": "pet_zhaoyueyu",
+   "affinity": "water",
+   "scale": 0.49494096800809106
+  },
+  {
+   "key": "pet_zuanjiaoxiniu",
+   "affinity": "normal",
+   "scale": 0.7756467172997781
+  },
+  {
+   "key": "worldboss_chaomeng",
+   "affinity": "psychic",
+   "scale": 3.7048234847570227
+  },
+  {
+   "key": "download_chien_pao",
+   "affinity": "fire",
+   "scale": 1.1501839747846814
+  },
+  {
+   "key": "download_bramblin",
+   "affinity": "normal",
+   "scale": 0.5524249984578862
+  },
+  {
+   "key": "download_brambleghast",
+   "affinity": "normal",
+   "scale": 0.6595347506468473
+  },
+  {
+   "key": "download_gholdengo",
+   "affinity": "psychic",
+   "scale": 0.7154864749772979
+  },
+  {
+   "key": "download_beedrill",
+   "affinity": "grass",
+   "scale": 0.6517824957040169
+  },
+  {
+   "key": "download_farigiraf",
+   "affinity": "normal",
+   "scale": 1.0889292334242267
+  },
+  {
+   "key": "download_butterfree",
+   "affinity": "grass",
+   "scale": 0.8834896579336969
+  },
+  {
+   "key": "download_wo_chien",
+   "affinity": "grass",
+   "scale": 1.0310717508676221
+  },
+  {
+   "key": "download_chansey",
+   "affinity": "normal",
+   "scale": 0.7152300721547036
+  },
+  {
+   "key": "download_landorus",
+   "affinity": "psychic",
+   "scale": 0.8944275743629639
+  },
+  {
+   "key": "download_corphish",
+   "affinity": "water",
+   "scale": 0.5121558664364694
+  },
+  {
+   "key": "download_iron_moth",
+   "affinity": "normal",
+   "scale": 0.6844166078432004
+  },
+  {
+   "key": "download_dewgong",
+   "affinity": "water",
+   "scale": 1.1479299186329959
+  },
+  {
+   "key": "download_ditto",
+   "affinity": "normal",
+   "scale": 0.39738843994597317
+  },
+  {
+   "key": "download_feraligatr",
+   "affinity": "grass",
+   "scale": 1.081958942868668
+  },
+  {
+   "key": "download_sandaconda",
+   "affinity": "normal",
+   "scale": 1.0030839948909986
+  },
+  {
+   "key": "download_annihilape",
+   "affinity": "psychic",
+   "scale": 0.6419829910384701
+  },
+  {
+   "key": "download_eevee",
+   "affinity": "normal",
+   "scale": 0.512824354959359
+  },
+  {
+   "key": "download_electabuzz",
+   "affinity": "lightning",
+   "scale": 0.8001224032582641
+  },
+  {
+   "key": "download_iron_thorns",
+   "affinity": "water",
+   "scale": 0.7441603559970614
+  },
+  {
+   "key": "download_toxel",
+   "affinity": "lightning",
+   "scale": 0.49386366793510084
+  },
+  {
+   "key": "download_electrode",
+   "affinity": "lightning",
+   "scale": 0.8001224032582641
+  },
+  {
+   "key": "download_raboot",
+   "affinity": "lightning",
+   "scale": 0.39202294639355556
+  },
+  {
+   "key": "download_fearow",
+   "affinity": "normal",
+   "scale": 0.9222453384603596
+  },
+  {
+   "key": "download_flareon",
+   "affinity": "fire",
+   "scale": 0.5667159142530799
+  },
+  {
+   "key": "download_flygon",
+   "affinity": "normal",
+   "scale": 1.0227614268192795
+  },
+  {
+   "key": "download_geodude",
+   "affinity": "normal",
+   "scale": 0.722562778319441
+  },
+  {
+   "key": "download_archaludon",
+   "affinity": "psychic",
+   "scale": 0.8150366128371154
+  },
+  {
+   "key": "download_golbat",
+   "affinity": "normal",
+   "scale": 0.8736023231427038
+  },
+  {
+   "key": "download_golem",
+   "affinity": "normal",
+   "scale": 0.8460947007190109
+  },
+  {
+   "key": "download_graveler",
+   "affinity": "normal",
+   "scale": 0.7756467172997781
+  },
+  {
+   "key": "download_marill",
+   "affinity": "normal",
+   "scale": 0.39738843994597317
+  },
+  {
+   "key": "download_okidogi",
+   "affinity": "grass",
+   "scale": 0.8278424387240326
+  },
+  {
+   "key": "download_hitmonchan",
+   "affinity": "fighter",
+   "scale": 0.6663545850917898
+  },
+  {
+   "key": "download_hitmonlee",
+   "affinity": "fighter",
+   "scale": 0.6866672613661948
+  },
+  {
+   "key": "download_jolteon",
+   "affinity": "lightning",
+   "scale": 0.5464023560133031
+  },
+  {
+   "key": "download_kabutops",
+   "affinity": "fighter",
+   "scale": 0.6866672613661948
+  },
+  {
+   "key": "download_kingler",
+   "affinity": "water",
+   "scale": 0.6327787029396825
+  },
+  {
+   "key": "download_krabby",
+   "affinity": "water",
+   "scale": 0.5121558664364694
+  },
+  {
+   "key": "download_eiscue",
+   "affinity": "water",
+   "scale": 0.5628210291413079
+  },
+  {
+   "key": "download_thwackey",
+   "affinity": "grass",
+   "scale": 0.41531869587731973
+  },
+  {
+   "key": "download_crocalor",
+   "affinity": "fire",
+   "scale": 0.8297933443021587
+  },
+  {
+   "key": "download_magmar",
+   "affinity": "fire",
+   "scale": 0.5636254521513474
+  },
+  {
+   "key": "download_magnemite",
+   "affinity": "lightning",
+   "scale": 0.39202294639355556
+  },
+  {
+   "key": "download_magneton",
+   "affinity": "lightning",
+   "scale": 0.625272313192483
+  },
+  {
+   "key": "download_iron_crown",
+   "affinity": "lightning",
+   "scale": 0.8001224032582641
+  },
+  {
+   "key": "download_naclstack",
+   "affinity": "fighter",
+   "scale": 0.4413404904923786
+  },
+  {
+   "key": "download_gouging_fire",
+   "affinity": "lightning",
+   "scale": 1.8178386075057968
+  },
+  {
+   "key": "download_mankey",
+   "affinity": "fighter",
+   "scale": 0.49615587497456176
+  },
+  {
+   "key": "pet_metapod",
+   "affinity": "grass",
+   "scale": 0.5187702163104344
+  },
+  {
+   "key": "download_ninetales",
+   "affinity": "fire",
+   "scale": 0.6214338744670652
+  },
+  {
+   "key": "download_torracat",
+   "affinity": "lightning",
+   "scale": 0.7184806083267662
+  },
+  {
+   "key": "download_paras",
+   "affinity": "grass",
+   "scale": 0.4414865205376505
+  },
+  {
+   "key": "download_parasect",
+   "affinity": "grass",
+   "scale": 0.7936980121829427
+  },
+  {
+   "key": "download_poliwag",
+   "affinity": "water",
+   "scale": 0.6761957602358488
+  },
+  {
+   "key": "download_poliwhirl",
+   "affinity": "water",
+   "scale": 0.6897494627304468
+  },
+  {
+   "key": "download_poliwrath",
+   "affinity": "water",
+   "scale": 0.7655794627846507
+  },
+  {
+   "key": "download_primeape",
+   "affinity": "fighter",
+   "scale": 0.6663545850917898
+  },
+  {
+   "key": "download_raticate",
+   "affinity": "normal",
+   "scale": 0.6485412007636033
+  },
+  {
+   "key": "download_rattata",
+   "affinity": "normal",
+   "scale": 0.512824354959359
+  },
+  {
+   "key": "download_garganacl",
+   "affinity": "fighter",
+   "scale": 0.9865703966998817
+  },
+  {
+   "key": "download_chi_yu",
+   "affinity": "lightning",
+   "scale": 0.39202294639355556
+  },
+  {
+   "key": "download_sandshrew",
+   "affinity": "normal",
+   "scale": 0.7539753788459401
+  },
+  {
+   "key": "download_sandslash",
+   "affinity": "normal",
+   "scale": 0.5778230206400692
+  },
+  {
+   "key": "download_seel",
+   "affinity": "water",
+   "scale": 0.8258607653344265
+  },
+  {
+   "key": "download_gimmighoul",
+   "affinity": "psychic",
+   "scale": 0.34973149704610595
+  },
+  {
+   "key": "download_arrokuda",
+   "affinity": "grass",
+   "scale": 0.9680755086684326
+  },
+  {
+   "key": "download_fuecoco",
+   "affinity": "fire",
+   "scale": 0.41978897473029897
+  },
+  {
+   "key": "download_spearow",
+   "affinity": "normal",
+   "scale": 0.5741063829691647
+  },
+  {
+   "key": "download_ting_lu",
+   "affinity": "normal",
+   "scale": 0.9737144475601134
+  },
+  {
+   "key": "download_kilowattrel",
+   "affinity": "normal",
+   "scale": 1.2046829733638447
+  },
+  {
+   "key": "download_staryu",
+   "affinity": "water",
+   "scale": 0.5808685765749316
+  },
+  {
+   "key": "download_nacli",
+   "affinity": "fighter",
+   "scale": 0.4413404904923786
+  },
+  {
+   "key": "download_vaporeon",
+   "affinity": "water",
+   "scale": 0.7881213522052796
+  },
+  {
+   "key": "download_victreebel",
+   "affinity": "grass",
+   "scale": 0.6873812127685385
+  },
+  {
+   "key": "download_voltorb",
+   "affinity": "lightning",
+   "scale": 0.6154760258378823
+  },
+  {
+   "key": "download_vulpix",
+   "affinity": "fire",
+   "scale": 0.5741239654197867
+  },
+  {
+   "key": "download_weedle",
+   "affinity": "grass",
+   "scale": 0.5187702163104344
+  },
+  {
+   "key": "download_weepinbell",
+   "affinity": "grass",
+   "scale": 0.7936980121829427
+  },
+  {
+   "key": "download_skeledirge",
+   "affinity": "grass",
+   "scale": 0.7936980121829427
+  },
+  {
+   "key": "download_zubat",
+   "affinity": "normal",
+   "scale": 0.7836726722309548
+  }
+ ],
+ "unitModel": {
+  "unit_h00f": "pet_allmiaomiao",
+  "unit_h00g": "pet_miaowazhongzi",
+  "unit_h00h": "pet_miaowazhongzi",
+  "unit_h00i": "pet_miaowacao",
+  "unit_h00j": "pet_miaowacao",
+  "unit_h00k": "pet_miaowahua",
+  "unit_h00l": "pet_miaowahua",
+  "unit_h00m": "pet_miaowahua",
+  "unit_h00n": "pet_miaowahua",
+  "unit_h00o": "pet_xiaohuolong",
+  "unit_h00p": "pet_xiaohuolong",
+  "unit_h00q": "pet_huokonglong",
+  "unit_h00r": "pet_huokonglong",
+  "unit_h00s": "pet_penhuolong",
+  "unit_h00t": "pet_penhuolong",
+  "unit_h00u": "pet_penhuolong",
+  "unit_h00v": "pet_penhuolong",
+  "unit_h00w": "pet_jienigui",
+  "unit_h00x": "pet_jienigui",
+  "unit_h00y": "pet_kamigui",
+  "unit_h00z": "pet_kamigui",
+  "unit_h010": "pet_shuijiangui",
+  "unit_h011": "pet_shuijiangui",
+  "unit_h012": "pet_shuijiangui",
+  "unit_h013": "pet_shuijiangui",
+  "unit_h014": "monster_lvmaochong",
+  "unit_h015": "pet_metapod",
+  "unit_h016": "download_butterfree",
+  "unit_h017": "download_butterfree",
+  "unit_h018": "download_butterfree",
+  "unit_h019": "download_weedle",
+  "unit_h01a": "pet_s_juqiantanglang",
+  "unit_h01b": "download_beedrill",
+  "unit_h01c": "download_beedrill",
+  "unit_h01d": "download_beedrill",
+  "unit_h01e": "download_hitmonchan",
+  "unit_h01f": "download_hitmonchan",
+  "unit_h01g": "download_hitmonchan",
+  "unit_h01h": "download_hitmonchan",
+  "unit_h01i": "download_hitmonlee",
+  "unit_h01j": "download_hitmonlee",
+  "unit_h01k": "download_hitmonlee",
+  "unit_h01l": "download_hitmonlee",
+  "unit_h01m": "download_nacli",
+  "unit_h01n": "pet_guisi",
+  "unit_h01o": "pet_guisi",
+  "unit_h01p": "pet_guisitong",
+  "unit_h01q": "pet_guisitong",
+  "unit_h01r": "pet_genggui",
+  "unit_h01s": "pet_genggui",
+  "unit_h01t": "pet_genggui",
+  "unit_h01u": "pet_genggui",
+  "unit_h01v": "pet_kaixi",
+  "unit_h01w": "pet_kaixi",
+  "unit_h01x": "pet_yongjila",
+  "unit_h01y": "pet_yongjila",
+  "unit_h01z": "pet_hudi",
+  "unit_h020": "pet_hudi",
+  "unit_h021": "pet_hudi",
+  "unit_h022": "pet_hudi",
+  "unit_h023": "pet_wanli",
+  "unit_h024": "pet_wanli",
+  "unit_h025": "pet_haoli",
+  "unit_h026": "pet_haoli",
+  "unit_h027": "pet_guaili",
+  "unit_h028": "pet_guaili",
+  "unit_h029": "pet_guaili",
+  "unit_h02a": "pet_guaili",
+  "unit_h02b": "download_rattata",
+  "unit_h02c": "download_raticate",
+  "unit_h02d": "download_raticate",
+  "unit_h02e": "download_raticate",
+  "unit_h02f": "download_marill",
+  "unit_h02g": "download_chansey",
+  "unit_h02h": "download_farigiraf",
+  "unit_h02i": "download_farigiraf",
+  "unit_h02j": "download_farigiraf",
+  "unit_h02k": "pet_piqiu",
+  "unit_h02l": "pet_pikaqiu",
+  "unit_h02m": "pet_leiqiu",
+  "unit_h02n": "pet_leiqiu",
+  "unit_h02o": "pet_leiqiu",
+  "unit_h02p": "pet_bobo",
+  "unit_h02q": "pet_bobo",
+  "unit_h02r": "pet_bibiniao",
+  "unit_h02s": "pet_bibiniao",
+  "unit_h02t": "pet_dabiniao",
+  "unit_h02u": "pet_dabiniao",
+  "unit_h02v": "pet_dabiniao",
+  "unit_h02w": "pet_dabiniao",
+  "unit_h02x": "pet_miaomiao",
+  "unit_h02y": "pet_miaomiao",
+  "unit_h02z": "pet_maolaoda",
+  "unit_h030": "pet_maolaoda",
+  "unit_h031": "pet_maolaoda",
+  "unit_h032": "download_spearow",
+  "unit_h033": "download_spearow",
+  "unit_h034": "download_fearow",
+  "unit_h035": "download_fearow",
+  "unit_h036": "download_fearow",
+  "unit_h039": "download_paras",
+  "unit_h03a": "download_paras",
+  "unit_h03b": "download_parasect",
+  "unit_h03c": "download_parasect",
+  "unit_h03d": "download_parasect",
+  "unit_h03e": "pet_aboshe",
+  "unit_h03f": "pet_aboshe",
+  "unit_h03g": "pet_aboguai",
+  "unit_h03h": "pet_aboguai",
+  "unit_h03i": "pet_aboguai",
+  "unit_h03j": "download_vulpix",
+  "unit_h03k": "download_vulpix",
+  "unit_h03l": "download_ninetales",
+  "unit_h03m": "download_ninetales",
+  "unit_h03n": "download_ninetales",
+  "unit_h03o": "download_sandshrew",
+  "unit_h03p": "download_sandshrew",
+  "unit_h03q": "download_sandslash",
+  "unit_h03r": "download_sandslash",
+  "unit_h03s": "download_sandslash",
+  "unit_h03t": "download_poliwag",
+  "unit_h03u": "download_poliwag",
+  "unit_h03v": "download_poliwhirl",
+  "unit_h03w": "download_poliwhirl",
+  "unit_h03x": "download_poliwrath",
+  "unit_h03y": "download_poliwrath",
+  "unit_h03z": "download_poliwrath",
+  "unit_h040": "pet_jiaherenwa",
+  "unit_h041": "pet_jiaherenwa",
+  "unit_h042": "pet_jiaherenwa",
+  "unit_h043": "pet_michunwa",
+  "unit_h044": "pet_michunwa",
+  "unit_h045": "download_magmar",
+  "unit_h046": "pet_michunjie",
+  "unit_h047": "pet_michunjie",
+  "unit_h048": "pet_michunjie",
+  "unit_h049": "pet_daidaishou",
+  "unit_h04a": "pet_daidaishou",
+  "unit_h04b": "pet_daikeshou",
+  "unit_h04c": "pet_daikeshou",
+  "unit_h04d": "pet_daikeshou",
+  "unit_h08x": "download_zubat",
+  "unit_h08y": "download_zubat",
+  "unit_h08z": "download_golbat",
+  "unit_h090": "download_iron_moth",
+  "unit_h091": "download_iron_moth",
+  "unit_h092": "download_iron_moth",
+  "unit_h093": "pet_kedaya",
+  "unit_h094": "pet_kedaya",
+  "unit_h095": "pet_gedaya",
+  "unit_h096": "pet_gedaya",
+  "unit_h097": "pet_gedaya",
+  "unit_h098": "download_mankey",
+  "unit_h099": "download_mankey",
+  "unit_h09a": "download_primeape",
+  "unit_h09b": "download_primeape",
+  "unit_h09c": "download_primeape",
+  "unit_h09d": "pet_kadigou",
+  "unit_h09e": "pet_kadigou",
+  "unit_h09f": "pet_fengsugou",
+  "unit_h09g": "pet_fengsugou",
+  "unit_h09h": "pet_fengsugou",
+  "unit_h09i": "download_geodude",
+  "unit_h09j": "download_geodude",
+  "unit_h09k": "download_graveler",
+  "unit_h09l": "download_graveler",
+  "unit_h09m": "download_golem",
+  "unit_h09n": "download_golem",
+  "unit_h09o": "download_golem",
+  "unit_h09p": "pet_xiaohuoma",
+  "unit_h09q": "pet_xiaohuoma",
+  "unit_h09r": "pet_lieyanma",
+  "unit_h09s": "pet_lieyanma",
+  "unit_h09t": "pet_lieyanma",
+  "unit_h09u": "download_magnemite",
+  "unit_h09v": "download_magnemite",
+  "unit_h09w": "download_magneton",
+  "unit_h09x": "download_iron_crown",
+  "unit_h09y": "download_iron_crown",
+  "unit_h09z": "download_iron_crown",
+  "unit_h0a0": "download_fuecoco",
+  "unit_h0a1": "download_fuecoco",
+  "unit_h0a2": "download_crocalor",
+  "unit_h0a3": "download_crocalor",
+  "unit_h0a4": "download_crocalor",
+  "unit_h0a5": "pet_xiaokabishou",
+  "unit_h0a6": "pet_xiaokabishou",
+  "unit_h0a7": "pet_kabishou",
+  "unit_h0a8": "pet_kabishou",
+  "unit_h0a9": "pet_kabishou",
+  "unit_h0aa": "download_raboot",
+  "unit_h0ab": "download_raboot",
+  "unit_h0ac": "download_electabuzz",
+  "unit_h0ad": "download_iron_thorns",
+  "unit_h0ae": "download_iron_thorns",
+  "unit_h0af": "download_iron_thorns",
+  "unit_h0ag": "download_voltorb",
+  "unit_h0ah": "download_voltorb",
+  "unit_h0ai": "download_electrode",
+  "unit_h0aj": "download_electrode",
+  "unit_h0ak": "download_electrode",
+  "unit_h0al": "pet_pibaobao",
+  "unit_h0am": "pet_pipi",
+  "unit_h0an": "pet_pikexi",
+  "unit_h0ao": "pet_pikexi",
+  "unit_h0ap": "pet_pikexi",
+  "unit_h0aq": "download_toxel",
+  "unit_h0ar": "download_toxel",
+  "unit_h0as": "download_gouging_fire",
+  "unit_h0at": "download_gouging_fire",
+  "unit_h0au": "download_gouging_fire",
+  "unit_h0av": "download_seel",
+  "unit_h0aw": "download_seel",
+  "unit_h0ax": "download_dewgong",
+  "unit_h0ay": "download_dewgong",
+  "unit_h0az": "download_dewgong",
+  "unit_h0b0": "pet_guaguapaowa",
+  "unit_h0b1": "pet_guaguapaowa",
+  "unit_h0b2": "pet_guatouwa",
+  "unit_h0b3": "pet_guatouwa",
+  "unit_h0b4": "pet_guatouwa",
+  "unit_h0b5": "download_krabby",
+  "unit_h0b6": "download_krabby",
+  "unit_h0b7": "download_kingler",
+  "unit_h0b8": "download_kingler",
+  "unit_h0b9": "download_kingler",
+  "unit_h0ba": "pet_kalakala",
+  "unit_h0bb": "pet_kalakala",
+  "unit_h0bc": "download_landorus",
+  "unit_h0bd": "download_landorus",
+  "unit_h0be": "download_landorus",
+  "unit_h0bf": "pet_huohuli",
+  "unit_h0bg": "pet_changweihuohu",
+  "unit_h0bh": "pet_yaohuohonghu",
+  "unit_h0bi": "pet_yaohuohonghu",
+  "unit_h0bj": "pet_yaohuohonghu",
+  "unit_h0bk": "pet_anheichaomeng",
+  "unit_h0bl": "pet_anheichaomeng",
+  "unit_h0bm": "pet_anheichaomeng",
+  "unit_h0bn": "pet_huozhiji",
+  "unit_h0bo": "pet_huozhiji",
+  "unit_h0bp": "pet_lizhuangji",
+  "unit_h0bq": "pet_lizhuangji",
+  "unit_h0br": "pet_lizhuangji",
+  "unit_h0bs": "pet_liuwei_ice",
+  "unit_h0bt": "pet_liuwei_ice",
+  "unit_h0bu": "pet_jiuwei_ice",
+  "unit_h0bv": "pet_jiuwei_ice",
+  "unit_h0bw": "pet_jiuwei_ice",
+  "unit_h0bx": "pet_dashebei",
+  "unit_h0by": "pet_dashebei",
+  "unit_h0bz": "pet_cijiabei",
+  "unit_h0c0": "pet_cijiabei",
+  "unit_h0c1": "pet_cijiabei",
+  "unit_h0c2": "download_naclstack",
+  "unit_h0c3": "download_naclstack",
+  "unit_h0c4": "pet_huoyanji",
+  "unit_h0c5": "pet_huoyanji",
+  "unit_h0c6": "pet_huoyanji",
+  "unit_h0c7": "download_ting_lu",
+  "unit_h0c9": "pet_liekongzuo",
+  "unit_h0ca": "pet_liekongzuo",
+  "unit_h0cb": "pet_liekongzuo",
+  "unit_h0cc": "pet_liekongzuo",
+  "unit_h0cd": "pet_liekongzuo",
+  "unit_h0ce": "pet_leigong",
+  "unit_h0cf": "pet_leigong",
+  "unit_h0cg": "pet_leigong",
+  "unit_h0ch": "pet_leigong",
+  "unit_h0ci": "pet_leigong",
+  "unit_h0cj": "pet_gaiouka",
+  "unit_h0ck": "pet_gaiouka",
+  "unit_h0cl": "pet_gaiouka",
+  "unit_h0cm": "pet_gaiouka",
+  "unit_h0cn": "pet_gaiouka",
+  "unit_h0cu": "pet_yandi",
+  "unit_h0cv": "pet_yandi",
+  "unit_h0cw": "pet_yandi",
+  "unit_h0cx": "pet_yandi",
+  "unit_h0cy": "pet_yandi",
+  "unit_h0cz": "pet_menghuan",
+  "unit_h0d0": "pet_menghuan",
+  "unit_h0d1": "pet_menghuan",
+  "unit_h0d2": "pet_menghuan",
+  "unit_h0d3": "pet_menghuan",
+  "unit_h0d4": "download_archaludon",
+  "unit_h0d5": "download_archaludon",
+  "unit_h0d6": "download_archaludon",
+  "unit_h0d7": "download_archaludon",
+  "unit_h0d8": "download_archaludon",
+  "unit_h0d9": "pet_dayanshe",
+  "unit_h0da": "pet_dayanshe",
+  "unit_h0db": "pet_dayanshe",
+  "unit_h0dc": "pet_dayanshe",
+  "unit_h0dd": "pet_dayanshe",
+  "unit_h0de": "download_chi_yu",
+  "unit_h0dg": "pet_galagala",
+  "unit_h0dh": "pet_daiouqixisi",
+  "unit_h0di": "pet_daiouqixisi",
+  "unit_h0dj": "pet_feitiantanglang",
+  "unit_h0dk": "pet_chaojiakuangxi",
+  "unit_h0dl": "pet_chaojiakuangxi",
+  "unit_h0dm": "pet_lapulasi",
+  "unit_h0dn": "pet_lapulasi",
+  "unit_h0do": "pet_lapulasi",
+  "unit_h0dp": "pet_huoyanniao",
+  "unit_h0dq": "pet_huoyanniao",
+  "unit_h0dr": "pet_huoyanniao",
+  "unit_h0ds": "pet_shandianniao",
+  "unit_h0dt": "pet_shandianniao",
+  "unit_h0du": "pet_jidongniao",
+  "unit_h0dv": "pet_jidongniao",
+  "unit_h0dw": "pet_jidongniao",
+  "unit_h0dx": "download_flygon",
+  "unit_h0dy": "download_flygon",
+  "unit_h0dz": "pet_fengwang",
+  "unit_h0e0": "download_kilowattrel",
+  "unit_h0e1": "download_annihilape",
+  "unit_h0e2": "download_annihilape",
+  "unit_h0e3": "download_okidogi",
+  "unit_h0e5": "download_ditto",
+  "unit_h0e6": "download_ditto",
+  "unit_h0e7": "download_ditto",
+  "unit_h0e8": "download_ditto",
+  "unit_h0e9": "download_ditto",
+  "unit_h0ea": "download_arrokuda",
+  "unit_h0eb": "download_arrokuda",
+  "unit_h0ec": "download_arrokuda",
+  "unit_h0ed": "download_feraligatr",
+  "unit_h0ee": "download_feraligatr",
+  "unit_h0ef": "download_feraligatr",
+  "unit_h0eg": "pet_liyuwang",
+  "unit_h0eh": "pet_liyuwang",
+  "unit_h0ei": "pet_liyuwang",
+  "unit_h0ej": "pet_baolilong",
+  "unit_h0ek": "pet_baolilong",
+  "unit_h0el": "pet_baolilong",
+  "unit_h0em": "pet_banjilasi",
+  "unit_h0en": "pet_youjilasi",
+  "unit_h0eo": "pet_shajilasi",
+  "unit_h0ep": "pet_shajilasi",
+  "unit_h0eq": "pet_banjilasi",
+  "unit_h0er": "pet_banjilasi",
+  "unit_h0es": "pet_huashiyilong",
+  "unit_h0et": "pet_huashiyilong",
+  "unit_h0eu": "pet_huashiyilong",
+  "unit_h0ev": "pet_huashiyilong",
+  "unit_h0ew": "pet_huashiyilong",
+  "unit_h0ex": "pet_huashiyilong",
+  "unit_h0ey": "download_bramblin",
+  "unit_h0ez": "download_bramblin",
+  "unit_h0f0": "download_brambleghast",
+  "unit_h0f1": "download_brambleghast",
+  "unit_h0f2": "download_brambleghast",
+  "unit_h0f3": "download_brambleghast",
+  "unit_h0f4": "pet_minilong",
+  "unit_h0f5": "pet_hakelong",
+  "unit_h0f6": "pet_hakelong",
+  "unit_h0f7": "pet_kuailong",
+  "unit_h0f8": "pet_kuailong",
+  "unit_h0f9": "pet_kuailong",
+  "unit_h0fa": "pet_senlinxiyi",
+  "unit_h0fb": "pet_mushougong",
+  "unit_h0fc": "pet_xiyiwang",
+  "unit_h0fd": "pet_xiyiwang",
+  "unit_h0fe": "pet_xiyiwang",
+  "unit_h0ff": "pet_xiyiwang",
+  "unit_h0fg": "pet_shuiyueyu",
+  "unit_h0fh": "pet_juzhaoguai",
+  "unit_h0fi": "pet_zhaoyueyu",
+  "unit_h0fj": "pet_juzhaoguai",
+  "unit_h0fk": "pet_juzhaoguai",
+  "unit_h0fl": "pet_juzhaoguai",
+  "unit_h0fm": "download_gimmighoul",
+  "unit_h0fn": "download_gholdengo",
+  "unit_h0fo": "download_gimmighoul",
+  "unit_h0fp": "download_gholdengo",
+  "unit_h0fq": "download_gholdengo",
+  "unit_h0fr": "download_gholdengo",
+  "unit_h0fs": "download_gholdengo",
+  "unit_h0ft": "pet_shuijun",
+  "unit_h0fu": "pet_shuijun",
+  "unit_h0fv": "pet_shuijun",
+  "unit_h0fw": "pet_shuijun",
+  "unit_h0fx": "pet_shuijun",
+  "unit_h0fy": "pet_guladuo",
+  "unit_h0fz": "pet_guladuo",
+  "unit_h0g0": "pet_guladuo",
+  "unit_h0g1": "pet_guladuo",
+  "unit_h0g2": "pet_guladuo",
+  "unit_h0g3": "pet_dakelaiyi",
+  "unit_h0g4": "pet_dakelaiyi",
+  "unit_h0g5": "pet_dakelaiyi",
+  "unit_h0g6": "pet_dakelaiyi",
+  "unit_h0g7": "pet_dakelaiyi",
+  "unit_h0g8": "pet_keleiseliya",
+  "unit_h0g9": "pet_keleiseliya",
+  "unit_h0ga": "pet_keleiseliya",
+  "unit_h0gb": "pet_keleiseliya",
+  "unit_h0gc": "pet_keleiseliya",
+  "unit_h0gd": "download_garganacl",
+  "unit_h0ge": "download_garganacl",
+  "unit_h0gf": "download_garganacl",
+  "unit_h0gg": "download_garganacl",
+  "unit_h0gh": "download_garganacl",
+  "unit_h0gi": "pet_ladiousi",
+  "unit_h0gj": "pet_ladiyasi",
+  "unit_h0gk": "pet_ladiyasi",
+  "unit_h0gl": "pet_ladiyasi",
+  "unit_h0gm": "pet_ladiyasi",
+  "unit_h0gn": "pet_ladiyasi",
+  "unit_h0go": "pet_aerzhousi",
+  "unit_h0gp": "pet_ladiousi",
+  "unit_h0gq": "pet_ladiousi",
+  "unit_h0gr": "pet_ladiousi",
+  "unit_h0gs": "pet_ladiousi",
+  "unit_h0gt": "pet_aerzhousi",
+  "unit_h0gu": "pet_aerzhousi",
+  "unit_h0gv": "pet_aerzhousi",
+  "unit_h0gw": "pet_aerzhousi",
+  "unit_h0gx": "pet_aerzhousi",
+  "unit_h0gy": "pet_aerzhousi",
+  "unit_h0gz": "pet_aerzhousi",
+  "unit_h0h0": "pet_aerzhousi",
+  "unit_h0h1": "pet_aerzhousi",
+  "unit_h0h2": "pet_aerzhousi",
+  "unit_h0h3": "download_thwackey",
+  "unit_h0h4": "download_jolteon",
+  "unit_h0h5": "download_kabutops",
+  "unit_h0h6": "download_flareon",
+  "unit_h0h7": "download_vaporeon",
+  "unit_h0h8": "download_eevee",
+  "unit_h0h9": "download_eevee",
+  "unit_h0ha": "download_eevee",
+  "unit_h0hb": "download_eevee",
+  "unit_h0hc": "download_vaporeon",
+  "unit_h0hd": "download_vaporeon",
+  "unit_h0he": "download_vaporeon",
+  "unit_h0hf": "download_jolteon",
+  "unit_h0hg": "download_jolteon",
+  "unit_h0hh": "download_jolteon",
+  "unit_h0hi": "download_flareon",
+  "unit_h0hj": "download_flareon",
+  "unit_h0hk": "download_flareon",
+  "unit_h0hl": "download_kabutops",
+  "unit_h0hm": "download_kabutops",
+  "unit_h0hn": "download_kabutops",
+  "unit_h0ho": "download_thwackey",
+  "unit_h0hp": "download_thwackey",
+  "unit_h0hq": "download_thwackey",
+  "unit_h0hr": "pet_allmaolada",
+  "unit_h0hs": "pet_allmaolada",
+  "unit_h0ht": "pet_allmaolada",
+  "unit_h0hu": "pet_allmaolada",
+  "unit_h0hv": "pet_luoqiya",
+  "unit_h0hw": "pet_luoqiya",
+  "unit_h0hx": "pet_dagangshe",
+  "unit_h0hy": "pet_dagangshe",
+  "unit_h0hz": "pet_boerkainien",
+  "unit_h0i0": "download_eiscue",
+  "unit_h0i1": "pet_s_shuijiangui",
+  "unit_h0i2": "pet_s_shuijiangui",
+  "unit_h0i3": "pet_s_shuijiangui",
+  "unit_h0i4": "download_sandaconda",
+  "unit_h0i5": "download_sandaconda",
+  "unit_h0i6": "monster_manaoshuimu",
+  "unit_h0i7": "monster_manaoshuimu",
+  "unit_h0i8": "pet_aerzhousi",
+  "unit_h0i9": "pet_boerkainien",
+  "unit_h0ia": "download_eiscue",
+  "unit_h0ib": "pet_fengwang",
+  "unit_h0ic": "download_raticate",
+  "unit_h0id": "pet_maolaoda",
+  "unit_h0ie": "download_fearow",
+  "unit_h0if": "pet_guatouwa",
+  "unit_h0ig": "download_poliwrath",
+  "unit_h0ih": "download_iron_crown",
+  "unit_h0ii": "download_beedrill",
+  "unit_h0ij": "download_gouging_fire",
+  "unit_h0ik": "download_electrode",
+  "unit_h0il": "pet_feitiantanglang",
+  "unit_h0im": "download_hitmonchan",
+  "unit_h0in": "download_hitmonlee",
+  "unit_h0io": "pet_guaili",
+  "unit_h0ip": "pet_galagala",
+  "unit_h0iq": "download_crocalor",
+  "unit_h0ir": "download_iron_moth",
+  "unit_h0is": "download_chi_yu",
+  "unit_h0it": "download_landorus",
+  "unit_h0iu": "download_chien_pao",
+  "unit_h0iv": "download_chien_pao",
+  "unit_h0iw": "download_wo_chien",
+  "unit_h0ix": "download_chien_pao",
+  "unit_h0iy": "download_chien_pao",
+  "unit_h0iz": "download_chien_pao",
+  "unit_h0j0": "download_chien_pao",
+  "unit_h0j1": "download_chien_pao",
+  "unit_h0j2": "download_wo_chien",
+  "unit_h0j3": "download_torracat",
+  "unit_h0j4": "download_wo_chien",
+  "unit_h0j5": "download_wo_chien",
+  "unit_h0j6": "download_wo_chien",
+  "unit_h0j7": "download_wo_chien",
+  "unit_h0j8": "download_wo_chien",
+  "unit_h0j9": "download_torracat",
+  "unit_h0ja": "download_torracat",
+  "unit_h0jb": "download_torracat",
+  "unit_h0jc": "download_corphish",
+  "unit_h0jd": "download_torracat",
+  "unit_h0je": "download_torracat",
+  "unit_h0jf": "download_torracat",
+  "unit_h0jg": "pet_juqiantanglang",
+  "unit_h0jh": "download_corphish",
+  "unit_h0ji": "download_corphish",
+  "unit_h0jj": "pet_juqiantanglang",
+  "unit_h0jk": "pet_juqiantanglang",
+  "unit_h0jl": "pet_juqiantanglang",
+  "unit_h0jm": "pet_dujiaoxiniu",
+  "unit_h0jn": "pet_dujiaoxiniu",
+  "unit_h0jo": "pet_zuanjiaoxiniu",
+  "unit_h0jp": "pet_dujiaoxiniu",
+  "unit_h0jq": "pet_zuanjiaoxiniu",
+  "unit_h0jr": "pet_zuanjiaoxiniu",
+  "unit_h0js": "pet_zuanjiaoxiniu",
+  "unit_h0jt": "pet_lioulu",
+  "unit_h0ju": "pet_lioulu",
+  "unit_h0jv": "pet_lioulu",
+  "unit_h0jw": "pet_lukaliou",
+  "unit_h0jx": "pet_lioulu",
+  "unit_h0jy": "pet_lioulu",
+  "unit_h0jz": "pet_lioulu",
+  "unit_h0k0": "pet_lioulu",
+  "unit_h0k1": "pet_pangkeding",
+  "unit_h0k2": "download_torracat",
+  "unit_h0k3": "pet_baobaoding",
+  "unit_h0k4": "pet_baobaoding",
+  "unit_h0k5": "pet_pangding",
+  "unit_h0k6": "pet_pangding",
+  "unit_h0k7": "pet_pangkeding",
+  "unit_h0k8": "pet_pangkeding",
+  "unit_h0k9": "pet_pangkeding",
+  "unit_h0ka": "pet_pangkeding",
+  "unit_h0ki": "pet_shuangdanwasi",
+  "unit_h0kj": "pet_shuangdanwasi",
+  "unit_h0kk": "pet_wasidan",
+  "unit_h0kl": "pet_wasidan",
+  "unit_h0km": "pet_wasidan",
+  "unit_h0ko": "monster_labaya",
+  "unit_h0kp": "monster_labaya",
+  "unit_h0kq": "download_weepinbell",
+  "unit_h0kr": "download_skeledirge",
+  "unit_h0ks": "download_victreebel",
+  "unit_h0kt": "download_victreebel",
+  "unit_h0kw": "pet_chaomeng",
+  "unit_h0kx": "pet_chaomeng",
+  "unit_h0ky": "pet_chaomeng",
+  "unit_h0kz": "pet_chaomeng",
+  "unit_h0l0": "pet_chaomeng",
+  "unit_h0l1": "pet_chaomeng",
+  "unit_h0l2": "download_staryu",
+  "unit_h0l3": "download_staryu",
+  "unit_h0l4": "download_staryu",
+  "unit_h0l5": "download_staryu",
+  "unit_h0l6": "download_staryu",
+  "unit_h0l7": "download_staryu",
+  "unit_h0l8": "download_staryu",
+  "unit_h0la": "pet_s_baolilong",
+  "unit_h0lb": "pet_s_baolilong"
+ },
+ "elementColors": {
+  "normal": [
+   [
+    255,
+    248,
+    214
+   ],
+   [
+    240,
+    200,
+    120
+   ],
+   [
+    140,
+    100,
+    40
+   ]
+  ],
+  "fire": [
+   [
+    255,
+    214,
+    120
+   ],
+   [
+    255,
+    122,
+    40
+   ],
+   [
+    150,
+    20,
+    10
+   ]
+  ],
+  "water": [
+   [
+    190,
+    240,
+    255
+   ],
+   [
+    70,
+    170,
+    250
+   ],
+   [
+    10,
+    60,
+    170
+   ]
+  ],
+  "grass": [
+   [
+    214,
+    255,
+    160
+   ],
+   [
+    120,
+    220,
+    90
+   ],
+   [
+    20,
+    100,
+    40
+   ]
+  ],
+  "lightning": [
+   [
+    255,
+    250,
+    190
+   ],
+   [
+    255,
+    220,
+    60
+   ],
+   [
+    140,
+    90,
+    230
+   ]
+  ],
+  "psychic": [
+   [
+    245,
+    200,
+    255
+   ],
+   [
+    190,
+    120,
+    250
+   ],
+   [
+    80,
+    20,
+    150
+   ]
+  ],
+  "fighter": [
+   [
+    255,
+    220,
+    160
+   ],
+   [
+    245,
+    140,
+    70
+   ],
+   [
+    130,
+    40,
+    20
+   ]
+  ]
+ },
+ "i18n": {
+  "Smart VFX optimization": "Tối ưu VFX thông minh",
+  "Ease crowded particles on slow frames; keep bursts.": "Giảm hạt chồng khi máy chậm; giữ skill và vệt sáng.",
+  "Graphics": "Đồ họa",
+  "Graphics quality": "Chất lượng đồ họa",
+  "Quality, frame rate and scenery.": "Chất lượng, tốc độ khung hình và cảnh vật.",
+  "Preferences are saved on this device.": "Lựa chọn được lưu trên thiết bị này.",
+  "Balance detail and performance.": "Cân bằng chi tiết và hiệu năng.",
+  "Frame rate": "Tốc độ khung hình",
+  "30 FPS saves power. 60 FPS gives smoother motion.": "30 FPS tiết kiệm pin. 60 FPS chuyển động mượt hơn.",
+  "Low": "Thấp",
+  "Medium": "Vừa",
+  "High": "Cao",
+  "Auto · {0}": "Tự động · {0}",
+  "Adjust quality to your device and frame rate.": "Điều chỉnh theo thiết bị và tốc độ khung hình.",
+  "Lower resolution for lighter rendering.": "Giảm độ phân giải để máy chạy nhẹ hơn.",
+  "Balance clarity and performance.": "Cân bằng độ rõ nét và hiệu năng.",
+  "Sharper scenery for more powerful devices.": "Cảnh vật sắc nét hơn cho máy cấu hình cao.",
+  "Wave": "Đợt",
+  "Start interactive tutorial": "Bắt đầu hướng dẫn tương tác",
+  "Practice catching, moving and evolving in this match.": "Thực hành bắt, di chuyển và tiến hóa ngay trong trận.",
+  "Tutorial": "Hướng dẫn",
+  "Tutorial complete": "Đã hoàn thành hướng dẫn",
+  "Tutorial · {0}/5": "Hướng dẫn · {0}/5",
+  "Tap a wild creature around your court. Its panel shows the Catch button and cost.": "Chạm vào sinh vật hoang dã quanh sân. Bảng thông tin hiện nút Bắt và giá.",
+  "Press Catch. Wait for the creature to become yours; a failed catch does not finish this step.": "Bấm Bắt và chờ sinh vật thuộc về bạn. Bắt thất bại chưa hoàn thành bước này.",
+  "Select your creature. Drag it onto your court, or right-click a destination during preparation.": "Chọn sinh vật của bạn. Kéo nó vào sân, hoặc nhấp chuột phải vào đích trong lúc chuẩn bị.",
+  "Defend through a wave. Combat runs automatically; enemies reaching the exit cost lives.": "Phòng thủ qua một wave. Chiến đấu tự động; quái tới cửa thoát sẽ làm mất mạng.",
+  "Select a defender and open Evolution. Compare branches and buy one when you can afford it.": "Chọn một sinh vật và mở Tiến hóa. So sánh các nhánh rồi mua khi đủ vàng.",
+  "You know the basics. Research, creature details and the guide are available from the menu.": "Bạn đã biết các thao tác cơ bản. Có thể mở nghiên cứu, thông tin sinh vật và hướng dẫn từ menu.",
+  "This run has ended for your base. You can restart the tutorial next match.": "Lượt chơi của căn cứ đã kết thúc. Bạn có thể mở lại hướng dẫn ở trận sau.",
+  "Return to your base to continue the tutorial.": "Về sân của bạn để tiếp tục hướng dẫn.",
+  "Done": "Xong",
+  "Skip tutorial": "Bỏ qua hướng dẫn",
+  "Public rooms": "Phòng công khai",
+  "Match history": "Lịch sử trận",
+  "Leaderboard": "Bảng xếp hạng",
+  "Lives: {0}": "Mạng: {0}",
+  "Join a waiting room. Running matches are listed for activity.": "Tham gia phòng đang chờ. Trận đang đấu được hiển thị để theo dõi hoạt động.",
+  "Completed matches saved by the server.": "Các trận đã kết thúc được máy chủ lưu lại.",
+  "Win to gain points; lose to drop points. Opponent ratings affect the change. Leaving counts as a loss.": "Thắng cộng điểm, thua trừ điểm theo điểm của đối thủ. Bỏ trận vẫn tính thua.",
+  "Your rank": "Hạng của bạn",
+  "Unranked": "Chưa xếp hạng",
+  "Rank points": "Điểm hạng",
+  "{0} RP": "{0} điểm hạng",
+  "Last match: {0}": "Trận trước: {0}",
+  "{0} wins · {1} losses": "{0} thắng · {1} thua",
+  "Finish a multiplayer match with a winner to enter the ladder.": "Hoàn tất trận nhiều người có người thắng để vào bảng xếp hạng.",
+  "Bronze": "Đồng",
+  "Silver": "Bạc",
+  "Platinum": "Bạch Kim",
+  "Diamond": "Kim Cương",
+  "Master": "Cao Thủ",
+  "Grandmaster": "Đại Cao Thủ",
+  "Challenger": "Thách Đấu",
+  "In progress": "Đang đấu",
+  "Full": "Đã đầy",
+  "No public rooms yet": "Chưa có phòng công khai",
+  "Create a public room or join a friend with their code.": "Tạo phòng công khai hoặc nhập mã phòng của bạn bè.",
+  "Left match": "Đã rời trận",
+  "No completed matches yet": "Chưa có trận hoàn tất",
+  "Your results will appear here after a match ends.": "Kết quả xuất hiện tại đây sau khi trận kết thúc.",
+  "Ranking rules": "Bộ luật xếp hạng",
+  "{0} players": "{0} người chơi",
+  "Rank {0}": "Hạng {0}",
+  "No ranked results yet": "Chưa có người chơi xếp hạng",
+  "Finish a match without leaving to record a result.": "Hoàn tất trận mà không bỏ cuộc để ghi nhận thành tích.",
+  "Refresh": "Làm mới",
+  "Public: anyone can find this room": "Công khai: mọi người có thể tìm phòng",
+  "Private: invite code only": "Riêng tư: chỉ vào bằng mã mời",
+  "Play again with group": "Chơi lại cùng nhóm",
+  "Return to a waiting room with the same rules.": "Trở về phòng chờ với cùng bộ luật.",
+  "Match finished": "Trận đã kết thúc",
+  "Language": "Ngôn ngữ",
+  "Choose your interface language.": "Chọn ngôn ngữ giao diện.",
+  "Your base has been eliminated.": "Căn cứ của bạn đã bị loại.",
+  "Rejoining the room…": "Đang vào lại phòng…",
+  "Joining the room…": "Đang vào phòng…",
+  "Connecting to the room…": "Đang kết nối đến phòng…",
+  "Connection lost · reconnecting…": "Mất kết nối · đang kết nối lại…",
+  "Disconnected · this client cannot join this room.": "Đã ngắt kết nối · phiên bản này không thể vào phòng.",
+  "Disconnected · reconnect from the menu.": "Đã ngắt kết nối · kết nối lại trong menu.",
+  "Another tab or device is now playing this base · reload here to take it back.": "Căn cứ đang được chơi ở tab hoặc thiết bị khác · tải lại trang để tiếp tục tại đây.",
+  "Disconnected by the server · {0}.": "Máy chủ đã ngắt kết nối · {0}.",
+  "Loading the base…": "Đang tải căn cứ…",
+  "The match has ended.": "Trận đấu đã kết thúc.",
+  "Return to your base to give orders.": "Về căn cứ của bạn để ra lệnh.",
+  "Waiting for the server…": "Đang chờ máy chủ…",
+  "Available during preparation.": "Có thể dùng trong giai đoạn chuẩn bị.",
+  "This creature cannot be caught.": "Không thể bắt sinh vật này.",
+  "Defender limit reached ({0}).": "Đã đạt giới hạn quân phòng thủ ({0}).",
+  "Legendary limit reached.": "Đã đạt giới hạn sinh vật huyền thoại.",
+  "Need {0} more Gold.": "Cần thêm {0} vàng.",
+  "Unknown creature": "Sinh vật chưa rõ",
+  "{0} · continued": "{0} · tiếp theo",
+  "Profile unavailable": "Chưa có thông tin",
+  "This creature is not in the current room catalog.": "Sinh vật này không có trong danh mục của phòng.",
+  "Health · live": "Máu · hiện tại",
+  "Health · base profile": "Máu · chỉ số gốc",
+  "{0} / {1} HP{2}": "{0} / {1} máu{2}",
+  " · Down until wave end": " · Gục đến hết đợt",
+  "{0} maximum HP": "{0} máu tối đa",
+  "{0} base HP regenerated per second": "Hồi {0} máu gốc mỗi giây",
+  "No base health regeneration": "Không có hồi máu cơ bản",
+  "Attack · base profile": "Tấn công · chỉ số gốc",
+  "{0} damage · {1} range · {2} interval": "{0} sát thương · tầm {1} · chu kỳ {2}",
+  "{0} attack · {1}": "Đòn đánh {0} · {1}",
+  "ground targets only": "chỉ mục tiêu mặt đất",
+  "ground and air targets": "mục tiêu mặt đất và trên không",
+  "Defense & movement · base profile": "Phòng thủ và di chuyển · chỉ số gốc",
+  "{0} armor · {1} armor type": "{0} giáp · loại giáp {1}",
+  "{0} movement speed · {1}": "Tốc độ di chuyển {0} · {1}",
+  "Air unit": "Đơn vị trên không",
+  "Ground unit": "Đơn vị mặt đất",
+  "Splash attack": "Đánh lan",
+  "{0} full-damage radius · {1} medium radius": "Bán kính toàn sát thương {0} · bán kính trung bình {1}",
+  "{0}% medium damage · {1}% damage within {2}": "{0}% sát thương trung bình · {1}% sát thương trong phạm vi {2}",
+  "Bouncing attack": "Đòn đánh nảy",
+  "Up to {0} targets · {1} bounce range": "Tối đa {0} mục tiêu · tầm nảy {1}",
+  "{0}% damage lost per bounce": "Giảm {0}% sát thương mỗi lần nảy",
+  "Unavailable": "Chưa khả dụng",
+  "Details": "Chi tiết",
+  "Until wave end": "Đến hết đợt",
+  "Active effect": "Hiệu ứng đang có",
+  "{0} stack{1}": "{0} cộng dồn{1}",
+  "Evolution path · inspect the resulting battle profile": "Nhánh tiến hóa · xem chỉ số sau tiến hóa",
+  "{0} G": "{0} V",
+  "Final form": "Dạng cuối",
+  "This creature has no further evolution paths.": "Sinh vật này không còn nhánh tiến hóa.",
+  "Invader profile": "Thông tin quân địch",
+  "Does not cost lives when it leaks": "Không mất mạng khi để lọt",
+  "{0} lives lost on leak": "Mất {0} mạng khi để lọt",
+  "Payouts follow the room’s selected economy rules.": "Phần thưởng theo quy tắc kinh tế của phòng.",
+  "An invader broke through": "Quân địch đã lọt qua",
+  "Gold transferred": "Đã chuyển vàng",
+  "Legendary caught": "Đã bắt sinh vật huyền thoại",
+  "Match complete": "Trận đấu kết thúc",
+  "Preparation started": "Bắt đầu chuẩn bị",
+  "Base eliminated": "Căn cứ bị loại",
+  "Player joined": "Người chơi đã vào",
+  "Player left": "Người chơi đã rời",
+  "Wave cleared": "Đã vượt qua đợt",
+  "Wave income received": "Đã nhận thu nhập đợt",
+  "Wave started": "Đợt tấn công bắt đầu",
+  "Wave time expired": "Hết thời gian đợt",
+  "Wild creature appeared": "Sinh vật hoang dã xuất hiện",
+  "{0} Gold": "{0} vàng",
+  "{0} lives": "{0} mạng",
+  "Room update": "Cập nhật phòng",
+  "Room": "Phòng",
+  "Base {0}": "Căn cứ {0}",
+  "{0} ago": "{0} trước",
+  "Match in progress": "Trận đấu đang diễn ra",
+  "Results will appear when the match ends.": "Kết quả sẽ xuất hiện khi trận đấu kết thúc.",
+  "Victory!": "Chiến thắng!",
+  "Congratulations! Your sanctuary stands.": "Chúc mừng! Căn cứ của bạn vẫn đứng vững.",
+  "Thank you for defending your sanctuary.": "Cảm ơn bạn đã bảo vệ căn cứ.",
+  "You are the winner!": "Bạn là người chiến thắng!",
+  "No winner": "Không có người thắng",
+  "Winner": "Người thắng",
+  "No sanctuary survived this match.": "Không căn cứ nào trụ vững trong trận này.",
+  "Winner confirmed by the server.": "Người thắng đã được máy chủ xác nhận.",
+  "Final wave · {0}": "Đợt cuối · {0}",
+  "{0} players · {1} bases standing": "{0} người chơi · {1} căn cứ còn trụ vững",
+  "Your sanctuary": "Căn cứ của bạn",
+  "{0} lives remaining": "Còn {0} mạng",
+  "{0} Gold · {1} Crystal remaining": "Còn {0} vàng · {1} tinh thể",
+  "View battlefield": "Xem chiến trường",
+  "Inspect the final standings and your defenders.": "Xem thứ hạng cuối cùng và quân phòng thủ của bạn.",
+  "Return to rooms": "Về sảnh",
+  "Head back to your account for another match.": "Về sảnh tài khoản để chơi trận khác.",
+  "Elemental finders": "Tìm sinh vật theo hệ",
+  "Choose which elements appear after each wave": "Chọn hệ sinh vật xuất hiện sau mỗi đợt",
+  "View your base": "Xem căn cứ của bạn",
+  "Finder choices belong to your own base.": "Chỉ có thể chọn hệ cho căn cứ của bạn.",
+  "Finder {0}": "Ô tìm kiếm {0}",
+  "Current element: {0}": "Hệ hiện tại: {0}",
+  "Changes apply to the next wild refresh.": "Áp dụng ở lần làm mới sinh vật hoang dã tiếp theo.",
+  "No finders available": "Chưa có ô tìm kiếm",
+  "Your finders appear once the base is loaded.": "Các ô tìm kiếm xuất hiện khi tải xong căn cứ.",
+  "Choose an element": "Chọn một hệ",
+  "One new wild creature from this element after each wave": "Một sinh vật hoang dã mới thuộc hệ này sau mỗi đợt",
+  "Draw from a random element each wave.": "Chọn ngẫu nhiên một hệ mỗi đợt.",
+  "Draw from the {0} pool.": "Chọn từ nhóm hệ {0}.",
+  "Selected": "Đã chọn",
+  "View your own finder first.": "Hãy xem ô tìm kiếm của bạn trước.",
+  "Sanctuary": "Căn cứ",
+  "Your match, at a glance": "Tổng quan trận đấu",
+  "Sound effects": "Âm thanh",
+  "Combat, catching and evolution sounds.": "Âm thanh chiến đấu, bắt và tiến hóa.",
+  "Arena decorations": "Trang trí đấu trường",
+  "Show scenery, fences and props around the floor.": "Hiện cảnh vật, hàng rào và đồ trang trí quanh sân.",
+  "Bloom": "Quầng sáng",
+  "Glow on spells and projectiles.": "Ánh sáng tỏa từ kỹ năng và đạn.",
+  "Unavailable in this build": "Chưa có trong phiên bản này",
+  "Match results": "Kết quả trận đấu",
+  "View the winner and your final match summary.": "Xem người thắng và tổng kết trận đấu.",
+  "Reconnect": "Kết nối lại",
+  "Open the link to the room again and reclaim your base.": "Kết nối lại phòng để tiếp tục điều khiển căn cứ.",
+  "Choose the elements of your next wild creatures.": "Chọn hệ cho các sinh vật hoang dã tiếp theo.",
+  "Quit match": "Rời trận",
+  "Leave this match and return to your account.": "Rời trận này và về sảnh tài khoản.",
+  "Creature book": "Sổ sinh vật",
+  "Browse profiles, skills and evolution paths.": "Xem chỉ số, kỹ năng và các nhánh tiến hóa.",
+  "Research": "Nghiên cứu",
+  "Strengthen the creature families you field.": "Tăng sức mạnh các họ sinh vật của bạn.",
+  "{0} C": "{0} TT",
+  "Incoming wave": "Đợt sắp tới",
+  "Inspect the invaders heading to this base.": "Xem quân địch đang tiến đến căn cứ này.",
+  "Players": "Người chơi",
+  "Standings, lives and spectating.": "Thứ hạng, số mạng và theo dõi.",
+  "Battle journal": "Nhật ký trận đấu",
+  "Recent events, payouts and eliminations.": "Sự kiện, phần thưởng và các căn cứ bị loại gần đây.",
+  "Quit this match?": "Rời trận này?",
+  "Your account and avatar will be kept.": "Tài khoản và ảnh đại diện được giữ lại.",
+  "You give up your current base. This cannot be undone.": "Bạn sẽ từ bỏ căn cứ hiện tại. Không thể hoàn tác.",
+  "Keep playing": "Chơi tiếp",
+  "Return to the battlefield.": "Trở lại chiến trường.",
+  "How to defend": "Cách phòng thủ",
+  "Build your team. Keep your sanctuary standing.": "Xây dựng đội hình. Giữ vững căn cứ.",
+  "Catch a wild creature": "Bắt sinh vật hoang dã",
+  "Select a creature in the meadow around the court. Its Catch button shows the Gold cost.": "Chọn sinh vật trên bãi cỏ quanh sân. Nút Bắt hiển thị giá vàng.",
+  "Place your defenders": "Bố trí quân phòng thủ",
+  "Select a defender, then right-click inside the court to move it. Drag with the left mouse button to pan the camera.": "Chọn quân phòng thủ, rồi nhấp chuột phải trong sân để di chuyển. Kéo chuột trái để dịch chuyển góc nhìn.",
+  "Prepare for battle": "Chuẩn bị chiến đấu",
+  "This room allows orders during battle.": "Phòng này cho phép ra lệnh trong lúc chiến đấu.",
+  "Catching, moving, selling and research are available during preparation. Battle runs automatically.": "Có thể bắt, di chuyển, bán và nghiên cứu khi chuẩn bị. Trận chiến diễn ra tự động.",
+  "Choose an evolution": "Chọn nhánh tiến hóa",
+  "Select a defender and open Evolution. Compare every branch and its cost before choosing.": "Chọn quân phòng thủ rồi mở Tiến hóa. So sánh các nhánh và chi phí trước khi chọn.",
+  "Research your creature families": "Nghiên cứu họ sinh vật",
+  "Spend Crystal on permanent base upgrades. Each entry shows its next cost and affected defenders.": "Dùng tinh thể nâng cấp căn cứ vĩnh viễn trong trận. Mỗi mục hiển thị giá cấp tiếp theo và quân được hưởng lợi.",
+  "Protect your lives": "Bảo vệ số mạng",
+  "Invaders that reach the exit cost lives. Watch the roster to see which bases are still defending.": "Quân địch đến lối ra sẽ làm mất mạng. Xem danh sách người chơi để biết căn cứ nào còn đang phòng thủ.",
+  "Watch another base": "Theo dõi căn cứ khác",
+  "Select any player in the roster. Your own name takes you home; you can only command your own defenders.": "Chọn người chơi trong danh sách để theo dõi. Chọn tên mình để về nhà; bạn chỉ ra lệnh được cho quân của mình.",
+  "Base profiles from this room’s catalog": "Chỉ số gốc theo danh mục của phòng",
+  "{0} HP · {1} attack · {2} armor": "{0} máu · {1} công · {2} giáp",
+  "Legendary": "Huyền thoại",
+  "{0} skills": "{0} kỹ năng",
+  "{0} evolution paths": "{0} nhánh tiến hóa",
+  "Inspect": "Xem",
+  "No creatures found": "Không tìm thấy sinh vật",
+  "Try another name or clear the search.": "Thử tên khác hoặc xóa nội dung tìm kiếm.",
+  "Creature details": "Chi tiết sinh vật",
+  "Live health, base profile, skills and evolution paths": "Máu hiện tại, chỉ số gốc, kỹ năng và nhánh tiến hóa",
+  "Base profile · actual battle stats can change with effects and research": "Chỉ số gốc · chỉ số thực tế có thể thay đổi theo hiệu ứng và nghiên cứu",
+  "Nothing selected": "Chưa chọn gì",
+  "Select a creature on the battlefield.": "Chọn một sinh vật trên chiến trường.",
+  "Throw a rock": "Ném đá",
+  "Remove this wild creature. No Gold is spent or refunded.": "Đuổi sinh vật hoang dã này. Không tốn hay hoàn vàng.",
+  "Targets": "Mục tiêu",
+  "Effect {0}": "Hiệu ứng {0}",
+  "Skill unavailable": "Kỹ năng chưa khả dụng",
+  "This skill has no active combat effect in this room’s ruleset.": "Kỹ năng này chưa có tác dụng chiến đấu trong bộ luật của phòng.",
+  "Sanctuary research": "Nghiên cứu căn cứ",
+  "{0} Crystal available · upgrades stay with this base": "Có {0} tinh thể · nâng cấp gắn với căn cứ này",
+  "Fully researched": "Đã nghiên cứu tối đa",
+  "Need {0} more Crystal": "Cần thêm {0} tinh thể",
+  "{0} per level": "{0} mỗi cấp",
+  "{0} matching defender{1} in this base": "{0} quân phù hợp{1} trong căn cứ",
+  "Complete": "Hoàn tất",
+  "No research found": "Không tìm thấy nghiên cứu",
+  "{0} · {1} Gold available": "{0} · có {1} vàng",
+  "Select one of your defenders": "Chọn một quân phòng thủ của bạn",
+  "This defender belongs to another player": "Quân này thuộc người chơi khác",
+  "This defender is down": "Quân này đã gục",
+  "Need {0} more Gold": "Cần thêm {0} vàng",
+  "Base change: {0} HP · {1} attack · {2} armor": "Thay đổi chỉ số gốc: {0} máu · {1} công · {2} giáp",
+  "Final evolution": "Tiến hóa cuối",
+  "There are no more waves in this match.": "Trận này không còn đợt nào.",
+  "Published incoming groups for the base you are watching": "Các nhóm địch sắp đến căn cứ đang xem",
+  "{0} base HP · {1} attack · {2} armor": "{0} máu gốc · {1} công · {2} giáp",
+  "From {0}": "Từ {0}",
+  "The battlefield is quiet": "Chiến trường yên tĩnh",
+  "Waiting for the wave preview": "Đang chờ thông tin đợt tới",
+  "Open Players to see the final standings.": "Mở Người chơi để xem thứ hạng cuối.",
+  "Incoming groups will appear when the room publishes them.": "Các nhóm địch sẽ hiện khi phòng công bố.",
+  "Select any base to spectate": "Chọn căn cứ để theo dõi",
+  " · You": " · Bạn",
+  "{0} invaders · {1} wild creatures": "{0} quân địch · {1} sinh vật hoang dã",
+  "Eliminated": "Đã bị loại",
+  "{0} Gold · {1} Crystal · Last payout {2} Gold": "{0} vàng · {1} tinh thể · Thu gần nhất {2} vàng",
+  "Joining the room": "Đang vào phòng",
+  "Player standings will appear after the room connects.": "Thứ hạng xuất hiện sau khi kết nối phòng.",
+  "Latest room events · newest first": "Sự kiện trong phòng · mới nhất trước",
+  "The story begins": "Câu chuyện bắt đầu",
+  "Waves, payouts and room events will appear here.": "Các đợt, phần thưởng và sự kiện phòng sẽ hiện ở đây.",
+  "Release this defender?": "Thả quân phòng thủ này?",
+  "Release your defender": "Thả quân phòng thủ",
+  "No defender selected": "Chưa chọn quân phòng thủ",
+  "No defender available": "Không có quân phòng thủ",
+  "Select one of your own defenders to see its refund.": "Chọn quân của bạn để xem khoản hoàn trả.",
+  "Confirm release": "Xác nhận thả",
+  "Release for {0}": "Thả để nhận {0}",
+  "This defender will leave the battlefield permanently.": "Quân này sẽ rời chiến trường vĩnh viễn.",
+  "{0}% of the defender’s current stage value": "{0}% giá trị dạng hiện tại của quân",
+  "Your refund is issued when the server accepts the release.": "Hoàn trả khi máy chủ chấp nhận thao tác thả.",
+  "You will confirm before the defender is removed.": "Bạn sẽ xác nhận trước khi thả quân.",
+  "Keep this defender": "Giữ quân này",
+  "Live health updates during battle; profile numbers are base values.": "Máu cập nhật khi chiến đấu; các chỉ số hồ sơ là giá trị gốc.",
+  "Aura": "Hào quang",
+  "Periodic": "Định kỳ",
+  "On attack": "Khi tấn công",
+  "When attacked": "Khi bị tấn công",
+  "Activated": "Kích hoạt",
+  "Automatic": "Tự động",
+  "When damaged": "Khi nhận sát thương",
+  "On death": "Khi chết",
+  "When a unit enters range": "Khi một đơn vị vào tầm",
+  "On hit": "Khi đánh trúng",
+  "On kill": "Khi hạ mục tiêu",
+  "At wave start": "Đầu đợt",
+  "the attacker": "kẻ tấn công",
+  "the caster": "đơn vị thi triển",
+  "the dying unit": "đơn vị đang chết",
+  "the entering unit": "đơn vị đi vào",
+  "each unit": "mỗi đơn vị",
+  "the matching unit": "đơn vị phù hợp",
+  "the killer": "đơn vị hạ mục tiêu",
+  "the summoned unit": "đơn vị được triệu hồi",
+  "the target": "mục tiêu",
+  "the sold unit": "đơn vị đã bán",
+  "the spell target": "mục tiêu kỹ năng",
+  "the triggering unit": "đơn vị kích hoạt",
+  "triggering attack damage": "sát thương đòn đánh kích hoạt",
+  "current HP": "máu hiện tại",
+  "maximum HP": "máu tối đa",
+  "unit value": "giá trị đơn vị",
+  "unit value difference": "chênh lệch giá trị đơn vị",
+  "{0} × wave index": "{0} × số đợt",
+  " of {0}": " của {0}",
+  "{0} × attack power": "{0} × sức tấn công",
+  "{0} of target current HP": "{0} máu hiện tại của mục tiêu",
+  "{0} of target maximum HP": "{0} máu tối đa của mục tiêu",
+  "{0} of caster maximum HP": "{0} máu tối đa của đơn vị thi triển",
+  "{0}; {1} less per successive target": "{0}; giảm {1} với mỗi mục tiêu kế tiếp",
+  "{0} chance{1}": "Xác suất {0}{1}",
+  " + 1% per {0} waves": " + 1% mỗi {0} đợt",
+  "excludes Legendary targets": "không áp dụng cho mục tiêu huyền thoại",
+  "target below {0} HP": "mục tiêu dưới {0} máu",
+  "boss targets only": "chỉ mục tiêu trùm",
+  "requires the caster’s matching ability": "cần kỹ năng tương ứng của đơn vị thi triển",
+  "while the caster has the required effect": "khi đơn vị thi triển có hiệu ứng yêu cầu",
+  "while the target has the required effect": "khi mục tiêu có hiệu ứng yêu cầu",
+  "unit value {0} {1}": "giá trị đơn vị {0} {1}",
+  "excludes the specified unit type": "loại trừ loại đơn vị chỉ định",
+  "move speed": "tốc độ di chuyển",
+  "attack speed": "tốc độ đánh",
+  "attack damage": "sát thương đòn đánh",
+  "damage taken": "sát thương nhận",
+  "max HP": "máu tối đa",
+  "{0} damage blocked": "chặn {0} sát thương",
+  "{0} evasion": "{0} né tránh",
+  "{0} miss chance": "{0} đánh trượt",
+  "{0} HP/s": "{0} máu/giây",
+  "until wave end": "đến hết đợt",
+  "for {0}": "trong {0}",
+  "up to {0} stacks": "tối đa {0} cộng dồn",
+  "periodic effect every {0}": "hiệu ứng định kỳ mỗi {0}",
+  "Status effect": "Hiệu ứng trạng thái",
+  "Self": "Bản thân",
+  "enemy creeps": "quân địch",
+  "All in base": "Tất cả trong căn cứ",
+  "up to {0} targets": "tối đa {0} mục tiêu",
+  "{0} range": "tầm {0}",
+  "{0} radius": "bán kính {0}",
+  "{0} bounce range": "tầm nảy {0}",
+  "prioritizes {0}": "ưu tiên {0}",
+  " to {0}": " lên {0}",
+  "Deal {0} damage{1}": "Gây {0} sát thương{1}",
+  "Remove {0} HP directly{1}": "Trừ trực tiếp {0} máu{1}",
+  "Restore {0} HP{1}": "Hồi {0} máu{1}",
+  "Set HP to {0}{1}": "Đặt máu thành {0}{1}",
+  "Apply a status effect": "Áp dụng hiệu ứng trạng thái",
+  "Remove the specified status effect": "Xóa hiệu ứng trạng thái chỉ định",
+  "Change {0} by {1}": "Thay đổi {0} một lượng {1}",
+  "Crystal": "Tinh thể",
+  "Gold": "Vàng",
+  "Create an area effect": "Tạo hiệu ứng vùng",
+  "Summon {0} {1}": "Triệu hồi {0} {1}",
+  "copy of the source unit": "bản sao của đơn vị gốc",
+  " for {0}": " trong {0}",
+  "Launch a projectile": "Phóng đạn",
+  "Move to the nearest base arena": "Di chuyển đến sân căn cứ gần nhất",
+  "Displace {0} units": "Dịch chuyển {0} đơn vị khoảng cách",
+  "Force the affected unit to change its attack target": "Buộc đơn vị chịu ảnh hưởng đổi mục tiêu tấn công",
+  "Transform into {0}": "Biến thành {0}",
+  "another form": "dạng khác",
+  "Remove the affected unit": "Loại bỏ đơn vị chịu ảnh hưởng",
+  "Remove the caster": "Loại bỏ đơn vị thi triển",
+  "No details available": "Chưa có chi tiết",
+  "Unavailable in this ruleset": "Chưa có trong bộ luật này",
+  "Managed through the match controls": "Điều khiển qua giao diện trận đấu",
+  "Autocast": "Tự thi triển",
+  "{0} cooldown": "hồi chiêu {0}",
+  "every {0}": "mỗi {0}",
+  "{0} delay": "trễ {0}",
+  "This defender is down until the next wave.": "Quân này đã gục, sẽ trở lại đợt sau.",
+  "AUTO": "TỰ ĐỘNG",
+  "PASSIVE": "NỘI TẠI",
+  "Available to trade": "Có thể trao đổi",
+  "required creature": "sinh vật yêu cầu",
+  "Trade offer {0}": "Đề nghị đổi {0}",
+  "Down · returns next wave": "Đã gục · trở lại đợt sau",
+  "{0} base HP": "{0} máu gốc",
+  "Shared offer · refreshes each wave": "Đề nghị chung · làm mới mỗi đợt",
+  "{0} / {1} HP": "{0} / {1} máu",
+  "Catch · {0} G": "Bắt · {0} V",
+  "Trade": "Đổi",
+  "Evolution · {0} G": "Tiến hóa · {0} V",
+  "View only · inspect stats and skills": "Chỉ xem · chỉ số và kỹ năng",
+  "Tap your {0} to exchange · tap Trade again to cancel.": "Chọn {0} của bạn để đổi · chọn Đổi lần nữa để hủy.",
+  "Trade one {0} for this offer.": "Đổi một {0} để nhận sinh vật này.",
+  "Catch this creature to bring it into your court.": "Bắt sinh vật này để đưa vào sân của bạn.",
+  "Tap a destination in your court · tap Cancel to stop": "Chọn vị trí trong sân · chọn Hủy để dừng",
+  "Move places this creature · right-click also works on desktop": "Chọn Di chuyển để bố trí · máy tính cũng có thể nhấp chuột phải",
+  "Drag this creature to move · or tap Move, then a destination": "Kéo quái để di chuyển · hoặc chọn Di chuyển rồi chạm điểm đến",
+  "Release to move": "Thả để di chuyển",
+  "Cannot place here · release to cancel": "Không thể đặt ở đây · thả để hủy",
+  "Wave —": "Đợt —",
+  "Connecting": "Đang kết nối",
+  "Wave {0}": "Đợt {0}",
+  "Starts in": "Bắt đầu sau",
+  "Preparation · catch creatures and position your defenders.": "Chuẩn bị · bắt sinh vật và bố trí quân phòng thủ.",
+  "Waiting": "Đang chờ",
+  "This base is clear · {0} {1} still defending. Select a player to watch.": "Căn cứ này đã sạch địch · {0} {1} vẫn đang phòng thủ. Chọn người chơi để theo dõi.",
+  "base is": "căn cứ",
+  "bases are": "căn cứ",
+  "Battle ends when all bases are clear. The timer is the time limit.": "Đợt kết thúc khi mọi căn cứ sạch địch. Đồng hồ hiển thị giới hạn thời gian.",
+  "Time limit": "Thời hạn",
+  "Defend against the map’s scripted waves. Suitable for solo play.": "Phòng thủ trước các đợt địch của bản đồ. Phù hợp chơi một mình.",
+  "Face other players’ formations. Choose Survival for scripted solo waves.": "Đối đầu đội hình người chơi khác. Chọn Sinh tồn để chơi một mình với các đợt địch của bản đồ.",
+  "Kill bounty": "Thưởng hạ địch",
+  "Wave multiplier ×{0}": "Hệ số đợt ×{0}",
+  "Wave income with interest": "Thu nhập đợt kèm lãi",
+  "The server could not complete the request.": "Máy chủ không thể hoàn tất yêu cầu.",
+  "Retrying…": "Đang thử lại…",
+  "Loading interrupted": "Tải bị gián đoạn",
+  "Loading creatures": "Đang tải sinh vật",
+  "Preparing the battlefield": "Đang chuẩn bị chiến trường",
+  "Connecting to the base": "Đang kết nối căn cứ",
+  "Some models unavailable · Auto-retrying": "Một số mô hình chưa tải được · đang tự thử lại",
+  "{0} / {1} creatures ready": "{0} / {1} sinh vật đã sẵn sàng",
+  "Arena assets could not load.": "Không tải được hình ảnh đấu trường.",
+  "Preparing arena assets…": "Đang chuẩn bị hình ảnh đấu trường…",
+  "Waiting for base data…": "Đang chờ dữ liệu căn cứ…",
+  "Try loading again to continue.": "Thử tải lại để tiếp tục.",
+  "The battle opens when all creatures are ready.": "Trận đấu mở khi mọi sinh vật đã sẵn sàng.",
+  "The battlefield will open when ready.": "Chiến trường sẽ mở khi sẵn sàng.",
+  "Retry loading": "Tải lại",
+  "Retry now": "Thử lại ngay",
+  "Creature": "Sinh vật",
+  "END": "HẾT",
+  "YOUR BASE": "CĂN CỨ CỦA BẠN",
+  "SPECTATING": "ĐANG THEO DÕI",
+  "Loading…": "Đang tải…",
+  "{0} / {1} ready": "{0} / {1} sẵn sàng",
+  "Unaligned": "Không hệ",
+  "No defenders yet\n\nCatch wild creatures\naround your court.": "Chưa có quân phòng thủ\n\nBắt sinh vật hoang dã\nquanh sân của bạn.",
+  "Last payout\n{0} Gold": "Thu gần nhất\n{0} vàng",
+  "Press C to catch this creature.": "Nhấn C để bắt sinh vật này.",
+  "Press R to release this creature.": "Nhấn R để thả sinh vật này.",
+  "Victory — your sanctuary stands.": "Chiến thắng — căn cứ vẫn đứng vững.",
+  "Match complete — thank you for playing.": "Trận đấu kết thúc — cảm ơn bạn đã chơi.",
+  "Loading base…": "Đang tải căn cứ…",
+  "Watching {0} · Return to my base in the roster": "Đang xem {0} · chọn Về căn cứ của tôi trong danh sách",
+  "another base": "căn cứ khác",
+  "Your base has been eliminated · you can still watch the rest of the match": "Căn cứ đã bị loại · bạn vẫn có thể xem tiếp trận đấu",
+  "Viewing your base": "Đang xem căn cứ của bạn",
+  "Return to my base": "Về căn cứ của tôi",
+  "Cancel": "Hủy",
+  "Move": "Di chuyển",
+  "Release": "Thả",
+  "More": "Chi tiết",
+  "Camera": "Góc nhìn",
+  "Guide": "Hướng dẫn",
+  "Journal": "Nhật ký",
+  "Menu": "Menu",
+  "Back": "Quay lại",
+  "Previous": "Trước",
+  "Next": "Tiếp",
+  "Search by name…": "Tìm theo tên…",
+  "{0} entries": "{0} mục",
+  "Level {0} / {1}": "Cấp {0} / {1}",
+  "{0}–{1} of {2}   ·   {3} / {4}": "{0}–{1} trên {2}   ·   {3} / {4}",
+  "Connecting…": "Đang kết nối…",
+  "Create your trainer": "Tạo huấn luyện viên",
+  "Welcome back": "Chào mừng trở lại",
+  "Create a room": "Tạo phòng",
+  "Join a room": "Vào phòng",
+  "Waiting room": "Phòng chờ",
+  "Choose your avatar and account details.": "Chọn ảnh đại diện và thông tin tài khoản.",
+  "Sign in with your trainer name.": "Đăng nhập bằng tên huấn luyện viên.",
+  "Trainer name": "Tên huấn luyện viên",
+  "Password": "Mật khẩu",
+  "Password · at least 10 characters": "Mật khẩu · ít nhất 10 ký tự",
+  "CHOOSE AVATAR": "CHỌN ẢNH ĐẠI DIỆN",
+  "Create account": "Tạo tài khoản",
+  "Sign in": "Đăng nhập",
+  "Already registered? Sign in": "Đã có tài khoản? Đăng nhập",
+  "New trainer? Create account": "Người chơi mới? Tạo tài khoản",
+  "Create room": "Tạo phòng",
+  "Join with room code": "Vào bằng mã phòng",
+  "Sign out": "Đăng xuất",
+  "Enter the 8-character code from your host.": "Nhập mã 8 ký tự từ chủ phòng.",
+  "ROOM CODE": "MÃ PHÒNG",
+  "Join room": "Vào phòng",
+  "Mode: {0}": "Chế độ: {0}",
+  "Speed: {0}": "Tốc độ: {0}",
+  "Income: {0}": "Thu nhập: {0}",
+  "Mode": "Chế độ",
+  "Income": "Thu nhập",
+  "Trading": "Trao đổi",
+  "Trading: {0}": "Trao đổi: {0}",
+  "ON": "BẬT",
+  "OFF": "TẮT",
+  "Create waiting room": "Tạo phòng chờ",
+  "Please wait for the current room action.": "Vui lòng chờ thao tác hiện tại hoàn tất.",
+  "Invite": "Mời bạn",
+  "Waiting for a player…": "Đang chờ người chơi…",
+  " · you": " · bạn",
+  "Host": "Chủ phòng",
+  "Ready": "Sẵn sàng",
+  "Leave": "Rời phòng",
+  "Cancel ready": "Hủy sẵn sàng",
+  "Start match": "Bắt đầu trận",
+  "Waiting for host": "Đang chờ chủ phòng",
+  "This mode needs {0} players.": "Chế độ này cần {0} người chơi.",
+  "Everyone is ready. The host can start.": "Tất cả đã sẵn sàng. Chủ phòng có thể bắt đầu.",
+  "All players must be ready. No wave runs while waiting.": "Mọi người phải sẵn sàng. Chưa có đợt tấn công trong phòng chờ.",
+  "Copied. Send it to your friends.": "Đã sao chép. Gửi cho bạn bè nhé.",
+  "Copy this: {0}": "Sao chép: {0}",
+  "Copy this: ": "Sao chép: ",
+  "Spectating": "Đang theo dõi",
+  "Joining…": "Đang vào…",
+  "Chat with the room…": "Trò chuyện với phòng…",
+  "Send": "Gửi",
+  "Message": "Tin nhắn",
+  "Disconnected · draft kept": "Mất kết nối · đã giữ bản nháp",
+  "{0} / {1} characters": "{0} / {1} ký tự",
+  "Could not send. Try again.": "Không gửi được. Hãy thử lại.",
+  "Target: {0}": "Mục tiêu: {0}",
+  "Target: ": "Mục tiêu: ",
+  "Watching {0} · pick your own name in the roster to return": "Đang xem {0} · chọn tên mình trong danh sách để về",
+  "Chat with the room": "Trò chuyện với phòng",
+  "Preparing the battlefield…": "Đang chuẩn bị chiến trường…",
+  "Connecting to the game server…": "Đang kết nối máy chủ trò chơi…",
+  "Art failed to load: {0}": "Không tải được hình ảnh: {0}",
+  "Unable to open the sanctuary: {0}": "Không thể mở căn cứ: {0}",
+  "Try again": "Thử lại",
+  "Health": "Máu",
+  "Attack": "Công",
+  "Armor": "Giáp",
+  "Range": "Tầm",
+  "Speed": "Tốc độ",
+  "Skills": "Kỹ năng",
+  "SKILLS": "KỸ NĂNG",
+  "Catch": "Bắt",
+  "Evolution": "Tiến hóa",
+  "Close": "Đóng",
+  "Fire": "Lửa",
+  "Water": "Nước",
+  "Grass": "Cỏ",
+  "Lightning": "Điện",
+  "Normal": "Thường",
+  "Psychic": "Tâm linh",
+  "Fighter": "Đấu sĩ",
+  "Random": "Ngẫu nhiên",
+  "Survival": "Sinh tồn",
+  "Log": "Nhật ký",
+  "ATK": "CÔNG",
+  "DEF": "GIÁP",
+  "RNG": "TẦM",
+  "SPD": "TỐC",
+  "BASE STATS": "CHỈ SỐ GỐC",
+  "Interval": "Chu kỳ",
+  "Skills · select to inspect": "Kỹ năng · chọn để xem",
+  "armor": "giáp",
+  "max health": "máu tối đa",
+  "attack power": "sức tấn công",
+  "Fast": "Nhanh",
+  "Slow": "Chậm",
+  "Duel": "Đối kháng",
+  "Use a name of 3–24 characters.": "Tên phải dài từ 3–24 ký tự.",
+  "Names may contain letters, numbers, spaces, _ and -.": "Tên chỉ gồm chữ, số, dấu cách, _ và -.",
+  "Use a password of at least 10 characters (maximum 256 bytes).": "Mật khẩu cần ít nhất 10 ký tự (tối đa 256 byte).",
+  "Choose an available avatar.": "Chọn một ảnh đại diện có sẵn.",
+  "That name is already taken.": "Tên này đã được sử dụng.",
+  "Name or password is incorrect.": "Tên hoặc mật khẩu không đúng.",
+  "Please sign in again.": "Vui lòng đăng nhập lại.",
+  "You are not in a waiting room.": "Bạn không ở trong phòng chờ.",
+  "Use 1–280 characters on a single line.": "Nhập từ 1–280 ký tự trên một dòng.",
+  "Leave your current room first.": "Hãy rời phòng hiện tại trước.",
+  "Choose room rules.": "Hãy chọn luật chơi cho phòng.",
+  "Invalid room rules.": "Luật chơi của phòng không hợp lệ.",
+  "Room not found. Check the code.": "Không tìm thấy phòng. Hãy kiểm tra mã.",
+  "That match has already started.": "Trận đấu đó đã bắt đầu.",
+  "That room is full.": "Phòng đó đã đầy.",
+  "Only the host can start the match.": "Chỉ chủ phòng mới có thể bắt đầu trận.",
+  "Waiting for more players.": "Đang chờ thêm người chơi.",
+  "Every player must be ready.": "Mọi người chơi phải sẵn sàng.",
+  "Could not start the match. Please retry.": "Không thể bắt đầu trận. Hãy thử lại.",
+  "Unknown lobby action.": "Thao tác phòng chờ không hợp lệ.",
+  "Join a lobby and wait for the host to start.": "Vào phòng chờ và đợi chủ phòng bắt đầu.",
+  "Invalid request.": "Yêu cầu không hợp lệ.",
+  "Too many attempts. Try again in a minute.": "Thử quá nhiều lần. Hãy thử lại sau một phút.",
+  "Sign-in is busy. Please retry.": "Hệ thống đăng nhập đang bận. Hãy thử lại.",
+  "Install CUTD": "Cài đặt CUTD",
+  "Install game": "Cài trò chơi",
+  "Got it": "Đã hiểu",
+  "Play fullscreen": "Chơi toàn màn hình",
+  "Not now": "Để sau",
+  "Chat · {0} new": "Trò chuyện · {0} tin mới",
+  "The battlefield fills the screen and the browser bars stay out of the way.": "Chiến trường phủ kín màn hình, thanh trình duyệt không che tầm nhìn.",
+  "Preparing the court…": "Đang chuẩn bị sân đấu…",
+  "In Safari, open Share, then choose Add to Home Screen and tap Add.": "Trong Safari, mở Chia sẻ, chọn Thêm vào Màn hình chính rồi nhấn Thêm.",
+  "Open your browser menu and choose Install CUTD or Add to Home Screen. If neither appears, this browser cannot offer installation yet.": "Mở menu trình duyệt, chọn Cài đặt CUTD hoặc Thêm vào Màn hình chính. Nếu không có, trình duyệt này chưa hỗ trợ cài đặt.",
+  "Installation could not open. Try Install from your browser menu.": "Không thể mở cài đặt. Hãy thử mục Cài đặt trong menu trình duyệt.",
+  "select a trade offer first": "Hãy chọn đề nghị trao đổi trước",
+  "trading happens between waves": "Chỉ có thể trao đổi giữa các đợt",
+  "that trade offer is no longer available": "Đề nghị trao đổi đó không còn",
+  "tap one of your creatures to trade": "Chọn một sinh vật của bạn để đổi",
+  "that is not the creature this offer requires": "Đề nghị này yêu cầu sinh vật khác",
+  "creatures stay inside the arena": "Sinh vật phải ở trong sân đấu",
+  "select one of your creatures to move": "Chọn sinh vật của bạn để di chuyển",
+  "that creature is not yours to order": "Bạn không thể ra lệnh cho sinh vật của người khác",
+  "orders are not accepted during a wave": "Không thể ra lệnh trong đợt chiến đấu",
+  "select a wild creature first": "Hãy chọn sinh vật hoang dã trước",
+  "only a wild creature can be caught": "Chỉ bắt được sinh vật hoang dã",
+  "catching happens between waves": "Chỉ có thể bắt giữa các đợt",
+  "that creature has nowhere to evolve to": "Sinh vật này không còn nhánh tiến hóa",
+  "select one of your creatures to evolve": "Chọn sinh vật của bạn để tiến hóa",
+  "select one of your creatures to sell": "Chọn sinh vật của bạn để bán",
+  "that is not yours to evolve": "Bạn không thể tiến hóa sinh vật của người khác",
+  "that is not yours to sell": "Bạn không thể bán sinh vật của người khác",
+  "you can evolve between waves": "Có thể tiến hóa giữa các đợt",
+  "you can sell between waves": "Có thể bán giữa các đợt",
+  "orders disabled during wave": "Không thể ra lệnh trong đợt chiến đấu",
+  "ability not castable": "Không thể thi triển kỹ năng này",
+  "unknown command": "Lệnh không hợp lệ",
+  "match ended": "Trận đấu đã kết thúc",
+  "base eliminated": "Căn cứ đã bị loại",
+  "wild not found": "Không tìm thấy sinh vật hoang dã",
+  "creature cap": "Đã đạt giới hạn quân phòng thủ",
+  "legendary cap": "Đã đạt giới hạn sinh vật huyền thoại",
+  "insufficient gold": "Không đủ vàng",
+  "insufficient lumber": "Không đủ tinh thể",
+  "unit not owned": "Sinh vật không thuộc về bạn",
+  "unit dead this wave": "Sinh vật đã gục trong đợt này",
+  "outside arena": "Vị trí nằm ngoài sân đấu",
+  "invalid evolution": "Nhánh tiến hóa không hợp lệ",
+  "invalid refund resource": "Loại tài nguyên hoàn trả không hợp lệ",
+  "invalid trade": "Trao đổi không hợp lệ",
+  "trade disabled": "Trao đổi đã bị tắt",
+  "sequence not increasing": "Thứ tự lệnh không hợp lệ",
+  "unknown base": "Không tìm thấy căn cứ",
+  "unsupported command": "Lệnh chưa được hỗ trợ",
+  "command limit exceeded": "Gửi lệnh quá nhanh",
+  "player gone": "Người chơi đã rời trận",
+  "room full": "Phòng đã đầy",
+  "already joined": "Bạn đã vào phòng",
+  "base not commandable": "Không thể ra lệnh cho căn cứ này",
+  "wild not available": "Sinh vật hoang dã không còn",
+  "wild not catchable": "Không thể bắt sinh vật hoang dã này",
+  "invalid research": "Nghiên cứu không hợp lệ",
+  "research max level": "Nghiên cứu đã đạt cấp tối đa",
+  "invalid finder": "Ô tìm kiếm không hợp lệ",
+  "invalid chat": "Tin nhắn không hợp lệ"
+ }
+}

@@ -1,68 +1,62 @@
-# CUTD Dex — Pokédex cho game CUTD (Moonlit Court)
+# CUTD Wiki — Moonlit Court
 
-Trang tra cứu pet cho `https://m.cutd.site`: thông tin, ảnh, chuỗi tiến hóa, kỹ năng chi tiết (kèm hệ số),
-bảng trade và wild pools. Dữ liệu bóc từ endpoint `catalog` của chính game.
+Wiki cho game [CUTD](https://cutd.site): toàn bộ pet + cây tiến hóa (kể cả rẽ nhánh), 731 sinh vật,
+kỹ năng mô tả **y như trong game** (dùng bảng dịch tiếng Việt chính thức của game), đợt quái của mọi chế độ,
+trade, wild pool, nghiên cứu, luật chơi, bảng sát thương và lịch sử cập nhật. Tự đồng bộ với server game.
 
 ## Chạy
 
 ```bash
 npm install
-npm run dev        # dev server
-npm run build      # build production → dist/
-npm run preview    # xem thử bản build
-npm run data       # build lại src/data.json từ scripts/catalog.json (khi game cập nhật)
+npm run dev          # dev server (tự build src/data/db.json trước)
+npm run build        # build production → dist/
+npm test             # unit test + kiểm tra toàn vẹn data + test UI (jsdom) crawl mọi link
+npm run sync         # kéo dữ liệu mới từ game (chỉ tải khi có thay đổi)
+npm run sync:force   # bỏ qua cache, tải + kiểm tra lại toàn bộ
 ```
 
 ## Cấu trúc
 
 ```
-scripts/            # dữ liệu thô + script build data
-  catalog.json      # bóc từ https://m.cutd.site/catalog
-  build-data.mjs    # → sinh src/data.json (dịch effect sang tiếng Việt)
-public/images/      # 185 ảnh portrait 256×256 (art/portraits của game)
+data/                    # dữ liệu thô từ game (commit vào git → xem diff mỗi lần game update)
+  catalog.json           #   GET /catalog (pretty-print để diff đọc được)
+  client.json            #   bóc từ bundle JS: model, unit→model, màu hệ, bảng dịch vi
+  changelog.json         #   lịch sử thay đổi tự sinh
+  state.json             #   ETag/Last-Modified cho conditional GET
+public/portraits, research/   # ảnh portrait + icon nghiên cứu (WebP, chuyển từ PNG của game bằng sharp)
+scripts/
+  sync.mjs               # đồng bộ: check → tải → validate → ghi atomic → build
+  build.mjs              # data/ → src/data/db.json (chuẩn hoá, gitignored)
+  lib/literal.mjs        #   parser literal an toàn (không eval code của server)
+  lib/client.mjs         #   bóc dữ liệu từ bundle
+  lib/game.mjs           #   port logic client: gia phả, hệ, model cho mọi species
+  lib/describe.mjs       #   port bộ mô tả skill/status của client
+  lib/diff.mjs           #   so catalog cũ/mới → changelog
+  lib/http.mjs           #   fetch: timeout, retry+backoff, conditional GET, pool song song
+  test/                  # node:test
 src/
-  main.js           # hash router (#/pets, #/pet/:slug, #/trade, #/pools)
-  ui.js             # helpers + renderer kỹ năng
-  data.json         # dữ liệu đã xử lý (pets/trade/pools)
-  pages/            # home, pet detail, trade, pools
+  main.js                # router hash + lazy load trang & DB
+  db.js                  # nạp DB + index (wavesOf, tradesOf…)
+  lib/html.js            # tagged template tự escape
+  lib/search.js          # inverted index + trie + BK-tree (chịu gõ sai)
+  pages/                 # pets, pet, units, unit, waves, trade, pools, research, rules, changelog
 ```
 
-## Trang
+## Tự cập nhật
 
-- **Pets** — lọc theo hệ/legendary, tìm kiếm, sort (DPS, HP, catch, số cấp)
-- **Chi tiết pet** — chuỗi tiến hóa từng cấp với ảnh riêng, stats đầy đủ, skill bung ra xem
-  hệ số (dịch từ effect gốc: damage/heal/modifier/summon…), wild pool spawn, trade liên quan
-- **Trade** — 7 slot × 3 recipe, ảnh 2 bên, link về chuỗi tiến hóa pet đem đổi
-- **Wild Pools** — 7 pool theo hệ, thanh tỉ lệ xuất hiện, catch %
+Workflow `Sync & Deploy` chạy mỗi 2 tiếng (và khi push / bấm tay):
 
-## Tự cập nhật — cron, không cần nút hay token
+1. `GET /catalog` + `GET /` song song kèm `If-None-Match` → không đổi thì server trả **304, 0 byte**, dừng luôn.
+2. Tên bundle JS có content-hash → chỉ tải bundle (~2.5MB) khi tên đổi.
+3. Catalog/bundle đổi → validate trước khi ghi đè, sinh changelog, revalidate ảnh bằng ETag (ảnh không đổi = 304).
+4. Commit `data/` + `public/` → build → test → deploy GitHub Pages **trong cùng workflow**
+   (push bằng `GITHUB_TOKEN` không kích hoạt workflow khác, nên tách ra là site không bao giờ deploy lại).
 
-GitHub Action chạy **mỗi 2 tiếng** (`7 */2 * * *`), flow tự chống spam request:
+## Dữ liệu chuẩn như game
 
-1. So `catalog_hash` mới vs cũ — trùng thì thoát ngay, **0 request thừa**
-2. Khác → bóc lại bundle JS (map unit→model, hệ, màu), báo cáo **pet mới / pet bị xoá**
-3. Tải ảnh portrait thiếu, **tự xoá ảnh rác** của pet không còn trong game
-   (guard: bóc mapping bất thường < 100 unit thì bỏ qua bước xoá)
-4. Build lại `data.json` (sinh từ đầu → pet bị remove tự biến mất) → commit → Deploy tự chạy
-
-Chạy tay khi muốn: `npm run update` (check hash, bóc nếu đổi) / `npm run update:force` (ép bóc toàn bộ).
-Xem lịch sử update: tab **Actions** trên GitHub (link ⚙ góc phải web).
-
-## Thuật toán & cấu trúc dữ liệu
-
-| Nơi | Kỹ thuật | Lợi ích |
-|---|---|---|
-| build-data | **Map** tra cứu id→object mọi nơi | mọi lookup O(1) |
-| build-data | **Danh sách kề** cho rừng tiến hóa + **BFS 1 lần duyệt** O(V+E) | tính chuỗi + map stage→root mà không đi lại chain nào 2 lần |
-| build-data | **sort-key tiền tính** (dpsMax/hpMax/stages) | UI sort không phải duyệt chain |
-| search.js | **Inverted index** Map<token, Set<idx>> | khớp từ chính xác O(1) |
-| search.js | **Trie (cây tiền tố)**, insert tích luỹ id dọc đường | gợi ý tiền tố O(len(prefix)), chết nhánh cắt sớm |
-| search.js | intersection nhỏ-dọn-trước (sort theo size) | multi-token query nhanh nhất có thể |
-| home.js | **nhóm theo hệ/legendary trước** (Map + list tách sẵn) | filter không scan toàn bộ |
-| home.js | `Intl.Collator('vi',{numeric})` cache 1 instance | sort tiếng Việt đúng chuẩn, nhanh hơn localeCompare từng cặp |
-| home.js | debounce 90ms + render theo delta | gõ liên tục không giật |
-| update.js | stream early-exit (đọc 1KB abort) | check hash không tải 1.7MB |
-| scrape.mjs | hash-gate → worker pool 8 luồng → Set membership | không request thừa, tải song song, check rác O(1) |
-| scrape.mjs | safety guard (bóc < 100 unit → không xoá) | chống xoá nhầm khi game đổi cấu trúc |
-
-Benchmark search: 10.000 query prefix ≈ 6ms (0.6µs/query trên 422 stage-tokens).
+| Thứ | Cách lấy |
+|---|---|
+| Hệ của pet | affinity của wild pool chứa gia phả (logic client) — khớp research theo hệ 80/83 pet |
+| Portrait mọi species | map trực tiếp → model của dạng nông nhất trong gia phả → hash FNV-1a trong danh sách model cùng hệ |
+| Mô tả kỹ năng | port hàm mô tả của client + bảng dịch vi chính thức; bỏ skill hệ thống, gộp `shared_execution_id` |
+| Thời gian | 32 tick/giây (`1/32` trong client) |

@@ -1,58 +1,88 @@
 import './style.css';
-import { homePage } from './pages/home.js';
-import { petPage } from './pages/pet.js';
-import { tradePage } from './pages/trade.js';
-import { poolsPage } from './pages/pools.js';
+import { html, toString } from './lib/html.js';
+import { loadDB } from './db.js';
+
+// Mỗi trang là 1 chunk riêng, chỉ tải khi mở lần đầu.
+const ROUTES = {
+  pets: () => import('./pages/pets.js'),
+  pet: () => import('./pages/pet.js'),
+  units: () => import('./pages/units.js'),
+  unit: () => import('./pages/unit.js'),
+  waves: () => import('./pages/waves.js'),
+  trade: () => import('./pages/trade.js'),
+  pools: () => import('./pages/pools.js'),
+  research: () => import('./pages/research.js'),
+  rules: () => import('./pages/rules.js'),
+  changelog: () => import('./pages/changelog.js'),
+};
+const NAV = [
+  ['pets', 'Pets'], ['units', 'Sinh vật'], ['waves', 'Đợt quái'], ['trade', 'Trade'],
+  ['pools', 'Wild'], ['research', 'Nghiên cứu'], ['rules', 'Luật chơi'],
+];
+const ACTIVE = { pet: 'pets', unit: 'units' };
 
 const app = document.getElementById('app');
+const scrolls = new Map();
+let navByClick = false;
+let current = null;
 
-function nav(active) {
-  const links = [
-    ['#/pets', 'Pets'],
-    ['#/trade', 'Trade'],
-    ['#/pools', 'Wild Pools'],
-  ];
-  return `
-  <header class="topbar">
-    <a class="brand" href="#/pets">
-      <img src="images/pet_xiaohuolong.png" alt="logo">
-      <span>CUTD <em>Dex</em></span>
-    </a>
-    <nav>${links.map(([href, label]) =>
-      `<a class="navlink ${active === href.slice(2) ? 'on' : ''}" href="${href}">${label}</a>`
-    ).join('')}</nav>
+history.scrollRestoration = 'manual';
+document.addEventListener('click', e => {
+  const a = e.target.closest?.('a[href^="#/"]');
+  if (a && !e.defaultPrevented) navByClick = true;
+});
+
+function parse() {
+  const [path, query = ''] = (location.hash.slice(1) || '/pets').split('?');
+  const [, name = 'pets', ...params] = path.split('/');
+  return { name: ROUTES[name] ? name : 'pets', params: params.map(decodeURIComponent), query: new URLSearchParams(query) };
+}
+
+function topbar(active) {
+  return html`<header class="topbar">
+    <a class="brand" href="#/pets"><img src="portraits/pet_xiaohuolong.webp" alt="" width="34" height="34"><span>CUTD <em>Wiki</em></span></a>
+    <nav>${NAV.map(([k, l]) => html`<a class="navlink ${k === active ? 'on' : ''}" href="#/${k}">${l}</a>`)}</nav>
   </header>`;
 }
 
-function bindAll() {
-  document.querySelectorAll('[data-action]').forEach(el => {
-    if (el.__bound) return;
-    el.__bound = true;
-    const ev = ['click', 'input', 'change'].includes(el.dataset.action) ? el.dataset.action : 'click';
-    el.addEventListener(ev, () => window.__actions?.[el.dataset.fn]?.(el));
-  });
-  document.querySelectorAll('.skill-card > .skill-head').forEach(h => {
-    if (h.__bound) return;
-    h.__bound = true;
-    h.addEventListener('click', () => h.parentElement.classList.toggle('open'));
-  });
-}
-window.__bind = bindAll;
+async function render() {
+  const route = parse();
+  const key = location.hash;
+  const fresh = navByClick;
+  navByClick = false;
 
-function render() {
-  const hash = location.hash || '#/pets';
-  window.scrollTo(0, 0);
-  const [, page, param] = hash.split('/');
+  if (current?.unmount) current.unmount();
+  const [mod] = await Promise.all([ROUTES[route.name](), loadDB()]);
+  if (key !== location.hash) return; // người dùng đã chuyển trang khác trong lúc tải
 
-  let html;
-  if (page === 'pet') html = nav('pets') + petPage(decodeURIComponent(param));
-  else if (page === 'trade') html = nav('trade') + tradePage();
-  else if (page === 'pools') html = nav('pools') + poolsPage();
-  else html = nav('pets') + homePage();
+  const page = mod.default;
+  const title = page.title?.(route) ?? '';
+  document.title = title ? `${title} · CUTD Wiki` : 'CUTD Wiki — Moonlit Court';
+  app.innerHTML = toString(html`${topbar(ACTIVE[route.name] ?? route.name)}${page.render(route)}`);
+  current = page;
+  page.mount?.(app.querySelector('main') ?? app, route);
+  app.dataset.route = key;
 
-  app.innerHTML = html;
-  bindAll();
+  const anchor = route.params[1] && document.getElementById(`s-${route.params[1]}`);
+  const saved = scrolls.get(key);
+  if (anchor && (fresh || saved === undefined)) anchor.scrollIntoView({ block: 'start' });
+  else window.scrollTo(0, fresh ? 0 : saved ?? 0);
 }
 
-window.addEventListener('hashchange', render);
-render();
+let saveTimer;
+window.addEventListener('scroll', () => {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => scrolls.set(location.hash, window.scrollY), 80);
+}, { passive: true });
+window.addEventListener('hashchange', e => {
+  clearTimeout(saveTimer);
+  scrolls.set(new URL(e.oldURL).hash, window.scrollY);
+  render().catch(fail);
+});
+render().catch(fail);
+
+function fail(err) {
+  console.error(err);
+  app.innerHTML = toString(html`<main><div class="empty">Không tải được dữ liệu 😢<br><small>${err.message}</small><br>
+    <button class="chip" onclick="location.reload()">Tải lại</button></div></main>`);
+}

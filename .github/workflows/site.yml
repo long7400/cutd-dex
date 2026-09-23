@@ -1,0 +1,76 @@
+name: Sync & Deploy
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '7 */2 * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Bỏ qua cache, tải + kiểm tra lại toàn bộ'
+        type: boolean
+        default: false
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: site
+  cancel-in-progress: false
+jobs:
+  # Push bằng GITHUB_TOKEN KHÔNG kích hoạt workflow khác → sync và deploy phải nằm chung 1 workflow.
+  sync:
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      changed: ${{ steps.sync.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - id: sync
+        run: node scripts/sync.mjs ${{ inputs.force && '--force' || '' }}
+      - name: Commit nếu có thay đổi
+        run: |
+          git add -A data public
+          if git diff --cached --quiet; then echo "Không có gì mới."; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(data): game update $(date -u '+%F %H:%M') — ${{ steps.sync.outputs.hash }}"
+          git push
+
+  build:
+    needs: sync
+    if: always() && needs.sync.result != 'failure' && (github.event_name == 'push' || needs.sync.outputs.changed == 'true' || inputs.force)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main # lấy luôn commit data vừa push ở job sync
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    if: always() && needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

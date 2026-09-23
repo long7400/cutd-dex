@@ -1,41 +1,32 @@
-import { trade, img, elBadge, esc } from '../ui.js';
+import { html, num } from '../lib/html.js';
+import { db, linkFor } from '../db.js';
+import { img, elBadge, footer } from '../ui.js';
 
-export function tradePage() {
-  return `<main>
-    <h1>Trade</h1>
-    <p class="sub">Đổi pet Lv100 lấy pet chỉ có qua trade · bấm skill để xem chi tiết</p>
-    ${trade.map(slot => `
-      <div class="trade-slot">
+function side(id, label, give) {
+  const u = db.units[id];
+  const pet = u.pet && db.pets.find(p => p.id === u.pet);
+  return html`<div class="side">
+    <span class="badge ${give ? '' : 'catch'}">${label}</span>
+    <a href="${linkFor(id)}">${img(u.model, u.name, '', 88)}</a>
+    <span class="who">${u.name}${u.level != null ? ` · Lv${u.level}` : ''}</span>
+    ${elBadge(u.el)}
+    <span class="bystats">HP ${num(u.hp)} · ST ${num(u.dmg)} · DPS ${num(u.dps)}</span>
+    <div class="skillnames">${(u.skills ?? []).map(s => html`<span class="badge">⚡ ${db.abilities[s]?.name}</span>`)}</div>
+    ${give ? (pet ? html`<a class="rootlink" href="#/pet/${pet.slug}">↗ Cây ${pet.name}</a>` : html`<span class="rootlink dim">không thuộc pet nào</span>`) : ''}
+  </div>`;
+}
+
+export default {
+  title: () => 'Trade',
+  render() {
+    return html`<main>
+      <h1>Trade</h1>
+      <p class="sub">Đổi pet lấy pet chỉ có qua trade. Mỗi slot có ${db.trade[0]?.recipes.length ?? 0} lựa chọn, đề nghị làm mới mỗi đợt.</p>
+      ${db.trade.map(slot => html`<section class="trade-slot">
         <div class="slot-title">Slot ${slot.slot}</div>
-        <div class="trade-grid">${slot.recipes.map(recipe).join('')}</div>
-      </div>`).join('')}
-  </main>`;
-}
-
-function recipe(r) {
-  return `
-  <div class="recipe">
-    ${side(r.required, 'ĐỔI ĐI', true)}
-    <div class="arrow">➜</div>
-    ${side(r.offered, 'NHẬN VỀ', false)}
-  </div>`;
-}
-
-function side(s, label, isReq) {
-  const skills = s.skills?.length
-    ? s.skills.map(k => `<span class="badge" style="color:var(--green)">⚡ ${esc(k.name)}</span>`).join(' ')
-    : '<span class="badge">—</span>';
-  const rootLink = s.rootPet
-    ? `<a class="rootlink" href="#/pet/${s.rootPet.slug}">↗ ${esc(s.rootPet.name)}</a>`
-    : `<span class="rootlink" style="color:var(--dim)">không tiến hóa</span>`;
-  return `
-  <div class="side">
-    <span class="badge ${isReq ? '' : 'catch'}">${label}</span>
-    <img src="${img(s.image)}" alt="${esc(s.name)}" loading="lazy">
-    <span class="who">${esc(s.name)}${s.level ? ` · Lv${s.level}` : ''}</span>
-    ${elBadge(s.element)}
-    <span class="bystats">HP ${s.hp.toLocaleString('vi-VN')} · DMG ${s.dmg.toLocaleString('vi-VN')} · DPS ${s.dps.toLocaleString('vi-VN')}</span>
-    <div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center">${skills}</div>
-    ${isReq ? rootLink : ''}
-  </div>`;
-}
+        <div class="trade-grid">${slot.recipes.map(r => html`<div class="recipe">${side(r.give, 'ĐỔI ĐI', true)}<div class="arrow">➜</div>${side(r.get, 'NHẬN VỀ', false)}</div>`)}</div>
+      </section>`)}
+      ${footer()}
+    </main>`;
+  },
+};

@@ -1,55 +1,81 @@
-import data from './data.json';
+import { html, num, pct, short } from './lib/html.js';
+import { db, ix, portrait, label, linkFor, elementName } from './db.js';
 
-export const pets = data.pets;
-export const trade = data.trade;
-export const pools = data.pools;
-export const elements = data.elements;
-export const meta = {
-  catalogHash: data.catalogHash ?? '',
-  builtAt: data.builtAt ?? '',
-};
+const rgb = a => `rgb(${a.join(',')})`;
+export const TAGS = { pet: 'Pet', wave: 'Quái đợt', wild: 'Wild', trade: 'Chỉ có qua trade', 'trade-give': 'Đem trade được', summon: 'Triệu hồi' };
+export const ICON = { fire: '🔥', water: '💧', grass: '🌿', lightning: '⚡', psychic: '🔮', fighter: '🥊', normal: '⭐' };
 
-export const img = file => `images/${file ?? 'icon-list.png'}`;
+export const img = (model, alt = '', cls = '', size = 64) =>
+  html`<img class="${cls}" src="${portrait(model)}" alt="${alt}" width="${size}" height="${size}" loading="lazy" decoding="async">`;
 
 export function elBadge(el) {
-  const c = elements[el] ?? elements.normal;
-  return `<span class="badge el" style="background:linear-gradient(135deg,${rgb(c.light)},${rgb(c.mid)});color:${rgb(c.dark)}">${c.vn}</span>`;
+  const c = db.elements[el];
+  if (!c) return html`<span class="badge">Không hệ</span>`;
+  return html`<span class="badge el" style="${`background:linear-gradient(135deg,${rgb(c.light)},${rgb(c.mid)});color:${rgb(c.dark)}`}">${c.name}</span>`;
 }
-const rgb = a => `rgb(${a[0]},${a[1]},${a[2]})`;
 
-export function elColor(el, i = 1) {
-  const c = elements[el] ?? elements.normal;
+export const elColor = (el, i = 1) => {
+  const c = db.elements[el] ?? db.elements.normal;
   return rgb([c.light, c.mid, c.dark][i]);
-}
-
-export function catchBadge(c) {
-  return `<span class="badge catch">Catch ${Math.round(c * 100)}%</span>`;
-}
-
-export function skillsHTML(skills, open = false) {
-  if (!skills?.length) return `<div class="sub" style="margin:0">—</div>`;
-  return skills.map(s => `
-    <div class="skill-card ${open ? 'open' : ''}">
-      <div class="skill-head">
-        <span class="sname">⚡ ${esc(s.name)}</span>
-        <span class="trig">${s.triggerVn}</span>
-        ${s.cooldownTicks ? `<span class="badge">CD ${(s.cooldownTicks / 32).toFixed(1)}s</span>` : ''}
-        <span class="caret">▶</span>
-      </div>
-      <div class="skill-body">
-        <ul>
-          ${s.effects.map(e => `<li><b>${eKind(e.raw.kind)}</b> — <span class="desc">${esc(e.text)}</span></li>`).join('')}
-        </ul>
-        <div class="meta">${esc(s.targeting || '')}${s.targeting && s.delivery ? ' · ' : ''}${esc(s.delivery || '')}</div>
-      </div>
-    </div>`).join('');
-}
-
-const EK = {
-  damage: 'Sát thương', heal: 'Hồi máu', apply_modifier: 'Trạng thái',
-  summon: 'Triệu hồi', health_loss: 'Mất máu', force_attack_target: 'Taunt',
-  destroy: 'Tiêu diệt', displace: 'Đẩy dời', set_health: 'Đặt máu',
 };
-export const eKind = k => EK[k] ?? k;
 
-export const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+export const catchBadge = c => html`<span class="badge catch">Bắt ${pct(c, 0)}</span>`;
+export const legBadge = (u, full = false) => (u.legendary ? html`<span class="badge legb">★ ${full ? 'Huyền thoại' : 'LEG'}</span>` : '');
+
+export function unitChip(id, extra = '') {
+  const u = db.units[id];
+  if (!u) return html`<span class="chipu">${id}</span>`;
+  return html`<a class="chipu" href="${linkFor(id)}" title="${u.name}${u.level ? ` Lv${u.level}` : ''}">
+    ${img(u.model, u.name, '', 32)}<span>${u.name}${u.level ? html` <small>Lv${u.level}</small>` : ''}${extra}</span></a>`;
+}
+
+export function statGrid(u) {
+  const dmg = u.dmgMin != null ? `${num(u.dmgMin)}–${num(u.dmgMax)}` : num(u.dmg);
+  const cells = [
+    ['Máu', num(u.hp), u.regen ? `+${num(u.regen)}/s` : ''],
+    ['Sát thương', dmg, label(u.atk)],
+    ['DPS', num(u.dps), `${num(u.aps)} đòn/s`],
+    ['Tầm đánh', num(u.range), u.groundOnly ? 'chỉ mặt đất' : ''],
+    ['Giáp', num(u.armor ?? 0), label(u.armorType)],
+    ['Tốc chạy', num(u.move), label(u.movement)],
+  ];
+  return html`<div class="statgrid">${cells.map(([k, v, s]) => html`
+    <div class="stat"><div class="k">${k}</div><div class="v">${v}</div>${s ? html`<div class="s">${s}</div>` : ''}</div>`)}
+  </div>
+  ${u.splash ? html`<div class="note">💥 Đánh lan: bán kính ${num(u.splash.small_radius)}${u.splash.medium_radius ? ` · ${num(u.splash.medium_factor * 100)}% trong ${num(u.splash.medium_radius)}` : ''}${u.splash.small_factor ? ` · ${num(u.splash.small_factor * 100)}% vùng ngoài` : ''}</div>` : ''}
+  ${u.bounce ? html`<div class="note">🔁 Đánh nảy: tối đa ${u.bounce.targets} mục tiêu · tầm nảy ${num(u.bounce.radius)}${u.bounce.damage_loss ? ` · mất ${num(u.bounce.damage_loss * 100)}%/lần` : ''}</div>` : ''}`;
+}
+
+export function skillList(ids, open = false) {
+  if (!ids?.length) return html`<div class="dim">Không có kỹ năng</div>`;
+  return ids.map(id => {
+    const s = db.abilities[id];
+    if (!s) return '';
+    const off = !s.available || s.inert;
+    return html`<details class="skill ${off ? 'off' : ''}" ${open ? html`open` : ''}>
+      <summary><span class="sname">⚡ ${s.name}</span><span class="trig">${s.inert ? 'Không có tác dụng' : s.summary}</span></summary>
+      ${s.inert ? html`<div class="meta">Trong ruleset hiện tại kỹ năng này chỉ gồm sát thương 0 và trạng thái rỗng (chưa được port) — thực tế không có hiệu ứng. Điều kiện gốc: ${s.summary}</div>`
+        : s.available ? html`
+        ${s.targeting ? html`<div class="meta">🎯 ${s.targeting}</div>` : ''}
+        <ol>${s.effects.map(e => html`<li>${e}</li>`)}</ol>` : html`<div class="meta">${s.reason ?? ''}</div>`}
+    </details>`;
+  });
+}
+
+export function researchIcons(ids) {
+  if (!ids?.length) return '';
+  return html`<div class="rsicons">${ids.map(id => {
+    const r = ix.researchById.get(id);
+    return r ? html`<a href="#/research" title="${r.en} · ${r.perLevel}/cấp"><img src="${`research/${r.id}.webp`}" alt="${r.en}" width="28" height="28" loading="lazy"></a>` : '';
+  })}</div>`;
+}
+
+export function footer() {
+  const m = db.meta;
+  return html`<footer class="foot">Dữ liệu: <code>${m.ruleset}</code> · catalog <code>${m.catalogHash.slice(0, 12)}</code> · build ${new Date(m.builtAt).toLocaleString('vi-VN')}
+    · <a href="#/changelog">lịch sử cập nhật</a></footer>`;
+}
+
+export const empty = (msg, back = '#/pets') => html`<main><div class="empty">${msg}<br><a class="backlink" href="${back}">← Quay lại</a></div></main>`;
+
+export { elementName, short };

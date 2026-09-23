@@ -1,77 +1,92 @@
-import { pets, trade, img, elBadge, catchBadge, skillsHTML, esc } from '../ui.js';
+import { html, num, pct } from '../lib/html.js';
+import { db, ix, unitUrl, linkFor } from '../db.js';
+import { img, elBadge, catchBadge, legBadge, statGrid, skillList, researchIcons, unitChip, empty, footer } from '../ui.js';
 
-export function petPage(slug) {
-  const p = pets.find(x => x.slug === slug || x.id === slug);
-  if (!p) return `<main><div class="empty">Không tìm thấy<br><a class="backlink" href="#/pets">← Pets</a></div></main>`;
+const sid = id => id.replace(/^unit_/, '');
 
-  const obtain = [];
-  if (p.pool) obtain.push(`<span class="badge">Pool ${p.pool.affinityVn} · ${(p.pool.chance * 100).toFixed(1)}% · w=${p.pool.weight}/${p.pool.totalWeight}</span>`);
-  obtain.push(catchBadge(p.catch));
-  obtain.push(`<span class="badge">Bán ${p.book}g</span>`);
-
-  const stages = p.chain.map((s, i) => `
-    <div class="stage-card ${i === p.chain.length - 1 ? 'final' : ''}">
-      <img src="${img(s.image)}" alt="${esc(s.name)}" loading="lazy">
-      <div class="grow">
-        <div class="stitle">
-          <span class="lv">Lv ${s.level ?? '?'}</span>
-          <b>${esc(s.name)}</b>
-          ${s.evolveCost != null ? `<span class="badge">⬆ ${s.evolveCost}g</span>` : ''}
-        </div>
-        <div class="statgrid">
-          <div class="stat"><div class="k">Máu</div><div class="v">${fmtN(s.hp)}</div></div>
-          <div class="stat"><div class="k">Sát thương</div><div class="v">${fmtN(s.dmg)}</div></div>
-          <div class="stat"><div class="k">Tầm đánh</div><div class="v">${s.range}</div></div>
-          <div class="stat"><div class="k">Giáp</div><div class="v">${s.armor}</div></div>
-          <div class="stat"><div class="k">Đánh / giây</div><div class="v">${s.aps}</div></div>
-          <div class="stat"><div class="k">DPS</div><div class="v">${fmtN(s.dps)}</div></div>
-          <div class="stat"><div class="k">Kiểu đánh</div><div class="v"><small>${esc(s.attackType)}</small></div></div>
-          <div class="stat"><div class="k">Tốc chạy</div><div class="v">${s.moveSpeed}</div></div>
-        </div>
-        ${skillsHTML(s.skills)}
-      </div>
-    </div>`).join('');
-
-  const final = p.chain[p.chain.length - 1];
-  const relatedTrades = [];
-  for (const slot of trade) for (const r of slot.recipes) {
-    if (r.required.rootPet?.slug === p.slug) relatedTrades.push({ slot: slot.slot, r });
-  }
-
-  return `<main>
-    <a class="backlink" href="#/pets">← Pets</a>
-    <div class="detail-head">
-      <img class="big" src="${img(p.image)}" alt="${esc(p.name)}">
-      <div style="flex:1;min-width:220px">
-        <h1>${esc(p.name)} ${p.legendary ? '<span class="badge legb">★ LEGENDARY</span>' : ''}</h1>
-        <div class="tags" style="display:flex;gap:6px;flex-wrap:wrap">${elBadge(p.element)} ${obtain.join(' ')}</div>
-      </div>
-    </div>
-
-    <h2>Tiến hóa</h2>
-    <div class="timeline">${stages}</div>
-
-    ${p.legendary && p.pool ? `
-    <p class="sub">★ Chỉ spawn wild pool ${p.pool.affinityVn} (1/${p.pool.totalWeight}) · catch ${Math.round(p.catch * 100)}% · không trade được</p>` : ''}
-
-    ${relatedTrades.length ? `
-    <h2>Trade</h2>
-    <div class="trade-grid">${relatedTrades.map(({ slot, r }) => `
-      <div class="recipe">
-        <div class="side">
-          <span class="badge">Slot ${slot} · ĐỔI ĐI</span>
-          <img src="${img(r.required.image)}" loading="lazy">
-          <span class="who">${esc(r.required.name)} · Lv${r.required.level}</span>
-        </div>
-        <div class="arrow">➜</div>
-        <div class="side">
-          <span class="badge catch">NHẬN VỀ</span>
-          <img src="${img(r.offered.image)}" loading="lazy">
-          <span class="who">${esc(r.offered.name)} · Lv${r.offered.level}</span>
-          <span class="bystats">HP ${r.offered.hp.toLocaleString('vi-VN')} · DPS ${r.offered.dps.toLocaleString('vi-VN')}</span>
-        </div>
-      </div>`).join('')}</div>` : ''}
-  </main>`;
+export function appearances(id) {
+  const waves = ix.wavesOf.get(id) ?? [];
+  const trades = ix.tradesOf.get(id) ?? [];
+  if (!waves.length && !trades.length) return '';
+  return html`<div class="appear">
+    ${waves.length ? html`<div>⚔ Xuất hiện làm quái: ${waves.slice(0, 12).map(w => html`<a class="badge" href="#/waves/${w.set}/${w.n}">${w.setName} · đợt ${w.n} ×${w.count}</a> `)}${waves.length > 12 ? html`<span class="dim">+${waves.length - 12}</span>` : ''}</div>` : ''}
+    ${trades.map(t => html`<div>🔄 Trade slot ${t.slot}: ${t.give === id ? html`đổi đi lấy ${unitChip(t.get)}` : html`nhận được khi đổi ${unitChip(t.give)}`}</div>`)}
+  </div>`;
 }
 
-const fmtN = n => n >= 10000 ? n.toLocaleString('vi-VN') : String(n);
+export function stageCard(u, { cost = null, highlight = false } = {}) {
+  const sell = Math.floor((u.book ?? 0) * (db.game.rules.sellGold ?? 0));
+  return html`<article class="stage-card ${u.evo ? '' : 'final'} ${highlight ? 'hl' : ''}" id="s-${sid(u.id)}">
+    ${img(u.model, u.name, 'stage-img', 96)}
+    <div class="grow">
+      <div class="stitle">
+        ${u.level != null ? html`<span class="lv">Lv ${u.level}</span>` : ''}
+        <b>${u.name}</b>
+        ${cost != null ? html`<span class="badge gold" title="Giá tiến hóa lên dạng này">⬆ ${num(cost)} vàng</span>` : ''}
+        ${sell ? html`<span class="badge" title="Bán nhận ${pct(db.game.rules.sellGold, 0)} giá trị">Bán ${num(sell)}</span>` : ''}
+        <a class="permalink" href="${unitUrl(u.id)}" title="Trang riêng của dạng này">#${sid(u.id)}</a>
+      </div>
+      ${statGrid(u)}
+      ${skillList(u.skills)}
+      ${appearances(u.id)}
+    </div>
+  </article>`;
+}
+
+// Cây tiến hóa: nhánh đơn render dọc, điểm rẽ nhánh render các cột song song.
+function tree(id, cost, seen, focus) {
+  const u = db.units[id];
+  const kids = (u.evo ?? []).filter(e => !seen.has(e.to));
+  kids.forEach(k => seen.add(k.to));
+  const self = stageCard(u, { cost, highlight: sid(id) === focus });
+  if (!kids.length) return self;
+  if (kids.length === 1) return html`${self}${tree(kids[0].to, kids[0].cost, seen, focus)}`;
+  return html`${self}<div class="branches">${kids.map((k, i) => html`
+    <div class="branch"><div class="branch-head">Nhánh ${String.fromCharCode(65 + i)} → ${db.units[k.to].name}</div>${tree(k.to, k.cost, seen, focus)}</div>`)}
+  </div>`;
+}
+
+export default {
+  title: ({ params }) => ix.petBySlug.get(params[0])?.name ?? 'Pet',
+  render({ params }) {
+    const p = ix.petBySlug.get(params[0]) ?? ix.petById.get(params[0]);
+    if (!p) return empty('Không tìm thấy pet');
+    const root = db.units[p.id];
+    const pool = root.pool && db.pools[root.pool.index];
+    const trades = p.stages.flatMap(id => (ix.tradesOf.get(id) ?? []).filter(t => t.give === id));
+    const totalCost = p.stages.reduce((s, id) => s + (db.units[id].evo ?? []).reduce((a, e) => a + e.cost, 0), 0);
+
+    return html`<main>
+      <a class="backlink" href="#/pets">← Pets</a>
+      <div class="detail-head">
+        ${img(p.model, p.name, 'big', 128)}
+        <div class="grow">
+          <h1>${p.name} ${legBadge(root, true)}</h1>
+          <div class="tags">
+            ${elBadge(p.el)} ${catchBadge(p.catch)}
+            <span class="badge gold">Giá bắt ${num(p.book)} vàng</span>
+            ${pool ? html`<a class="badge" href="#/pools">Wild ${db.elements[pool.element]?.name} · ${pct(root.pool.weight / root.pool.total)} (${root.pool.weight}/${root.pool.total})</a>` : ''}
+            <span class="badge">${p.stages.length} dạng${p.branching ? ' · có rẽ nhánh' : ''}</span>
+          </div>
+          <div class="sub" style="margin:8px 0 0">Nâng tiến hóa toàn bộ cây: ${num(totalCost)} vàng</div>
+          ${researchIcons(root.research)}
+        </div>
+      </div>
+
+      ${p.legendary ? html`<p class="note">★ Huyền thoại: tối đa ${db.game.rules.legendaryCap} huyền thoại mỗi căn cứ.</p>` : ''}
+
+      <h2>Tiến hóa</h2>
+      <div class="timeline">${tree(p.id, null, new Set([p.id]), params[1])}</div>
+
+      ${trades.length ? html`<h2>Đem đi trade</h2>
+        <div class="trade-grid">${trades.map(t => html`<div class="recipe">
+          <div class="side"><span class="badge">Slot ${t.slot} · ĐỔI ĐI</span>${unitChip(t.give)}</div>
+          <div class="arrow">➜</div>
+          <div class="side"><span class="badge catch">NHẬN VỀ</span>${unitChip(t.get)}
+            <span class="bystats">HP ${num(db.units[t.get].hp)} · DPS ${num(db.units[t.get].dps)}</span>
+            <a class="rootlink" href="${linkFor(t.get)}">Xem chi tiết →</a></div>
+        </div>`)}</div>` : ''}
+      ${footer()}
+    </main>`;
+  },
+};

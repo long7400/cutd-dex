@@ -1,0 +1,921 @@
+{
+ "assets": {
+  "portraits/boss_penhuolong.webp": {
+   "etag": "\"6aad94a8-6c9b\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:40 GMT"
+  },
+  "portraits/download_annihilape.webp": {
+   "etag": "\"6ab0a537-7470\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:07 GMT"
+  },
+  "portraits/download_archaludon.webp": {
+   "etag": "\"6ab0a53b-7197\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:11 GMT"
+  },
+  "portraits/download_arrokuda.webp": {
+   "etag": "\"6ab0a547-27ea\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:23 GMT"
+  },
+  "portraits/download_beedrill.webp": {
+   "etag": "\"6ab0a533-6786\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:03 GMT"
+  },
+  "portraits/download_brambleghast.webp": {
+   "etag": "\"6ab0a532-9135\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:02 GMT"
+  },
+  "portraits/download_bramblin.webp": {
+   "etag": "\"6ab0a532-68ae\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:02 GMT"
+  },
+  "portraits/download_butterfree.webp": {
+   "etag": "\"6ab0a533-5279\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:03 GMT"
+  },
+  "portraits/download_chansey.webp": {
+   "etag": "\"6ab0a534-6ea6\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:04 GMT"
+  },
+  "portraits/download_chi_yu.webp": {
+   "etag": "\"6ab0a545-4938\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:21 GMT"
+  },
+  "portraits/download_chien_pao.webp": {
+   "etag": "\"6ab0a531-412f\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:01 GMT"
+  },
+  "portraits/download_corphish.webp": {
+   "etag": "\"6ab0a535-5a78\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:05 GMT"
+  },
+  "portraits/download_crocalor.webp": {
+   "etag": "\"6ab0a53f-48ae\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:15 GMT"
+  },
+  "portraits/download_dewgong.webp": {
+   "etag": "\"6ab0a536-1c70\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:06 GMT"
+  },
+  "portraits/download_ditto.webp": {
+   "etag": "\"6ab0a536-5cfa\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:06 GMT"
+  },
+  "portraits/download_eevee.webp": {
+   "etag": "\"6ab0a537-513e\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:07 GMT"
+  },
+  "portraits/download_eiscue.webp": {
+   "etag": "\"6ab0a53e-451e\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:14 GMT"
+  },
+  "portraits/download_electabuzz.webp": {
+   "etag": "\"6ab0a538-84d7\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:08 GMT"
+  },
+  "portraits/download_electrode.webp": {
+   "etag": "\"6ab0a539-3f98\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:09 GMT"
+  },
+  "portraits/download_farigiraf.webp": {
+   "etag": "\"6ab0a533-406a\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:03 GMT"
+  },
+  "portraits/download_fearow.webp": {
+   "etag": "\"6ab0a539-2da3\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:09 GMT"
+  },
+  "portraits/download_feraligatr.webp": {
+   "etag": "\"6ab0a536-506a\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:06 GMT"
+  },
+  "portraits/download_flareon.webp": {
+   "etag": "\"6ab0a53a-6822\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:10 GMT"
+  },
+  "portraits/download_flygon.webp": {
+   "etag": "\"6ab0a53a-3e48\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:10 GMT"
+  },
+  "portraits/download_fuecoco.webp": {
+   "etag": "\"6ab0a547-5df7\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:23 GMT"
+  },
+  "portraits/download_garganacl.webp": {
+   "etag": "\"6ab0a545-5d15\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:21 GMT"
+  },
+  "portraits/download_geodude.webp": {
+   "etag": "\"6ab0a53a-20d7\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:10 GMT"
+  },
+  "portraits/download_gholdengo.webp": {
+   "etag": "\"6ab0a532-2c0a\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:02 GMT"
+  },
+  "portraits/download_gimmighoul.webp": {
+   "etag": "\"6ab0a547-99ee\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:23 GMT"
+  },
+  "portraits/download_golbat.webp": {
+   "etag": "\"6ab0a53b-3da9\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:11 GMT"
+  },
+  "portraits/download_golem.webp": {
+   "etag": "\"6ab0a53b-88d1\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:11 GMT"
+  },
+  "portraits/download_gouging_fire.webp": {
+   "etag": "\"6ab0a541-36e1\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:17 GMT"
+  },
+  "portraits/download_graveler.webp": {
+   "etag": "\"6ab0a53c-5d79\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:12 GMT"
+  },
+  "portraits/download_hitmonchan.webp": {
+   "etag": "\"6ab0a53d-630f\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:13 GMT"
+  },
+  "portraits/download_hitmonlee.webp": {
+   "etag": "\"6ab0a53d-80b0\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:13 GMT"
+  },
+  "portraits/download_iron_crown.webp": {
+   "etag": "\"6ab0a540-3d55\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:16 GMT"
+  },
+  "portraits/download_iron_moth.webp": {
+   "etag": "\"6ab0a535-4084\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:05 GMT"
+  },
+  "portraits/download_iron_thorns.webp": {
+   "etag": "\"6ab0a538-6901\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:08 GMT"
+  },
+  "portraits/download_jolteon.webp": {
+   "etag": "\"6ab0a53d-770e\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:13 GMT"
+  },
+  "portraits/download_kabutops.webp": {
+   "etag": "\"6ab0a53d-751e\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:13 GMT"
+  },
+  "portraits/download_kilowattrel.webp": {
+   "etag": "\"6ab0a548-1e08\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:24 GMT"
+  },
+  "portraits/download_kingler.webp": {
+   "etag": "\"6ab0a53e-6668\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:14 GMT"
+  },
+  "portraits/download_krabby.webp": {
+   "etag": "\"6ab0a53e-59ae\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:14 GMT"
+  },
+  "portraits/download_landorus.webp": {
+   "etag": "\"6ab0a535-6250\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:05 GMT"
+  },
+  "portraits/download_magmar.webp": {
+   "etag": "\"6ab0a540-7695\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:16 GMT"
+  },
+  "portraits/download_magnemite.webp": {
+   "etag": "\"6ab0a540-46f8\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:16 GMT"
+  },
+  "portraits/download_magneton.webp": {
+   "etag": "\"6ab0a540-67c3\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:16 GMT"
+  },
+  "portraits/download_mankey.webp": {
+   "etag": "\"6ab0a541-4589\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:17 GMT"
+  },
+  "portraits/download_marill.webp": {
+   "etag": "\"6ab0a53c-5089\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:12 GMT"
+  },
+  "portraits/download_nacli.webp": {
+   "etag": "\"6ab0a549-83f1\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:25 GMT"
+  },
+  "portraits/download_naclstack.webp": {
+   "etag": "\"6ab0a541-7390\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:17 GMT"
+  },
+  "portraits/download_ninetales.webp": {
+   "etag": "\"6ab0a542-744a\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:18 GMT"
+  },
+  "portraits/download_okidogi.webp": {
+   "etag": "\"6ab0a53c-762f\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:12 GMT"
+  },
+  "portraits/download_paras.webp": {
+   "etag": "\"6ab0a543-7aac\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:19 GMT"
+  },
+  "portraits/download_parasect.webp": {
+   "etag": "\"6ab0a543-5d69\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:19 GMT"
+  },
+  "portraits/download_poliwag.webp": {
+   "etag": "\"6ab0a543-4750\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:19 GMT"
+  },
+  "portraits/download_poliwhirl.webp": {
+   "etag": "\"6ab0a544-68f4\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:20 GMT"
+  },
+  "portraits/download_poliwrath.webp": {
+   "etag": "\"6ab0a544-6c97\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:20 GMT"
+  },
+  "portraits/download_primeape.webp": {
+   "etag": "\"6ab0a544-6898\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:20 GMT"
+  },
+  "portraits/download_raboot.webp": {
+   "etag": "\"6ab0a539-432a\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:09 GMT"
+  },
+  "portraits/download_raticate.webp": {
+   "etag": "\"6ab0a544-4ede\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:20 GMT"
+  },
+  "portraits/download_rattata.webp": {
+   "etag": "\"6ab0a545-4cec\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:21 GMT"
+  },
+  "portraits/download_sandaconda.webp": {
+   "etag": "\"6ab0a537-482a\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:07 GMT"
+  },
+  "portraits/download_sandshrew.webp": {
+   "etag": "\"6ab0a546-57b7\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:22 GMT"
+  },
+  "portraits/download_sandslash.webp": {
+   "etag": "\"6ab0a546-93e5\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:22 GMT"
+  },
+  "portraits/download_seel.webp": {
+   "etag": "\"6ab0a546-3678\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:22 GMT"
+  },
+  "portraits/download_skeledirge.webp": {
+   "etag": "\"6ab0a54b-32c9\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:27 GMT"
+  },
+  "portraits/download_spearow.webp": {
+   "etag": "\"6ab0a548-4180\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:24 GMT"
+  },
+  "portraits/download_staryu.webp": {
+   "etag": "\"6ab0a549-53d4\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:25 GMT"
+  },
+  "portraits/download_thwackey.webp": {
+   "etag": "\"6ab0a53f-48ff\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:15 GMT"
+  },
+  "portraits/download_ting_lu.webp": {
+   "etag": "\"6ab0a548-684b\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:24 GMT"
+  },
+  "portraits/download_torracat.webp": {
+   "etag": "\"6ab0a542-592e\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:18 GMT"
+  },
+  "portraits/download_toxel.webp": {
+   "etag": "\"6ab0a539-5e1f\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:09 GMT"
+  },
+  "portraits/download_vaporeon.webp": {
+   "etag": "\"6ab0a549-3015\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:25 GMT"
+  },
+  "portraits/download_victreebel.webp": {
+   "etag": "\"6ab0a54a-4989\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:26 GMT"
+  },
+  "portraits/download_voltorb.webp": {
+   "etag": "\"6ab0a54a-513b\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:26 GMT"
+  },
+  "portraits/download_vulpix.webp": {
+   "etag": "\"6ab0a54a-671d\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:26 GMT"
+  },
+  "portraits/download_weedle.webp": {
+   "etag": "\"6ab0a54b-2a49\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:27 GMT"
+  },
+  "portraits/download_weepinbell.webp": {
+   "etag": "\"6ab0a54b-4975\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:27 GMT"
+  },
+  "portraits/download_wo_chien.webp": {
+   "etag": "\"6ab0a534-6f8c\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:04 GMT"
+  },
+  "portraits/download_zubat.webp": {
+   "etag": "\"6ab0a54b-3a2d\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:27 GMT"
+  },
+  "portraits/monster_labaya.webp": {
+   "etag": "\"6aad94aa-3dd2\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:42 GMT"
+  },
+  "portraits/monster_lvmaochong.webp": {
+   "etag": "\"6aad94aa-55ba\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:42 GMT"
+  },
+  "portraits/monster_manaoshuimu.webp": {
+   "etag": "\"6aad94ab-49f1\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:43 GMT"
+  },
+  "portraits/pet_aboguai.webp": {
+   "etag": "\"6aad94ab-485d\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:43 GMT"
+  },
+  "portraits/pet_aboshe.webp": {
+   "etag": "\"6aad94ac-737d\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:44 GMT"
+  },
+  "portraits/pet_aerzhousi.webp": {
+   "etag": "\"6aad94ad-6a99\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:45 GMT"
+  },
+  "portraits/pet_allmaolada.webp": {
+   "etag": "\"6aad94ad-3ede\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:45 GMT"
+  },
+  "portraits/pet_allmiaomiao.webp": {
+   "etag": "\"6aad94ae-77d7\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:46 GMT"
+  },
+  "portraits/pet_anheichaomeng.webp": {
+   "etag": "\"6aad94ae-5536\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:46 GMT"
+  },
+  "portraits/pet_banjilasi.webp": {
+   "etag": "\"6aad94af-99c4\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:47 GMT"
+  },
+  "portraits/pet_baobaoding.webp": {
+   "etag": "\"6aad94b0-88bd\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:48 GMT"
+  },
+  "portraits/pet_baolilong.webp": {
+   "etag": "\"6aad94b0-3f42\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:48 GMT"
+  },
+  "portraits/pet_bibiniao.webp": {
+   "etag": "\"6aad94b2-714b\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:50 GMT"
+  },
+  "portraits/pet_bobo.webp": {
+   "etag": "\"6aad94b3-6878\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:51 GMT"
+  },
+  "portraits/pet_boerkainien.webp": {
+   "etag": "\"6aad94b3-b992\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:51 GMT"
+  },
+  "portraits/pet_changweihuohu.webp": {
+   "etag": "\"6aad94b4-7681\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:52 GMT"
+  },
+  "portraits/pet_chaojiakuangxi.webp": {
+   "etag": "\"6aad94b4-8e97\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:52 GMT"
+  },
+  "portraits/pet_chaomeng.webp": {
+   "etag": "\"6aad94b5-5e94\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:53 GMT"
+  },
+  "portraits/pet_cijiabei.webp": {
+   "etag": "\"6aad94b6-9594\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:54 GMT"
+  },
+  "portraits/pet_dabiniao.webp": {
+   "etag": "\"6aad94b7-8adb\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:55 GMT"
+  },
+  "portraits/pet_dagangshe.webp": {
+   "etag": "\"6aad94b7-5f02\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:55 GMT"
+  },
+  "portraits/pet_daidaishou.webp": {
+   "etag": "\"6aad94b8-31cc\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:56 GMT"
+  },
+  "portraits/pet_daikeshou.webp": {
+   "etag": "\"6aad94b8-95ae\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:56 GMT"
+  },
+  "portraits/pet_daiouqixisi.webp": {
+   "etag": "\"6aad94b9-6ed1\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:57 GMT"
+  },
+  "portraits/pet_dakelaiyi.webp": {
+   "etag": "\"6aad94ba-6b10\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:58 GMT"
+  },
+  "portraits/pet_dashebei.webp": {
+   "etag": "\"6aad94ba-597d\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:58 GMT"
+  },
+  "portraits/pet_dayanshe.webp": {
+   "etag": "\"6aad94bb-4003\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:59 GMT"
+  },
+  "portraits/pet_dujiaoxiniu.webp": {
+   "etag": "\"6aad94bb-7227\"",
+   "lastModified": "Fri, 18 Sep 2026 19:44:59 GMT"
+  },
+  "portraits/pet_feitiantanglang.webp": {
+   "etag": "\"6aad94bc-6239\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:00 GMT"
+  },
+  "portraits/pet_fengsugou.webp": {
+   "etag": "\"6aad94bd-5d75\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:01 GMT"
+  },
+  "portraits/pet_fengwang.webp": {
+   "etag": "\"6aad94bd-56ed\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:01 GMT"
+  },
+  "portraits/pet_gaiouka.webp": {
+   "etag": "\"6aad94be-3818\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:02 GMT"
+  },
+  "portraits/pet_galagala.webp": {
+   "etag": "\"6aad94bf-6bd6\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:03 GMT"
+  },
+  "portraits/pet_gedaya.webp": {
+   "etag": "\"6aad94bf-78ca\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:03 GMT"
+  },
+  "portraits/pet_genggui.webp": {
+   "etag": "\"6aad94c0-8e3a\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:04 GMT"
+  },
+  "portraits/pet_guaguapaowa.webp": {
+   "etag": "\"6aad94c0-ab96\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:04 GMT"
+  },
+  "portraits/pet_guaili.webp": {
+   "etag": "\"6aad94c1-88dd\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:05 GMT"
+  },
+  "portraits/pet_guatouwa.webp": {
+   "etag": "\"6aad94c2-77bb\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:06 GMT"
+  },
+  "portraits/pet_guisi.webp": {
+   "etag": "\"6aad94c2-6e8f\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:06 GMT"
+  },
+  "portraits/pet_guisitong.webp": {
+   "etag": "\"6aad94c3-5cd5\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:07 GMT"
+  },
+  "portraits/pet_guladuo.webp": {
+   "etag": "\"6aad94c3-5cd3\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:07 GMT"
+  },
+  "portraits/pet_hakelong.webp": {
+   "etag": "\"6aad94c4-45cc\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:08 GMT"
+  },
+  "portraits/pet_haoli.webp": {
+   "etag": "\"6aad94c5-9545\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:09 GMT"
+  },
+  "portraits/pet_huashiyilong.webp": {
+   "etag": "\"6aad94c5-310e\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:09 GMT"
+  },
+  "portraits/pet_hudi.webp": {
+   "etag": "\"6aad94c6-9fc1\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:10 GMT"
+  },
+  "portraits/pet_huohuli.webp": {
+   "etag": "\"6aad94c7-89e0\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:11 GMT"
+  },
+  "portraits/pet_huokonglong.webp": {
+   "etag": "\"6aad94c8-58f0\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:12 GMT"
+  },
+  "portraits/pet_huoyanji.webp": {
+   "etag": "\"6aad94c8-6fe6\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:12 GMT"
+  },
+  "portraits/pet_huoyanniao.webp": {
+   "etag": "\"6aad965c-5924\"",
+   "lastModified": "Fri, 18 Sep 2026 19:51:56 GMT"
+  },
+  "portraits/pet_huozhiji.webp": {
+   "etag": "\"6aad94c9-5d4b\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:13 GMT"
+  },
+  "portraits/pet_jiaherenwa.webp": {
+   "etag": "\"6aad94ca-61e4\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:14 GMT"
+  },
+  "portraits/pet_jidongniao.webp": {
+   "etag": "\"6aad94cb-46a2\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:15 GMT"
+  },
+  "portraits/pet_jienigui.webp": {
+   "etag": "\"6aad94cc-7f7c\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:16 GMT"
+  },
+  "portraits/pet_jiuwei_ice.webp": {
+   "etag": "\"6aad94cd-55e5\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:17 GMT"
+  },
+  "portraits/pet_juqiantanglang.webp": {
+   "etag": "\"6aad94ce-6912\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:18 GMT"
+  },
+  "portraits/pet_juzhaoguai.webp": {
+   "etag": "\"6aad94ce-8953\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:18 GMT"
+  },
+  "portraits/pet_kabishou.webp": {
+   "etag": "\"6aad94cf-71a6\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:19 GMT"
+  },
+  "portraits/pet_kadigou.webp": {
+   "etag": "\"6aad94cf-7d96\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:19 GMT"
+  },
+  "portraits/pet_kaixi.webp": {
+   "etag": "\"6aad94d0-5e49\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:20 GMT"
+  },
+  "portraits/pet_kalakala.webp": {
+   "etag": "\"6aad94d1-8761\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:21 GMT"
+  },
+  "portraits/pet_kamigui.webp": {
+   "etag": "\"6aad94d1-7f54\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:21 GMT"
+  },
+  "portraits/pet_kedaya.webp": {
+   "etag": "\"6aad94d2-7330\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:22 GMT"
+  },
+  "portraits/pet_keleiseliya.webp": {
+   "etag": "\"6aad94d2-54f5\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:22 GMT"
+  },
+  "portraits/pet_kuailong.webp": {
+   "etag": "\"6aad94d3-6c48\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:23 GMT"
+  },
+  "portraits/pet_ladiousi.webp": {
+   "etag": "\"6aad94d4-3d97\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:24 GMT"
+  },
+  "portraits/pet_ladiyasi.webp": {
+   "etag": "\"6aad94d4-3c79\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:24 GMT"
+  },
+  "portraits/pet_lapulasi.webp": {
+   "etag": "\"6aad94d5-5dd4\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:25 GMT"
+  },
+  "portraits/pet_leigong.webp": {
+   "etag": "\"6aad94d6-5af8\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:26 GMT"
+  },
+  "portraits/pet_leiqiu.webp": {
+   "etag": "\"6aad94d6-4cab\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:26 GMT"
+  },
+  "portraits/pet_liekongzuo.webp": {
+   "etag": "\"6aad94d7-7a1c\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:27 GMT"
+  },
+  "portraits/pet_lieyanma.webp": {
+   "etag": "\"6aad965c-49a5\"",
+   "lastModified": "Fri, 18 Sep 2026 19:51:56 GMT"
+  },
+  "portraits/pet_lioulu.webp": {
+   "etag": "\"6aad94d9-6a0a\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:29 GMT"
+  },
+  "portraits/pet_liuwei_ice.webp": {
+   "etag": "\"6aad94da-78d9\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:30 GMT"
+  },
+  "portraits/pet_liyuwang.webp": {
+   "etag": "\"6aad94da-5a73\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:30 GMT"
+  },
+  "portraits/pet_lizhuangji.webp": {
+   "etag": "\"6aad94db-61ed\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:31 GMT"
+  },
+  "portraits/pet_lukaliou.webp": {
+   "etag": "\"6aad94db-6902\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:31 GMT"
+  },
+  "portraits/pet_luoqiya.webp": {
+   "etag": "\"6aad94dc-3f76\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:32 GMT"
+  },
+  "portraits/pet_maolaoda.webp": {
+   "etag": "\"6aad94dd-37db\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:33 GMT"
+  },
+  "portraits/pet_menghuan.webp": {
+   "etag": "\"6aad94dd-394b\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:33 GMT"
+  },
+  "portraits/pet_metapod.webp": {
+   "etag": "\"6ab0a542-47ad\"",
+   "lastModified": "Mon, 21 Sep 2026 03:32:18 GMT"
+  },
+  "portraits/pet_miaomiao.webp": {
+   "etag": "\"6aad94de-84e6\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:34 GMT"
+  },
+  "portraits/pet_miaowacao.webp": {
+   "etag": "\"6aad94df-6c2d\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:35 GMT"
+  },
+  "portraits/pet_miaowahua.webp": {
+   "etag": "\"6aad94df-8cf3\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:35 GMT"
+  },
+  "portraits/pet_miaowazhongzi.webp": {
+   "etag": "\"6aad94e0-9337\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:36 GMT"
+  },
+  "portraits/pet_michunjie.webp": {
+   "etag": "\"6aad94e0-a232\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:36 GMT"
+  },
+  "portraits/pet_michunwa.webp": {
+   "etag": "\"6aad94e1-9124\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:37 GMT"
+  },
+  "portraits/pet_minilong.webp": {
+   "etag": "\"6aad94e1-45bb\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:37 GMT"
+  },
+  "portraits/pet_mushougong.webp": {
+   "etag": "\"6aad94e2-7b1e\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:38 GMT"
+  },
+  "portraits/pet_pangding.webp": {
+   "etag": "\"6aad94e3-b0a4\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:39 GMT"
+  },
+  "portraits/pet_pangkeding.webp": {
+   "etag": "\"6aad94e3-8d96\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:39 GMT"
+  },
+  "portraits/pet_penhuolong.webp": {
+   "etag": "\"6aad94e4-6c9b\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:40 GMT"
+  },
+  "portraits/pet_pibaobao.webp": {
+   "etag": "\"6aad94e6-6e7e\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:42 GMT"
+  },
+  "portraits/pet_pikaqiu.webp": {
+   "etag": "\"6aad94e6-6a1e\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:42 GMT"
+  },
+  "portraits/pet_pikexi.webp": {
+   "etag": "\"6aad94e7-7106\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:43 GMT"
+  },
+  "portraits/pet_pipi.webp": {
+   "etag": "\"6aad94e7-7662\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:43 GMT"
+  },
+  "portraits/pet_piqiu.webp": {
+   "etag": "\"6aad94e8-749e\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:44 GMT"
+  },
+  "portraits/pet_s_baolilong.webp": {
+   "etag": "\"6aad94e9-58e1\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:45 GMT"
+  },
+  "portraits/pet_s_juqiantanglang.webp": {
+   "etag": "\"6aad94ef-630e\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:51 GMT"
+  },
+  "portraits/pet_s_shuijiangui.webp": {
+   "etag": "\"6aad94f2-9a4f\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:54 GMT"
+  },
+  "portraits/pet_senlinxiyi.webp": {
+   "etag": "\"6aad94f4-3db9\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:56 GMT"
+  },
+  "portraits/pet_shajilasi.webp": {
+   "etag": "\"6aad94f4-7eb1\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:56 GMT"
+  },
+  "portraits/pet_shandianniao.webp": {
+   "etag": "\"6aad94f5-6662\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:57 GMT"
+  },
+  "portraits/pet_shuangdanwasi.webp": {
+   "etag": "\"6aad94f6-926e\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:58 GMT"
+  },
+  "portraits/pet_shuijiangui.webp": {
+   "etag": "\"6aad94f6-c4cf\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:58 GMT"
+  },
+  "portraits/pet_shuijun.webp": {
+   "etag": "\"6aad94f7-4b1f\"",
+   "lastModified": "Fri, 18 Sep 2026 19:45:59 GMT"
+  },
+  "portraits/pet_shuiyueyu.webp": {
+   "etag": "\"6aad94f8-6470\"",
+   "lastModified": "Fri, 18 Sep 2026 19:46:00 GMT"
+  },
+  "portraits/pet_wanli.webp": {
+   "etag": "\"6aad94f8-703f\"",
+   "lastModified": "Fri, 18 Sep 2026 19:46:00 GMT"
+  },
+  "portraits/pet_wasidan.webp": {
+   "etag": "\"6aad94f9-962c\"",
+   "lastModified": "Fri, 18 Sep 2026 19:46:01 GMT"
+  },
+  "portraits/pet_xiaohuolong.webp": {
+   "etag": "\"6aad94fa-5ab9\"",
+   "lastModified": "Fri, 18 Sep 2026 19:46:02 GMT"
+  },
+  "portraits/pet_xiaohuoma.webp": {
+   "etag": "\"6aad965f-5b6c\"",
+   "lastModified": "Fri, 18 Sep 2026 19:51:59 GMT"
+  },
+  "portraits/pet_xiaokabishou.webp": {
+   "etag": "\"6aad94fb-85ac\"",
+   "lastModified": "Fri, 18 Sep 2026 19:46:03 GMT"
+  },
+  "portraits/pet_xiyiwang.webp": {
+   "etag": "\"6aad94fb-7d4b\"",
+   "lastModified": "Fri, 18 Sep 2026 19:46:03 GMT"
+  },
+  "portraits/pet_yandi.webp": {
+   "etag": "\"6aad94fe-7a3c\"",
+   "lastModified": "Fri, 18 Sep 2026 19:46:06 GMT"
+  },
+  "portraits/pet_yaohuohonghu.webp": {
+   "etag": "\"6aad94fe-823c\"",
+   "lastModified": "Fri, 18 Sep 2026 19:46:06 GMT"
+  },
+  "portraits/pet_yongjila.webp": {
+   "etag": "\"6aad94ff-734f\"",
+   "lastModified": "Fri, 18 Sep 2026 19:46:07 GMT"
+  },
+  "portraits/pet_youjilasi.webp": {
+   "etag": "\"6aad94ff-63ea\"",
+   "lastModified": "Fri, 18 Sep 2026 19:46:07 GMT"
+  },
+  "portraits/pet_zhaoyueyu.webp": {
+   "etag": "\"6aad9500-80cf\"",
+   "lastModified": "Fri, 18 Sep 2026 19:46:08 GMT"
+  },
+  "portraits/pet_zuanjiaoxiniu.webp": {
+   "etag": "\"6aad9501-6d18\"",
+   "lastModified": "Fri, 18 Sep 2026 19:46:09 GMT"
+  },
+  "research/research_r000.webp": {
+   "etag": "\"6ab020f7-aedf\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r001.webp": {
+   "etag": "\"6ab020f7-bd10\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r002.webp": {
+   "etag": "\"6ab020f7-a29a\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r003.webp": {
+   "etag": "\"6ab020f7-b552\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r004.webp": {
+   "etag": "\"6ab020f7-c593\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r005.webp": {
+   "etag": "\"6ab020f7-a444\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r006.webp": {
+   "etag": "\"6ab020f7-b832\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r007.webp": {
+   "etag": "\"6ab020f7-9dbc\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r008.webp": {
+   "etag": "\"6ab020f7-b35a\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r009.webp": {
+   "etag": "\"6ab020f7-9915\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r00a.webp": {
+   "etag": "\"6ab020f7-b82d\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r00b.webp": {
+   "etag": "\"6ab020f7-bf65\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r00c.webp": {
+   "etag": "\"6ab020f7-b876\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r00d.webp": {
+   "etag": "\"6ab020f7-b329\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r00e.webp": {
+   "etag": "\"6ab020f7-a0b0\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r00f.webp": {
+   "etag": "\"6ab020f7-b60a\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r00g.webp": {
+   "etag": "\"6ab020f7-a756\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r00h.webp": {
+   "etag": "\"6ab020f7-b039\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r00i.webp": {
+   "etag": "\"6ab020f7-a12b\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r00j.webp": {
+   "etag": "\"6ab020f7-a0bb\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r00k.webp": {
+   "etag": "\"6ab020f7-bb4f\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r00l.webp": {
+   "etag": "\"6ab020f7-ab29\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r00m.webp": {
+   "etag": "\"6ab020f7-adef\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r00n.webp": {
+   "etag": "\"6ab020f7-c508\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r00o.webp": {
+   "etag": "\"6ab020f7-bbbd\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r00p.webp": {
+   "etag": "\"6ab020f7-ca08\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r00q.webp": {
+   "etag": "\"6ab020f7-c459\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "research/research_r00r.webp": {
+   "etag": "\"6ab020f7-bc89\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  }
+ },
+ "bundle": "/assets/index-BSrOIqaL.js",
+ "catalog": {
+  "etag": "W/\"3f576dbc0c974fb746143a74f4431b04dcb62f1cf09a560b7b73f463d5e39f4c\""
+ },
+ "catalogHash": "70bc0dd034a602cec2565a6d9b093d297da591cd44a0b52948da22167f230c54",
+ "html": {
+  "etag": "W/\"6ab36bfe-19a2\"",
+  "lastModified": "Wed, 23 Sep 2026 06:04:46 GMT"
+ }
+}
