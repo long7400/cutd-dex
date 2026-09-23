@@ -270,8 +270,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     await web.frames(2);
     const pt = webPoint(t.pos);
     if (!pt || !web.tap(pt.x, pt.y, pointerId)) return 'aim';
-    await web.frames(2);
-    return web.selectedName() === expect ? null : 'aim';
+    return (await web.until(() => web.selectedName() === expect, 600)) ? null : 'aim';
   }
   async function webRun(job) {
     if (webBusy) { toast = FAIL.busy; dirty = true; render(true); return; }
@@ -336,7 +335,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         const fail = await webSelect(key, pointerId);
         if (fail) return fail;
         if (!web.clickPrimary()) return 'rule';
-        await web.frames(2);
+        await web.until(() => web.modalOpen(), 600);
         return web.clickRow(row, title) ? null : 'rule';
       }
       if (kind === 'trade' && key[0] === 'u' && Number.isInteger(arg)) {

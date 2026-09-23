@@ -64,6 +64,15 @@ export function clickRow(i, expectTitle) {
   return true;
 }
 
+export async function until(ok, ms = 600) {
+  const end = performance.now() + ms;
+  while (!ok()) {
+    if (performance.now() > end) return false;
+    await frames(1);
+  }
+  return true;
+}
+
 export const frames = (n = 2) => new Promise(resolve => {
   let left = n;
   const step = () => (--left <= 0 ? resolve() : requestAnimationFrame(step));
