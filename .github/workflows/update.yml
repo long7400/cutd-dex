@@ -1,8 +1,4 @@
 name: Auto-update data from game
-# 2 cơ chế song song:
-#  - cron mỗi 2 tiếng: tự update, KHÔNG cần ai làm gì
-#  - workflow_dispatch: nút 🔄 trên web gọi (cần token) — chỉ để ép update ngay
-# Cả 2 đều tự check catalog_hash — trùng thì thoát ngay (0 request thừa).
 on:
   schedule:
     - cron: '7 */2 * * *'

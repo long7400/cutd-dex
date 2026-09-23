@@ -1,6 +1,3 @@
-// Tự bóc lại dữ liệu game khi có update.
-// Cách chạy:  node scripts/scrape.mjs [--force]
-//   --force : bỏ qua check hash, bóc lại toàn bộ
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -22,32 +19,27 @@ async function get(url) {
   return r;
 }
 
-// ---------- 1. Lấy bundle JS mới nhất ----------
 console.log(j('① Lấy index.html…'));
 const html = await (await get(BASE)).text();
 const m = html.match(/src="(\/assets\/index-[\w-]+\.js)"/);
 if (!m) throw new Error('Không tìm thấy bundle JS trong index.html — game đổi cấu trúc?');
 console.log(`   bundle: ${m[1]}`);
 
-// ---------- 2. Bóc map từ bundle ----------
 console.log(j('② Bóc mapping từ bundle…'));
 const js = await (await get(BASE + m[1])).text();
 
-// unit id → model (portrait)
 const unit2model = {};
 for (const [, u, p] of js.matchAll(/(unit_h\w{3}):`([a-z0-9_]+)`/g)) {
   unit2model[u] ??= p;
 }
 console.log(`   unit→model: ${ok(Object.keys(unit2model).length)} unit`);
 
-// model → hệ
 const modelAffinity = {};
 for (const [, k, a] of js.matchAll(/\{key:`([a-z0-9_]+)`,affinity:`([a-z]+)`/g)) {
   modelAffinity[k] = a;
 }
 console.log(`   model→affinity: ${ok(Object.keys(modelAffinity).length)} model`);
 
-// màu hệ (fallback: giữ file cũ nếu không bóc được)
 let elementColors = null;
 const ci = js.indexOf('{normal:[[');
 if (ci >= 0) {
@@ -64,7 +56,6 @@ if (ci >= 0) {
 if (elementColors) console.log(`   màu hệ: ${ok(Object.keys(elementColors).length)} hệ`);
 else { elementColors = read('element_colors.json'); console.log(warn('   màu hệ: giữ nguyên file cũ')); }
 
-// ---------- 3. Catalog + check update ----------
 console.log(j('③ Lấy catalog…'));
 const response = await (await get(BASE + '/catalog')).json();
 const cat = response.catalog;
@@ -80,7 +71,6 @@ if (!FORCE && oldHash === response.catalog_hash) {
 }
 console.log(warn('⚠ Catalog thay đổi → bóc lại toàn bộ!'));
 
-// so sánh pet mới / pet bị xoá
 const oldCat = existsSync(join(dir, 'catalog.json')) ? read('catalog.json').catalog : null;
 const nameOf = (c, id) => c.display_names.find(d => d.id === id)?.value ?? id;
 if (oldCat) {
@@ -99,7 +89,6 @@ if (oldCat) {
   if (!added.length && !removed.length) console.log('   danh sách pet không đổi (chỉ đổi số liệu)');
 }
 
-// ---------- 4. Tính ảnh cần + tải thiếu ----------
 console.log(j('④ Kiểm tra ảnh portrait…'));
 const spById = new Map(cat.species.map(s => [s.id, s]));
 const imgOf = sid => unit2model[sid];
@@ -150,10 +139,7 @@ await Promise.all(Array.from({ length: 8 }, async () => {
 if (downloaded) console.log(`   ${ok('↓ ' + downloaded + ' ảnh mới')}`);
 if (failed.length) console.log(warn(`   Lỗi tải: ${failed.join(', ')}`));
 
-// ---------- XÓA ẢNH RÁC (pet bị game remove) ----------
-// keepList: ảnh UI tự tham chiếu (logo/favicon), không thuộc data
 const keepList = new Set(['pet_xiaohuolong']);
-// an toàn: nếu bóc mapping bị lỗi (quá ít unit) thì KHÔNG xoá gì cả
 if (Object.keys(unit2model).length < 100 || need.size < 100) {
   console.log(warn(`   ⚠ Bóc mapping bất thường (${Object.keys(unit2model).length} unit, ${need.size} ảnh cần) — BỎ QUA bước xoá rác để an toàn.`));
 } else {
@@ -169,7 +155,6 @@ if (Object.keys(unit2model).length < 100 || need.size < 100) {
   }
 }
 
-// ---------- 5. Lưu + build data ----------
 write('catalog.json', response);
 write('unit2model.json', unit2model);
 write('model_affinity.json', modelAffinity);

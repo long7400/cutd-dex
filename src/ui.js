@@ -1,4 +1,3 @@
-// Helpers dùng chung
 import data from './data.json';
 
 export const pets = data.pets;
@@ -29,7 +28,7 @@ export function catchBadge(c) {
 }
 
 export function skillsHTML(skills, open = false) {
-  if (!skills?.length) return `<div class="sub" style="margin:0">— Chưa có kỹ năng ở cấp này —</div>`;
+  if (!skills?.length) return `<div class="sub" style="margin:0">—</div>`;
   return skills.map(s => `
     <div class="skill-card ${open ? 'open' : ''}">
       <div class="skill-head">
@@ -42,10 +41,7 @@ export function skillsHTML(skills, open = false) {
         <ul>
           ${s.effects.map(e => `<li><b>${eKind(e.raw.kind)}</b> — <span class="desc">${esc(e.text)}</span></li>`).join('')}
         </ul>
-        <div class="meta">
-          Mục tiêu: ${esc(s.targeting || '—')} · Hình thức: ${esc(s.delivery || '—')}
-          ${s.status !== 'executable' ? ` · <span style="color:var(--red)">[${s.status}]</span>` : ''}
-        </div>
+        <div class="meta">${esc(s.targeting || '')}${s.targeting && s.delivery ? ' · ' : ''}${esc(s.delivery || '')}</div>
       </div>
     </div>`).join('');
 }

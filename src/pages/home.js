@@ -1,8 +1,3 @@
-// Trang chính — lọc/sort/tìm kiếm tối ưu:
-//  - Search: trie + inverted index (src/search.js), không quét chuỗi toàn bộ pet
-//  - Filter: nhóm theo hệ/tính legendary trước (Map) — không scan mảng lớn mỗi lần
-//  - Sort: key tiền tính (dpsMax/hpMax/...) + Intl.Collator('vi', numeric) cache 1 instance
-//  - Render: debounce 90ms khi gõ, chỉ render khi bộ lọc thật sự thay đổi
 import { pets, img, elBadge, catchBadge, esc, meta } from '../ui.js';
 import { buildIndex, debounce } from '../search.js';
 
@@ -10,10 +5,9 @@ export let filters = { q: '', el: 'all', kind: 'all', sort: 'name' };
 
 window.__actions = window.__actions || {};
 
-// ---- index dựng đúng 1 lần ----
 const index = buildIndex(pets);
-const byElement = new Map();          // hệ -> Pet[]
-const listLeg = [], listNorm = [];    // tách sẵn theo legendary
+const byElement = new Map();
+const listLeg = [], listNorm = [];
 for (const p of pets) {
   if (!byElement.has(p.element)) byElement.set(p.element, []);
   byElement.get(p.element).push(p);
@@ -45,7 +39,7 @@ const SORTERS = {
 function filtered() {
   let list = baseList();
   if (filters.q) {
-    const hits = index.query(filters.q);          // Set idx -> mảng pet
+    const hits = index.query(filters.q);
     if (hits) {
       const set = new Set(hits);
       list = list.filter(p => set.has(p));
@@ -54,7 +48,6 @@ function filtered() {
   return [...list].sort(SORTERS[filters.sort] ?? SORTERS.name);
 }
 
-// debounce gõ chữ — 90ms im lặng mới render
 window.__actions.homeFilter = el => {
   const kind = el.dataset.kind;
   if (kind !== undefined) filters.kind = kind;
@@ -82,7 +75,7 @@ function listHTML() {
   const counts = { all: pets.length, leg: listLeg.length, normal: listNorm.length };
   return `
   <div class="controls">
-    <input type="search" placeholder="Tìm pet / tiến hóa / skill… (trie + inverted index)" value="${esc(filters.q)}"
+    <input type="search" placeholder="Tìm pet / tiến hóa / skill…" value="${esc(filters.q)}"
            data-action="input" data-fn="homeFilter" data-field="q">
     <span class="chip ${filters.el === 'all' ? 'on' : ''}" data-action="click" data-fn="homeSet" data-el="all">Tất cả hệ</span>
     ${allElements.map(e => elChip(e)).join('')}
@@ -93,10 +86,10 @@ function listHTML() {
       ${[['name', 'Tên A-Z'], ['catchDesc', 'Catch khó nhất'], ['catchAsc', 'Catch dễ nhất'], ['dps', 'DPS max cao nhất'], ['hp', 'HP max cao nhất'], ['stages', 'Nhiều cấp tiến hóa nhất']]
         .map(([v, l]) => `<option value="${v}" ${filters.sort === v ? 'selected' : ''}>${l}</option>`).join('')}
     </select>
-    <span class="badge" style="margin-left:auto">${list.length} kết quả</span>
+    <span class="badge" style="margin-left:auto">${list.length}</span>
   </div>
-  <div class="grid">${list.map(card).join('') || '<div class="empty">Không tìm thấy pet nào</div>'}</div>
-  <p class="footnote">Dữ liệu game: <code>${esc(meta.catalogHash.slice(0, 12))}</code> · bóc lúc ${new Date(meta.builtAt).toLocaleString('vi-VN')} · cập nhật bằng nút 🔄 góc trên · ảnh portrait gốc từ game.</p>`;
+  <div class="grid">${list.map(card).join('') || '<div class="empty">Không tìm thấy</div>'}</div>
+  <p class="footnote">${esc(meta.catalogHash.slice(0, 12))} · ${new Date(meta.builtAt).toLocaleString('vi-VN')}</p>`;
 }
 
 function elChip(e) {
@@ -129,8 +122,8 @@ const fmt = n => n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace('.0'
 
 export function homePage() {
   return `<main>
-    <h1>Pokédex CUTD</h1>
-    <p class="sub">${pets.length} pet bắt được (${listLeg.length} legendary) · bấm vào pet để xem chi tiết tiến hóa &amp; kỹ năng</p>
+    <h1>Pokédex</h1>
+    <p class="sub">${pets.length} pet · ${listLeg.length} legendary</p>
     <div id="home-root">${listHTML()}</div>
   </main>`;
 }

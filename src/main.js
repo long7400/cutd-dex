@@ -22,11 +22,10 @@ function nav(active) {
     <nav>${links.map(([href, label]) =>
       `<a class="navlink ${active === href.slice(2) ? 'on' : ''}" href="${href}">${label}</a>`
     ).join('')}</nav>
-    <a class="brand2" href="https://github.com/long7400/cutd-dex/actions" target="_blank" rel="noopener" title="Trạng thái auto-update (cron mỗi 2 tiếng)">⚙</a>
+    <a class="brand2" href="https://github.com/long7400/cutd-dex/actions" target="_blank" rel="noopener" title="Actions">⚙</a>
   </header>`;
 }
 
-// Gắn lại mọi listener sau mỗi lần vẽ DOM (kể cả re-render cục bộ)
 function bindAll() {
   document.querySelectorAll('[data-action]').forEach(el => {
     if (el.__bound) return;
@@ -55,7 +54,6 @@ function render() {
 
   app.innerHTML = html;
   bindAll();
-  // giữ focus ô search khi đang gõ filter
   const search = document.querySelector('input[type=search]');
   if (search && homeFilters.q) { search.focus(); search.setSelectionRange(9999, 9999); }
 }

@@ -1,12 +1,3 @@
-// Build src/data.json từ catalog gốc của game (m.cutd.site/catalog)
-//
-// Thuật toán / cấu trúc dữ liệu chính:
-//  - Map (hash table): mọi tra cứu id → object đều O(1)
-//  - Danh sách kề (adjacency list) cho rừng tiến hóa: build 1 lượt O(V)
-//  - BFS từng cây trong rừng: tính chuỗi + map stageId→root trong đúng 1 lần duyệt O(V+E)
-//    (thay vì đi lại từng chain độc lập)
-//  - Tiền tính sort-key (dpsMax/hpMax/...) để UI không phải duyệt chain lúc sort
-//  - searchTokens: tokens chuẩn hoá để UI dựng trie + inverted index
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -18,7 +9,6 @@ const u2m = JSON.parse(readFileSync(join(dir, 'unit2model.json'), 'utf8'));
 const modelAffinity = JSON.parse(readFileSync(join(dir, 'model_affinity.json'), 'utf8'));
 const elementColors = JSON.parse(readFileSync(join(dir, 'element_colors.json'), 'utf8'));
 
-// ---- Map tra cứu O(1) ----
 const spById = new Map(catalog.species.map(s => [s.id, s]));
 const abById = new Map(catalog.abilities.map(a => [a.id, a]));
 const modById = new Map(catalog.modifiers.map(m => [m.id, m]));
@@ -115,7 +105,6 @@ const elOf = sid => modelAffinity[u2m[sid]] ?? 'normal';
 const slugify = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
 
-// ---- skills của 1 stage ----
 const skillsOf = sp => (sp.abilities ?? []).filter(aid => abById.has(aid)).map(aid => {
   const a = abById.get(aid);
   const effects = (a.effects ?? []).map(e => ({ raw: e, text: fmtEffect(e) }));
@@ -137,7 +126,6 @@ const skillsOf = sp => (sp.abilities ?? []).filter(aid => abById.has(aid)).map(a
   }
 });
 
-// ---- stage info ----
 const stageOf = (sp, evolveCost) => {
   const rawName = nameById.get(sp.display_name_id) ?? sp.id;
   const lvlMatch = rawName.match(/level (\d+)/);
@@ -161,12 +149,6 @@ const stageOf = (sp, evolveCost) => {
   };
 };
 
-// =====================================================================
-// RỪNG TIẾN HÓA — 1 lần duyệt duy nhất cho toàn bộ dữ liệu
-//   1) Danh sách kề: stageId → stageId kế tiếp (từ mảng evolutions)
-//   2) BFS từ mỗi gốc catchable → chain + gán stageId → rootPet
-//      Độ phức tạp tổng: O(V + E), không đi lại chain nào 2 lần
-// =====================================================================
 const nextStage = new Map(); // adjacency list của rừng
 for (const s of catalog.species) {
   if (s.evolutions?.length) nextStage.set(s.id, s.evolutions[0].stage_id);
@@ -190,7 +172,6 @@ const chainOf = root => {
   return chain;
 };
 
-// ---- wild pools ----
 const pools = catalog.wild.pools.map((p, i) => {
   const total = p.entries.reduce((s, e) => s + e.weight, 0);
   return {
@@ -214,11 +195,9 @@ const pools = catalog.wild.pools.map((p, i) => {
   };
 });
 
-// map root catchable → pool (1 lượt)
 const poolByStage = new Map();
 pools.forEach(p => p.entries.forEach(e => poolByStage.set(e.stageId, { pool: p, weight: e.weight })));
 
-// ---- pets ----
 const pets = catalog.species.filter(s => s.catchable).map(s => {
   const chain = chainOf(s);
   const poolInfo = poolByStage.get(s.id) ?? null;
@@ -238,17 +217,14 @@ const pets = catalog.species.filter(s => s.catchable).map(s => {
     killGold: s.kill_gold,
     image: imgOf(s.id),
     pool: poolInfo ? { index: poolInfo.pool.index, affinity: poolInfo.pool.affinity, affinityVn: poolInfo.pool.affinityVn, weight: poolInfo.weight, totalWeight: poolInfo.pool.totalWeight, chance: poolInfo.weight / poolInfo.pool.totalWeight } : null,
-    // sort-key tiền tính — UI sort không cần duyệt chain
     dpsMax: final.dps,
     hpMax: final.hp,
     stages: chain.length,
-    // tokens chuẩn hoá cho inverted index / trie phía UI
     searchTokens: [...tokens].filter(Boolean),
     chain,
   };
 });
 
-// ---- trade ----
 const tradeSummary = sid => {
   const sp = spById.get(sid);
   if (!sp) return null;

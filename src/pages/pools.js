@@ -2,11 +2,8 @@ import { pools, pets, img, elColor, esc } from '../ui.js';
 
 export function poolsPage() {
   return `<main>
-    <h1>🌍 Wild Pools</h1>
-    <p class="sub">Mỗi ván, pet xuất hiện trong wild được roll từ 7 pool theo hệ.
-    Chance = trọng số / tổng trọng số pool. Legendary có trọng số 1 — cực hiếm.</p>
+    <h1>Wild Pools</h1>
     ${pools.map(poolCard).join('')}
-    <p class="footnote">Tổng ${pools.reduce((s, p) => s + p.entries.length, 0)} mục trong 7 pool.</p>
   </main>`;
 }
 
@@ -16,9 +13,9 @@ function poolCard(p) {
   return `
   <div class="pool-card">
     <div class="pool-head">
-      <h3 style="color:${light}">${ICON[p.affinity] ?? '⭐'} Pool ${p.index} — Hệ ${p.affinityVn}</h3>
-      <span class="badge">${p.entries.length} pet · tổng trọng số ${p.totalWeight}</span>
-      ${p.entries.some(e => e.legendary) ? '<span class="badge legb">★ Có legendary</span>' : ''}
+      <h3 style="color:${light}">${ICON[p.affinity] ?? '⭐'} ${p.affinityVn}</h3>
+      <span class="badge">${p.entries.length} pet · Σw ${p.totalWeight}</span>
+      ${p.entries.some(e => e.legendary) ? '<span class="badge legb">★ Legendary</span>' : ''}
     </div>
     ${p.entries.map(e => `
       <div class="bar-row ${e.legendary ? 'leg' : ''}">
