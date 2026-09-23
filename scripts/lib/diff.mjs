@@ -1,5 +1,3 @@
-// So sánh 2 phiên bản catalog → 1 entry changelog gọn (thêm/xoá/đổi chỉ số), để wiki có trang lịch sử cập nhật.
-
 const STAT_FIELDS = [
   'max_health', 'attack_damage', 'attack_cooldown_ticks', 'attack_range', 'armor', 'armor_type', 'attack_type',
   'move_speed', 'catch_chance', 'book_value', 'kill_gold', 'leak_lives', 'catchable', 'legendary',

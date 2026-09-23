@@ -1,5 +1,3 @@
-// Tagged template tự escape mọi giá trị nội suy → hết lỗi quên esc()/XSS.
-// Dùng raw(str) cho HTML đã tin cậy; mảng được nối tự động.
 const RAW = Symbol('raw');
 
 export const raw = s => ({ [RAW]: String(s ?? '') });

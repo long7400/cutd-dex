@@ -1,6 +1,5 @@
 import { norm } from './html.js';
 
-// Levenshtein có cắt nhánh theo dải chéo |i-j| ≤ max, dừng sớm khi cả hàng > max.
 function levenshtein(a, b, max = Infinity) {
   if (Math.abs(a.length - b.length) > max) return max + 1;
   let prev = new Array(b.length + 1), cur = new Array(b.length + 1);
@@ -20,7 +19,6 @@ function levenshtein(a, b, max = Infinity) {
   return prev[b.length];
 }
 
-// BK-tree: tìm từ gần đúng (typo) trong O(log n) thay vì so với mọi từ.
 function bkTree() {
   let root = null;
   return {
@@ -39,7 +37,7 @@ function bkTree() {
       const stack = root ? [root] : [];
       while (stack.length) {
         const node = stack.pop();
-        const d = levenshtein(node.word, word); // phải là khoảng cách đúng thì cắt nhánh mới an toàn
+        const d = levenshtein(node.word, word);
         if (d <= max) out.push({ word: node.word, d });
         for (let i = Math.max(1, d - max); i <= d + max; i++) {
           const k = node.kids.get(i);
@@ -51,7 +49,6 @@ function bkTree() {
   };
 }
 
-// Trie: mỗi node giữ sẵn tập id của cả nhánh con → tra tiền tố O(len(prefix)).
 function trie() {
   const root = { kids: new Map(), ids: new Set() };
   return {
@@ -72,8 +69,6 @@ function trie() {
   };
 }
 
-// Index tìm kiếm cho docs bất kỳ: tokensOf(doc) → mảng chuỗi (tên, tên tiến hóa, skill…).
-// query(q) trả mảng index doc đã xếp hạng: khớp đúng > tiền tố > gần đúng; nhiều từ = giao (AND).
 export function buildIndex(docs, tokensOf) {
   const exact = new Map();
   const pre = trie();
@@ -108,7 +103,6 @@ export function buildIndex(docs, tokensOf) {
       const nq = norm(q);
       if (!nq) return null;
       const words = [...new Set(nq.split(' '))];
-      // Giao các tập, tập nhỏ nhất đi trước để cắt sớm.
       const per = words.map(scoreWord).sort((a, b) => a.size - b.size);
       let total = per[0];
       for (const s of per.slice(1)) {

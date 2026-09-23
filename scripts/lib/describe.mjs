@@ -1,7 +1,3 @@
-// Port bộ mô tả skill/status của client game (hàm Vt/Ht/Ut/Wt/Gt/Kt/qt trong bundle),
-// dùng bảng dịch tiếng Việt chính thức bóc từ bundle → wiki hiển thị y như trong game.
-// Chỗ game chưa dịch (loại đòn đánh, loại giáp, …) dùng GLOSSARY bổ sung.
-
 export const TICKS_PER_SECOND = 32;
 
 const GLOSSARY = {
@@ -158,8 +154,6 @@ export function createDescriber(catalog, i18n = {}) {
     return conds.length ? `${conds.join(', ')}: ${o}` : o;
   }
 
-  // Effect "rỗng" kế thừa từ object WC3 (sát thương 0, modifier chỉ để đánh dấu) — game vẫn liệt kê
-  // nhưng không có tác dụng; wiki ẩn đi cho dễ đọc.
   const MAG_KEYS = ['base', 'per_wave', 'random_min', 'random_max', 'multiplier', 'percent', 'per_attack_power',
     'per_target_current_health', 'per_target_max_health', 'per_caster_max_health'];
   const zeroMagnitude = m => !m || MAG_KEYS.every(k => !m[k]);
@@ -196,7 +190,6 @@ export function createDescriber(catalog, i18n = {}) {
     };
   }
 
-  // Skill hiển thị của 1 species: bỏ skill hệ thống, gộp skill cùng shared_execution_id.
   function visibleAbilities(sp) {
     const seen = new Set();
     return (sp.abilities ?? []).filter(id => {

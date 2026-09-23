@@ -1,4 +1,3 @@
-// Kiểm tra toàn vẹn DB build từ dữ liệu thật trong data/: mọi tham chiếu đều trỏ tới thứ có thật.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';

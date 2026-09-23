@@ -1,6 +1,3 @@
-// fetch có timeout, retry (exponential backoff + jitter, tôn trọng Retry-After)
-// và conditional GET (If-None-Match / If-Modified-Since → 304 không tải lại byte nào).
-
 const UA = 'cutd-dex-sync/2 (+https://github.com/long7400/cutd-dex)';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -18,7 +15,6 @@ export class TooLarge extends Error {
 
 export const stats = { requests: 0, notModified: 0, bytes: 0, retries: 0 };
 
-// maxBytes: chặn server trả về dữ liệu khổng lồ (DoS bộ nhớ) — đọc theo luồng, vượt ngưỡng là huỷ.
 export async function request(url, { validator, timeout = 30_000, retries = 3, maxBytes = 8 * 1024 * 1024 } = {}) {
   for (let attempt = 0; ; attempt++) {
     try {
@@ -58,7 +54,7 @@ export async function request(url, { validator, timeout = 30_000, retries = 3, m
         },
       };
     } catch (e) {
-      const retryable = e instanceof HttpError ? e.retryable : !(e instanceof TooLarge); // lỗi mạng/timeout → thử lại
+      const retryable = e instanceof HttpError ? e.retryable : !(e instanceof TooLarge);
       if (!retryable || attempt >= retries) throw e;
       stats.retries++;
       const wait = e.retryAfter ? e.retryAfter * 1000 : 500 * 2 ** attempt + Math.random() * 250;
@@ -67,7 +63,6 @@ export async function request(url, { validator, timeout = 30_000, retries = 3, m
   }
 }
 
-// Chạy fn trên items với tối đa `limit` tác vụ song song; không dừng khi 1 item lỗi.
 export async function mapLimit(items, limit, fn) {
   const results = new Array(items.length);
   let next = 0;

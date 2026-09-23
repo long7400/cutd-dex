@@ -1,7 +1,3 @@
-// Parser an toàn cho object/array literal lấy từ bundle JS đã minify.
-// Không dùng eval/Function: bundle là code từ server ngoài, chỉ chấp nhận dữ liệu thuần
-// (object, array, string '…' "…" `…` không có ${}, number, !0/!1, true/false, null, void 0).
-
 export class LiteralError extends Error {}
 
 export function parseLiteral(src, start = 0) {
@@ -25,7 +21,7 @@ export function parseLiteral(src, start = 0) {
         if (src[i] === '{') { const end = src.indexOf('}', i); out += String.fromCodePoint(parseInt(src.slice(i + 1, end), 16)); i = end + 1; }
         else { out += String.fromCharCode(parseInt(src.slice(i, i + 4), 16)); i += 4; }
       } else if (e === 'x') { out += String.fromCharCode(parseInt(src.slice(i, i + 2), 16)); i += 2; }
-      else if (e === '\n') { /* line continuation */ }
+      else if (e === '\n') { }
       else out += e;
     }
     fail('unterminated string');
@@ -69,7 +65,6 @@ export function parseLiteral(src, start = 0) {
       if (src[i] !== ':') fail('expected :');
       i++;
       const v = value();
-      // Không để key đặc biệt đổi prototype của object kết quả.
       if (k !== '__proto__' && k !== 'constructor' && k !== 'prototype') out[k] = v;
       ws();
       if (src[i] === ',') { i++; ws(); if (src[i] === '}') { i++; return out; } continue; }
@@ -96,18 +91,15 @@ export function parseLiteral(src, start = 0) {
   return { value: v, end: i };
 }
 
-// Tìm literal bắt đầu đúng tại vị trí khớp `re` (re phải khớp ngay ký tự mở { hoặc [).
 export function literalsMatching(src, re) {
   const out = [];
   const g = new RegExp(re.source, re.flags.includes('g') ? re.flags : re.flags + 'g');
   for (const m of src.matchAll(g)) {
-    try { out.push(parseLiteral(src, m.index).value); } catch { /* bỏ qua ứng viên hỏng */ }
+    try { out.push(parseLiteral(src, m.index).value); } catch { }
   }
   return out;
 }
 
-// Tìm object literal bao quanh vị trí của `needle` (vd một key đã biết), bằng cách
-// thử parse từ các `={` gần nhất phía trước.
 export function enclosingObject(src, needle, { maxBack = 200_000, tries = 50 } = {}) {
   const at = src.indexOf(needle);
   if (at < 0) return null;
@@ -118,7 +110,7 @@ export function enclosingObject(src, needle, { maxBack = 200_000, tries = 50 } =
     try {
       const { value, end } = parseLiteral(src, open + 1);
       if (end > at) return value;
-    } catch { /* thử ứng viên tiếp theo */ }
+    } catch { }
     from = open - 1;
   }
   return null;

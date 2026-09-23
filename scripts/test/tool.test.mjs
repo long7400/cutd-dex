@@ -13,7 +13,6 @@ let tool, overlay, scenario;
 before(async () => {
   tool = await buildTool();
   overlay = buildOverlay(build({ raw: readJSON(PATHS.catalog), client: readJSON(PATHS.client) }));
-  // Kịch bản từ dữ liệu thật: 1 chuỗi tiến hóa A → B → C; offer 1 cần C (mình có C), offer 2 cần C nhưng mình chỉ có A.
   const [a, b] = Object.entries(overlay.u).find(([, u]) => u.k && u.e?.length) ?? [];
   const bId = b.e[0][0], cId = overlay.u[bId].e?.[0]?.[0] ?? bId;
   scenario = { a, b: bId, c: cId, costAC: evolvePath(overlay, a, cId).cost };
@@ -49,7 +48,6 @@ test('logic: keyframe + delta + trade + đợt tới', () => {
   assert.equal(o2.ready.length, 0);
   assert.equal(o2.evolve, null);
 
-  // Delta: mất con C → offer 1 phải chuyển sang "tiến hóa từ A".
   applyMessage(s, { type: 'base_delta', tick: 110, from_tick: 100, base: { base_id: 7, lives: 29, gold: 5000, lumber: 0 },
     unit_ids_removed: [1], creep_ids_removed: [], wild_ids_removed: [1] });
   const t = tradeOptions(s, overlay)[0];
@@ -58,7 +56,6 @@ test('logic: keyframe + delta + trade + đợt tới', () => {
   assert.equal(s.wilds.size, 0);
   assert.equal(s.lives, 29);
 
-  // Delta của căn cứ khác bị bỏ qua.
   assert.equal(applyMessage(s, { type: 'base_delta', base: { base_id: 99 } }), false);
   assert.deepEqual(nextWaveForBase(s).map(g => g.count), [3]);
 });
@@ -78,7 +75,6 @@ function setupDom(url = 'https://cutd.site/?room=TEST') {
   class FakeWS extends w.EventTarget { send() { log.sent++; } }
   w.WebSocket = FakeWS;
   w.alert = m => log.alerts.push(m);
-  // overlay.json của wiki + /catalog của chính game (tool lấy dữ liệu quyết định hành động từ /catalog).
   w.fetch = async (u, opts) => {
     log.fetches.push({ u, opts });
     const body = JSON.stringify(u === '/catalog' ? readJSON(PATHS.catalog) : overlay);
@@ -86,7 +82,7 @@ function setupDom(url = 'https://cutd.site/?room=TEST') {
   };
   const attach = w.Element.prototype.attachShadow;
   w.Element.prototype.attachShadow = function (o) { const r = attach.call(this, { ...o, mode: 'open' }); log.roots.push(r); return r; };
-  const code = tool.code; // địa chỉ dữ liệu đã khoá sẵn lúc build
+  const code = tool.code;
   return { w, log, code, FakeWS };
 }
 
@@ -97,7 +93,6 @@ test('bookmarklet: chỉ đọc, bắt socket rồi trả getter, hiển thị t
   t.after(() => w.close());
   const original = Object.getOwnPropertyDescriptor(w.MessageEvent.prototype, 'data');
 
-  // "Game" đã kết nối từ trước khi bấm bookmark.
   const ws = new FakeWS();
   const gameGot = [];
   ws.addEventListener('message', e => gameGot.push(JSON.parse(e.data)));
@@ -131,11 +126,9 @@ test('bookmarklet: chỉ đọc, bắt socket rồi trả getter, hiển thị t
   clickTab('Phòng');
   assert.match(text(), /Tao/);
 
-  // Không có HTML nào từ dữ liệu được parse: tên độc hại hiển thị dạng chữ.
   assert.equal(root.querySelectorAll('script,iframe,[onerror],[onclick]').length, 0);
   assert.equal(log.sent, 0, 'tool KHÔNG BAO GIỜ gửi gì lên server');
 
-  // Bấm bookmark lần 2 = ẩn/hiện; tắt = dọn sạch.
   w.eval(code);
   assert.ok(root.querySelector('.panel').hidden);
   w.__cutdHelper.destroy();
@@ -157,7 +150,6 @@ test('bookmarklet: dữ liệu wiki độc hại không chạy được code', a
     ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(keyframe([{ id: 1, stage_id: scenario.c, owner_id: 11, active: true }])) }));
     await tick(1200);
     const root = log.roots[0];
-    // Tên lấy theo catalog game nên tên giả không hiện; dù hiện ở đâu (tooltip kỹ năng…) cũng chỉ là chữ.
     assert.ok(root.querySelector('.panel').textContent.length > 0);
     assert.equal(w.pwned, undefined);
     assert.equal(root.querySelectorAll('script,[onerror],[onclick]').length, 0);
@@ -186,14 +178,12 @@ test('bookmarklet: bấm ở sảnh → bỏ qua socket sảnh, bám đúng sock
   const original = Object.getOwnPropertyDescriptor(w.MessageEvent.prototype, 'data');
   w.eval(code);
 
-  // Socket sảnh: message không phải của trận → không bám, getter vẫn chờ.
   const lobby = new FakeWS();
   lobby.addEventListener('message', e => e.data);
   lobby.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify({ type: 'room_list', rooms: [] }) }));
   await tick(0);
   assert.notEqual(Object.getOwnPropertyDescriptor(w.MessageEvent.prototype, 'data').get, original.get, 'vẫn phải chờ socket trận');
 
-  // Vào phòng: socket trận mới → server_hello → bám, trả getter.
   const game = new FakeWS();
   game.addEventListener('message', e => e.data);
   const emit = m => game.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
@@ -217,7 +207,6 @@ test('bookmarklet: bấm ở sảnh → bỏ qua socket sảnh, bám đúng sock
   assert.equal(log.sent, 0);
 });
 
-// Click "thật" (isTrusted) trong jsdom — mô phỏng người dùng bấm chuột.
 import { createRequire } from 'node:module';
 const jsdomUtils = createRequire(import.meta.url)('jsdom/lib/jsdom/living/generated/utils.js');
 function trustedClick(w, el) {
@@ -257,13 +246,11 @@ test('bookmarklet: nút Bắt/Tiến hóa/Trade gọi đúng hàm game, chỉ kh
   const btn = text => [...root.querySelectorAll('button.act')].find(b => b.textContent.startsWith(text));
   const tab = name => [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith(name)).click();
 
-  // Trade: nút Trade trên slot có sẵn lính.
-  btn('Trade').click();                         // click do script → bị bỏ qua
+  btn('Trade').click();
   assert.deepEqual(calls, []);
   trustedClick(w, btn('Trade'));
   assert.deepEqual(calls.at(-1), ['tradePet', 'u1', 1]);
 
-  // Bấm đúp trong 600ms chỉ tính 1 lệnh.
   await tick(700);
   tab('Wild');
   trustedClick(w, btn('Bắt'));
@@ -271,7 +258,6 @@ test('bookmarklet: nút Bắt/Tiến hóa/Trade gọi đúng hàm game, chỉ kh
   assert.equal(calls.filter(c => c[0] === 'catchWild').length, 1);
   assert.deepEqual(calls.at(-1), ['catchWild', 'w1']);
 
-  // Tiến hóa: đúng nhánh của con đó.
   await tick(700);
   tab('Đội');
   const up = [...root.querySelectorAll('button.act')].find(b => b.textContent.startsWith('↑'));
@@ -279,12 +265,10 @@ test('bookmarklet: nút Bắt/Tiến hóa/Trade gọi đúng hàm game, chỉ kh
   assert.equal(calls.at(-1)[0], 'evolveCreature');
   assert.ok(overlay.u[entities.get(calls.at(-1)[1]).contentId].e.some(([to]) => to === calls.at(-1)[2]), 'nhánh tiến hóa phải hợp lệ');
 
-  // Bấm vào dòng = chọn trong game (không gửi lệnh).
   await tick(700);
   trustedClick(w, root.querySelector('.row.pick .mid'));
   assert.equal(calls.at(-1)[0], 'selectEntity');
 
-  // Không bao giờ đụng các hàm khác của game.
   assert.ok(!calls.some(c => ['sellCreature', 'dispatch'].includes(c[0])));
   assert.deepEqual([...touched].filter(k => !['catchWild', 'evolveCreature', 'tradePet'].includes(k)), []);
   assert.equal(log.sent, 0, 'không tự gửi gì qua socket');
@@ -304,12 +288,10 @@ test('bookmarklet: camera — Option/Alt+kéo trái (chặn trọn cú bấm) v�
     buttons: type === 'mouseup' || type === 'click' ? 0 : button === 1 ? 4 : 1,
   }));
 
-  // Kéo chuột trái thường → hoàn toàn là của game (tool không giữ phím, không chặn gì).
   fire('mousedown', 500, 400); fire('mousemove', 460, 400); fire('mouseup', 460, 400); fire('click', 460, 400);
   assert.equal(keys.size, 0);
   assert.deepEqual(gameGot, ['mousedown', 'mousemove', 'mouseup', 'click']);
 
-  // Option/Alt + kéo trái → giữ phím; game KHÔNG thấy nửa nào của cú bấm (không kẹt trạng thái).
   gameGot.length = 0;
   fire('mousedown', 500, 400, { alt: true });
   fire('mousemove', 480, 400, { alt: true });
@@ -321,7 +303,6 @@ test('bookmarklet: camera — Option/Alt+kéo trái (chặn trọn cú bấm) v�
   fire('mouseup', 480, 370, { alt: true }); fire('click', 480, 370, { alt: true });
   assert.deepEqual(gameGot, [], 'cú bấm Alt+kéo bị chặn trọn vẹn');
 
-  // Chuột giữa + kéo → giữ phím; game vẫn nhận đủ (game bỏ qua chuột giữa).
   fire('mousedown', 500, 400, { button: 1 });
   fire('mousemove', 500, 430, { button: 1 });
   assert.deepEqual([...keys], ['KeyW']);
@@ -329,7 +310,6 @@ test('bookmarklet: camera — Option/Alt+kéo trái (chặn trọn cú bấm) v�
   assert.equal(keys.size, 0);
   assert.ok(gameGot.includes('mousedown') && gameGot.includes('mouseup'));
 
-  // Đang kéo mà tắt tool → nhả hết phím.
   fire('mousedown', 500, 400, { alt: true });
   fire('mousemove', 540, 400, { alt: true });
   assert.deepEqual([...keys], ['KeyA']);
@@ -348,7 +328,6 @@ test('bookmarklet: dán bản mới khi bản cũ còn chạy → thay bản cũ
   assert.ok(oldDestroyed, 'phải tắt bản cũ');
   assert.equal(w.__cutdHelper.version, tool.version);
   assert.equal(log.roots.length, 1, 'bản mới phải dựng panel');
-  // Dán lại đúng bản đang chạy → chỉ ẩn/hiện.
   w.eval(code);
   assert.equal(log.roots.length, 1);
   assert.ok(log.roots[0].querySelector('.panel').hidden);
@@ -356,12 +335,10 @@ test('bookmarklet: dán bản mới khi bản cũ còn chạy → thay bản cũ
 
 test('bookmarklet: nhãn + đích của nút lấy từ catalog GAME, overlay giả mạo không đổi được; không thao tác nhà người khác', async t => {
   const raw = readJSON(PATHS.catalog);
-  // Chọn 1 stage có 2 nhánh tiến hóa thật.
   const branchy = raw.catalog.species.find(s => s.evolutions?.length === 2);
   const [realA, realB] = branchy.evolutions.map(e => e.stage_id);
   const { w, log, code, FakeWS } = setupDom();
   t.after(() => { w.close(); overlay = buildOverlay(build({ raw, client: readJSON(PATHS.client) })); });
-  // Overlay giả mạo: đảo thứ tự nhánh + tráo tên + giá rẻ bèo.
   overlay.u[branchy.id] = { ...overlay.u[branchy.id], e: [[realB, 1], [realA, 1]] };
   overlay.u[realA] = { ...overlay.u[realA], n: 'TÊN-GIẢ-B' };
   overlay.u[realB] = { ...overlay.u[realB], n: 'TÊN-GIẢ-A' };
@@ -385,7 +362,6 @@ test('bookmarklet: nhãn + đích của nút lấy từ catalog GAME, overlay gi
   assert.equal(ups.length, 2);
   assert.ok(!root.textContent.includes('TÊN-GIẢ'), 'tên hiển thị phải theo catalog của game');
   const cost = to => branchy.evolutions.find(e => e.stage_id === to).cost;
-  // Mỗi nút gửi đúng nhánh mà nhãn/giá của nó ghi (theo game), bất kể overlay xếp thế nào.
   for (const b of ups) {
     trustedClick(w, b);
     const sent = calls.at(-1);
@@ -393,7 +369,6 @@ test('bookmarklet: nhãn + đích của nút lấy từ catalog GAME, overlay gi
     await tick(650);
   }
 
-  // Chuyển sang xem nhà người khác (base 8) → nút bị khoá.
   emit({ ...keyframe([{ id: 1, stage_id: branchy.id, owner_id: 12, health: 5, max_health: 10, active: true }]), base: { base_id: 8, lives: 1, gold: 9, lumber: 0 } });
   await tick(1200);
   const n = calls.length;
@@ -401,14 +376,10 @@ test('bookmarklet: nhãn + đích của nút lấy từ catalog GAME, overlay gi
   assert.equal(calls.length, n);
 });
 
-// Bản web (m.cutd.site): dựng 1 "game giả" đúng các điểm tool dựa vào — canvas #world nhận chạm, phím Esc/Home,
-// dock HTML (MonsterPanel/Name, Primary), bảng "Chọn tiến hóa" (ModalShade/RowN/Title). Game giả chọn con gần điểm chạm
-// nhất theo toạ độ màn hình của camera mặc định; chỉ khi đã nhấn Home thì camera mới ở mặc định.
 function fakeWebGame(w, { honourHome = true } = {}) {
   const doc = w.document;
   const cat = buildGameCatalog(readJSON(PATHS.catalog)), rules = readJSON(PATHS.catalog).catalog.base;
   const game = { commands: [], keys: [], sel: null, tradeTargeting: false, home: false, entities: [], origin: null };
-  // jsdom chưa có PointerEvent (trình duyệt thật thì có).
   w.PointerEvent ??= class extends w.MouseEvent {
     constructor(type, o = {}) { super(type, o); this.pointerId = o.pointerId; this.pointerType = o.pointerType; this.isPrimary = !!o.isPrimary; }
   };
@@ -450,7 +421,7 @@ function fakeWebGame(w, { honourHome = true } = {}) {
     if (!down || e.button !== 0 || down.button !== 0) return;
     down = null;
     game.taps = (game.taps ?? 0) + 1;
-    const hit = game.home ? pick(e.clientX, e.clientY) : null; // camera chưa về mặc định → chạm lệch
+    const hit = game.home ? pick(e.clientX, e.clientY) : null;
     if (game.tradeTargeting && hit?.kind === 'unit') { game.commands.push(['trade', hit.key, game.sel.slot]); game.tradeTargeting = false; return; }
     game.sel = hit; render();
   });
@@ -476,7 +447,7 @@ function fakeWebGame(w, { honourHome = true } = {}) {
 test('bookmarklet: bản m.cutd.site — tự nhận bản web, chạm đúng con rồi bấm nút của game (Bắt / Tiến hóa / Trade)', async t => {
   const { w, log, code, FakeWS } = setupDom('https://m.cutd.site/?room=805A6070');
   t.after(() => w.close());
-  w.document.getElementById('GameCanvas').remove(); // bản web không có #GameCanvas/cc
+  w.document.getElementById('GameCanvas').remove();
   const { game, rules } = fakeWebGame(w);
   const origin = { x: 2048, y: 2336 };
   const g = groundOf(rules, origin);
@@ -507,7 +478,6 @@ test('bookmarklet: bản m.cutd.site — tự nhận bản web, chạm đúng co
   const tab = name => [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith(name)).click();
   const done = () => tick(900);
 
-  // Trade: click do script → bỏ qua; click thật → chọn hàng trade, bấm Trade, chạm đúng con u1.
   btn('Trade').click();
   await done();
   assert.equal(game.taps ?? 0, 0);
@@ -516,14 +486,12 @@ test('bookmarklet: bản m.cutd.site — tự nhận bản web, chạm đúng co
   assert.deepEqual(game.commands, [['trade', 'u1', 1]], root.querySelector('.toast')?.textContent);
   assert.ok(game.keys.includes('Escape') && game.keys.includes('Home'), 'Esc + Home trước khi chạm');
 
-  // Bắt.
   tab('Wild');
   await tick(50);
   trustedClick(w, btn('Bắt'));
   await done();
   assert.deepEqual(game.commands.at(-1), ['catch', 'w1']);
 
-  // Tiến hóa: mở bảng của game rồi bấm đúng hàng nhánh.
   tab('Đội');
   await tick(50);
   const up = [...root.querySelectorAll('button.act')].find(b => b.textContent.startsWith('↑'));
@@ -534,7 +502,6 @@ test('bookmarklet: bản m.cutd.site — tự nhận bản web, chạm đúng co
   const stage = game.entities.find(e => e.key === evo[1]).stage;
   assert.ok(overlay.u[stage].e.some(([to]) => to === evo[2]), 'đúng nhánh của đúng con');
 
-  // Bấm dòng = chỉ chọn, không lệnh.
   const n = game.commands.length;
   trustedClick(w, root.querySelector('.row.pick .mid'));
   await done();
@@ -547,7 +514,7 @@ test('bookmarklet: bản web — chạm lệch (tên trên dock không khớp) t
   const { w, log, code, FakeWS } = setupDom('https://m.cutd.site/?room=805A6070');
   t.after(() => w.close());
   w.document.getElementById('GameCanvas').remove();
-  const { game } = fakeWebGame(w, { honourHome: false }); // game "đổi camera": Home không đưa về mặc định
+  const { game } = fakeWebGame(w, { honourHome: false });
   const origin = { x: 2048, y: 2336 };
   const wildPos = { x: origin.x + 300, y: origin.y + 1900 };
   game.origin = origin;
@@ -573,7 +540,6 @@ test('bookmarklet: bản web — chạm lệch (tên trên dock không khớp) t
 test('web-camera: khớp số tính bằng PlayCanvas + hàm căn khung của game (m.cutd.site)', () => {
   const rules = readJSON(PATHS.catalog).catalog.base;
   const origin = { x: 2048, y: 2336 };
-  // Sinh bằng playcanvas@2.22 (Quat.setFromEulerAngles, Mat4.setPerspective) + hàm KL/aR chép từ bundle game.
   const golden = [
     [0, 1280, 720, { x: 2656, y: 3336 }, 655.979, 386.007], [0, 1280, 720, { x: 2348, y: 4236 }, 752.985, 765.694],
     [0, 1280, 720, { x: 1688, y: 3232 }, 138.538, 492.545], [0, 1280, 720, { x: 2148, y: 2536 }, 368.436, 244.394],
@@ -598,7 +564,7 @@ test('bookmarklet: phím F bấm nút chính của game (bản web) — chỉ ph
   primary.className = 'authored-node';
   primary.dataset.node = 'Primary';
   primary.onclick = () => { clicks++; };
-  primary.getClientRects = () => [{ width: 10, height: 10 }]; // jsdom không tính layout
+  primary.getClientRects = () => [{ width: 10, height: 10 }];
   const other = doc.createElement('button');
   other.className = 'authored-node';
   other.dataset.node = 'Sell';

@@ -21,7 +21,6 @@ code { font-size: .9em; background: var(--bg2); padding: 1px 5px; border-radius:
 button { font: inherit; }
 img { max-width: 100%; }
 
-/* topbar */
 .topbar {
   position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 18px;
   padding: 10px 22px; background: #0b1526e6; backdrop-filter: blur(8px); border-bottom: 1px solid var(--line);
@@ -47,7 +46,6 @@ h2 { font-size: 19px; color: var(--gold); margin: 30px 0 12px; }
 .up { color: var(--green); } .down { color: var(--red); }
 .note { background: var(--bg2); border: 1px solid var(--line); border-radius: 9px; padding: 7px 11px; font-size: 13px; color: var(--sub); margin: 8px 0; }
 
-/* controls */
 .controls {
   display: flex; flex-direction: column; gap: 10px;
   background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; margin-bottom: 18px;
@@ -69,7 +67,6 @@ h2 { font-size: 19px; color: var(--gold); margin: 30px 0 12px; }
 select.chip { appearance: none; padding-right: 14px; }
 .count { margin-left: auto; }
 
-/* pet grid */
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
 .pet-card {
   background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px;
@@ -91,7 +88,6 @@ select.chip { appearance: none; padding-right: 14px; }
 .statrow { display: flex; flex-wrap: wrap; gap: 4px 10px; color: var(--sub); font-size: 12.5px; }
 .statrow b { color: var(--txt); }
 
-/* badges */
 .badge {
   display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; border-radius: 7px;
   padding: 2.5px 8px; background: var(--bg2); border: 1px solid var(--line2); color: var(--sub); white-space: nowrap;
@@ -104,7 +100,6 @@ a.badge:hover { color: var(--txt); border-color: var(--gold2); }
 .badge.warn { color: var(--red); }
 .legb-t { color: var(--gold); }
 
-/* detail */
 .backlink { display: inline-flex; gap: 6px; align-items: center; color: var(--sub); font-size: 13.5px; font-weight: 600; margin-bottom: 14px; }
 .backlink:hover, .rootlink:hover { color: var(--gold); }
 .rootlink { color: var(--purple); font-weight: 600; }
@@ -118,7 +113,6 @@ a.badge:hover { color: var(--txt); border-color: var(--gold2); }
 .rsicons { display: flex; gap: 6px; margin-top: 10px; }
 .rsicons img { border-radius: 7px; border: 1px solid var(--line2); }
 
-/* evolution */
 .timeline { display: flex; flex-direction: column; gap: 12px; }
 .stage-card {
   display: flex; gap: 16px; align-items: flex-start; scroll-margin-top: 80px;
@@ -143,7 +137,6 @@ a.badge:hover { color: var(--txt); border-color: var(--gold2); }
 .evo-links { display: flex; flex-direction: column; gap: 8px; }
 .chip-list { display: flex; flex-wrap: wrap; gap: 6px; }
 
-/* unit chip */
 .chipu {
   display: inline-flex; align-items: center; gap: 7px; background: var(--bg2); border: 1px solid var(--line);
   border-radius: 9px; padding: 3px 9px 3px 3px; font-size: 13px; font-weight: 600; margin: 2px 4px 2px 0; vertical-align: middle;
@@ -152,7 +145,6 @@ a.chipu:hover { border-color: var(--gold2); }
 .chipu img { width: 32px; height: 32px; border-radius: 7px; }
 .chipu small { color: var(--dim); }
 
-/* skills */
 .skill-card { background: var(--bg2); border: 1px solid var(--line); border-radius: 11px; overflow: hidden; margin: 6px 0; }
 .skill-head { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; padding: 10px 12px; cursor: pointer; user-select: none; }
 .skill-head:hover { background: #1d3050; }
@@ -171,7 +163,6 @@ a.chipu:hover { border-color: var(--gold2); }
 .skill-body .meta { color: var(--dim); font-size: 12.5px; margin-top: 7px; }
 .skill-body .desc { color: var(--txt); }
 
-/* trade */
 .trade-slot { margin-bottom: 26px; }
 .trade-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
 .recipe {
@@ -188,7 +179,6 @@ a.chipu:hover { border-color: var(--gold2); }
 .slot-title { display: flex; align-items: center; gap: 10px; color: var(--gold); font-weight: 800; margin: 18px 0 10px; font-size: 16px; }
 .slot-title::after { content: ''; flex: 1; height: 1px; background: var(--line); }
 
-/* pools */
 .pool-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
 .pool-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
 .pool-head h3 { margin: 0; font-size: 17px; }
@@ -203,7 +193,6 @@ a.chipu:hover { border-color: var(--gold2); }
 .bar-row .num { font-size: 12.5px; color: var(--sub); text-align: right; }
 .bar-row .catchc { color: var(--green); }
 
-/* tables */
 .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
 table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
 th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; }
@@ -227,12 +216,10 @@ table.units tbody tr { content-visibility: auto; contain-intrinsic-size: auto 54
 .hpbar span { position: absolute; inset: 0; display: flex; align-items: center; padding-left: 8px; font-size: 12px; font-weight: 700; text-shadow: 0 1px 2px #000; }
 table.dmg td.up { color: var(--green); font-weight: 700; } table.dmg td.down { color: var(--red); font-weight: 700; }
 
-/* key-value grid */
 .kv { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
 .kv > div { display: flex; justify-content: space-between; gap: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 9px; padding: 8px 12px; font-size: 13.5px; }
 .kv span { color: var(--sub); }
 
-/* research */
 .rs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
 .rs-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
 .rs-head { display: flex; gap: 12px; align-items: center; }
@@ -242,7 +229,6 @@ table.dmg td.up { color: var(--green); font-weight: 700; } table.dmg td.down { c
 .rs-card .chip-list { margin-top: 8px; }
 .rs-card .chipu img { width: 28px; height: 28px; }
 
-/* tool */
 .tool-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 4px 18px 16px; margin-bottom: 16px; }
 .tool-card h2 { margin-top: 14px; }
 .steps { margin: 0 0 12px; padding-left: 20px; }
@@ -252,7 +238,6 @@ a.bm { cursor: grab; font-size: 15px; padding: 9px 18px; }
 .codebox summary { cursor: pointer; color: var(--sub); }
 .codebox pre { max-height: 320px; overflow: auto; white-space: pre-wrap; word-break: break-all; background: var(--bg2); border: 1px solid var(--line); border-radius: 9px; padding: 10px; font-size: 11.5px; color: var(--sub); }
 
-/* changelog */
 .log { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 14px; }
 .log-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 6px; }
 .log-items { margin: 10px 0 0; padding-left: 20px; font-size: 13.5px; columns: 2 320px; }

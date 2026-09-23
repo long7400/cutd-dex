@@ -1,4 +1,3 @@
-// Kiểm tra dữ liệu từ server game trước khi dùng làm tên file / đường dẫn / ghi đè bản cũ.
 import { resolve, sep } from 'node:path';
 
 export const SAFE_NAME = /^[A-Za-z0-9_-]{1,80}$/;
@@ -15,7 +14,6 @@ export function validateCatalog(raw) {
   return bad;
 }
 
-// Trả đường dẫn tuyệt đối của `key` dưới `base`, chỉ khi nó nằm TRONG một trong `dirs`.
 export function containedPath(base, dirs, key) {
   const p = resolve(base, key);
   if (!dirs.some(d => p.startsWith(resolve(d) + sep))) throw new Error(`Đường dẫn bất thường: ${key}`);

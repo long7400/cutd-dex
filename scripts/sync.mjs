@@ -1,12 +1,3 @@
-// Đồng bộ dữ liệu từ game → data/ + public/ rồi build src/data/db.json.
-//   node scripts/sync.mjs            # chỉ tải khi có thay đổi
-//   node scripts/sync.mjs --force    # bỏ qua cache, tải + kiểm tra lại toàn bộ
-//
-// Chiến lược chống request thừa:
-//   ① /catalog và / (index.html) gửi song song kèm If-None-Match → không đổi = 304, 0 byte body.
-//   ② Bundle JS (~2.5MB, tên file có content-hash) chỉ tải khi tên bundle đổi.
-//   ③ Ảnh: thiếu thì tải; khi game đổi thì revalidate bằng ETag (304 nếu ảnh không đổi); lưu dạng WebP.
-//   ④ Mọi file ghi atomic; dữ liệu mới phải qua validate mới được ghi đè bản cũ.
 import { existsSync, readdirSync, unlinkSync, appendFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -28,15 +19,12 @@ const ASSET_DIRS = { portraits: join(ROOT, 'public/portraits'), research: join(R
 const ASSET_SIZE = { skills: 96 };
 const CONCURRENCY = 8;
 
-// Mọi chuỗi in ra log đều có thể chứa dữ liệu từ server → bỏ ký tự điều khiển/xuống dòng và vô hiệu "::"
-// ở đầu dòng, để server không giả được lệnh workflow của GitHub Actions (::set-output, ::add-mask…).
 const clean = v => String(v).replace(/[\x00-\x1f\x7f]/g, '?').replace(/::/g, ': :');
 const log = (...a) => console.log(a.map(clean).join(' '));
 const c = (code, s) => (process.stdout.isTTY ? `\x1b[${code}m${clean(s)}\x1b[0m` : clean(s));
 const info = s => console.log(c(36, s)), ok = s => console.log(c(32, s)), warn = s => console.log(c(33, s));
 const t0 = performance.now();
 
-// Lỗi có thể mang nguyên văn dữ liệu server (vd JSON.parse trích đoạn body) → lọc trước khi in.
 const die = err => { console.error(`✗ sync thất bại: ${clean(err?.message ?? err)}`); process.exit(1); };
 process.on('uncaughtException', die);
 process.on('unhandledRejection', die);
@@ -47,12 +35,9 @@ const stateBefore = JSON.stringify(sortKeys(state));
 let oldRaw = readJSON(PATHS.catalog);
 let client = readJSON(PATHS.client);
 
-
-// ① Kiểm tra thay đổi (2 request nhỏ, song song).
 info(`① Kiểm tra ${BASE} …`);
 const [htmlRes, catRes] = await Promise.all([
   request(`${BASE}/`, { validator: client && !FORCE ? state.html : undefined, maxBytes: 1024 * 1024 }),
-  // Chỉ tin ETag khi file local đúng là bản đã tải kèm ETag đó (file bị sửa tay/hỏng → tải lại).
   request(`${BASE}/catalog`, { validator: oldRaw && !FORCE && state.catalogHash === oldRaw.catalog_hash ? state.catalog : undefined, maxBytes: 32 * 1024 * 1024 }),
 ]);
 
@@ -97,7 +82,6 @@ if (htmlRes.notModified) {
   }
 }
 
-// ③ Ảnh cần thiết: portrait của mọi species (theo đúng logic client) + icon research.
 const resolver = createResolver(raw.catalog, client);
 const wanted = new Map();
 const want = (dir, name, url) => { if (SAFE_NAME.test(name)) wanted.set(`${dir}/${name}.webp`, url(name)); };
@@ -110,10 +94,8 @@ for (const icon of new Set(['icon-ability', ...Object.values(client.abilityIcon 
   want('skills', icon, i => `/resources/art/ui/monster-dock/${i}.png`);
 }
 
-// Chốt chặn thứ 2: đường dẫn cuối cùng bắt buộc nằm trong public/<portraits|research|skills>/.
 const localPath = key => containedPath(join(ROOT, 'public'), Object.values(ASSET_DIRS), key);
 
-// Migrate 1 lần: PNG đã có sẵn → WebP tại chỗ (không tải lại), giữ ETag của bản gốc.
 let migrated = 0;
 for (const key of wanted.keys()) {
   const pngKey = key.replace(/\.webp$/, '.png');
@@ -142,14 +124,13 @@ const results = await mapLimit(todo, CONCURRENCY, async ([key, url]) => {
   const res = await request(BASE + url, { validator: have ? state.assets[key] : undefined, retries: 2, maxBytes: 4 * 1024 * 1024 });
   if (res.notModified) { unchanged++; return; }
   writeAtomic(localPath(key), await toWebp(res.body, { size: ASSET_SIZE[key.split('/')[0]] }));
-  state.assets[key] = res.validator; // ETag của PNG gốc trên server
+  state.assets[key] = res.validator;
   fetched++;
 });
 const failed = results.map((r, i) => (r.ok ? null : `${todo[i][0]} (${r.error.message})`)).filter(Boolean);
 console.log(`   ↓ ${fetched} tải mới · ${unchanged} không đổi (304)${failed.length ? c(33, ` · ${failed.length} lỗi`) : ''}`);
 for (const f of failed.slice(0, 10)) warn(`   ${f}`);
 
-// Dọn ảnh không còn dùng — có guard chống xoá nhầm khi dữ liệu bóc ra bất thường.
 for (const [dirKey, dir] of Object.entries(ASSET_DIRS)) {
   if (!existsSync(dir)) continue;
   const files = readdirSync(dir).filter(f => /\.(png|webp)$/.test(f));
@@ -163,7 +144,6 @@ for (const [dirKey, dir] of Object.entries(ASSET_DIRS)) {
   warn(`   🗑 ${dirKey}: xoá ${orphans.length} ảnh không dùng: ${orphans.join(', ')}`);
 }
 
-// ④ Ghi dữ liệu thô + changelog.
 const changelog = readJSON(PATHS.changelog, []);
 if (catalogChanged && oldRaw) {
   const entry = diffCatalog(oldRaw, raw);
@@ -179,7 +159,6 @@ if (clientChanged || FORCE || !existsSync(PATHS.client)) writeJSON(PATHS.client,
 writeJSON(PATHS.changelog, changelog.slice(0, 200), { pretty: true });
 writeJSON(STATE, sortKeys(state), { pretty: true });
 
-// ⑤ Build DB cho web.
 const db = build({ raw, client, changelog });
 writeJSON(PATHS.db, db);
 writeJSON(PATHS.overlay, buildOverlay(db));

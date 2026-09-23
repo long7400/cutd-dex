@@ -22,7 +22,6 @@ export function stageCard(u, { cost = null, highlight = false } = {}) {
   </article>`;
 }
 
-// Cây tiến hóa: nhánh đơn render dọc, điểm rẽ nhánh render các cột song song.
 function tree(id, cost, seen, focus) {
   const u = db.units[id];
   const kids = (u.evo ?? []).filter(e => !seen.has(e.to));

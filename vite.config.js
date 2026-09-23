@@ -1,7 +1,5 @@
 import { defineConfig } from 'vite';
 
-// CSP cho bản production: chỉ chạy script/ảnh/CSS của chính site. Lỡ có XSS lọt qua thì trình duyệt
-// cũng không chạy script lạ và không cho gửi dữ liệu đi nơi khác. (Dev server cần HMR nên không gắn.)
 const CSP = [
   "default-src 'self'", "script-src 'self'", "style-src 'self' 'unsafe-inline'", "img-src 'self' data:",
   "connect-src 'self'", "font-src 'self'", "object-src 'none'", "base-uri 'self'", "form-action 'none'",

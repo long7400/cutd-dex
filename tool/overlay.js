@@ -1,17 +1,3 @@
-// CUTD Helper — bookmarklet chạy trên trang game (cutd.site / m.cutd.site).
-//
-// Cam kết an toàn (kiểm chứng được bằng cách đọc file này):
-//  • Toàn bộ code nằm trong bookmark. KHÔNG nạp <script> từ đâu, KHÔNG eval / new Function / innerHTML.
-//  • Chỉ fetch 1 file DỮ LIỆU (overlay.json của wiki) → JSON.parse → hiển thị bằng textContent.
-//  • Không tự gửi gì qua socket (không socket.send). Chỉ khi NGƯỜI DÙNG BẤM nút Bắt / Tiến hóa / Trade, tool làm
-//    đúng việc nút của game làm — game tự đánh số lệnh, server tự kiểm tra. 1 cú bấm = 1 lệnh, không tự động.
-//    Tool tự nhận biết bản game:
-//      – cutd.site (Cocos): gọi hàm của client game (tool/game-bridge.js): selectEntity / catchWild / evolveCreature / tradePet.
-//      – m.cutd.site (web): thao tác như tay người (tool/web-input.js): Esc/Home, chạm chuột trái lên canvas đúng chỗ
-//        con đó (tool/web-camera.js tính điểm), kiểm tra tên trên dock của game, rồi bấm nút HTML của game.
-//  • Đọc dữ liệu: bọc getter MessageEvent.data ĐÚNG 1 lần để lấy tham chiếu WebSocket của game,
-//    gắn listener chỉ-đọc rồi trả getter về nguyên bản ngay.
-//  • UI nằm trong Shadow DOM đóng → không đụng CSS/DOM của game. Không ghi cookie/localStorage.
 import {
   createState, applyMessage, isGameMessage, myUnits, tradeOptions, offersForFamily,
   bestAttacks, nextWaveForBase, buildGameCatalog, baseRulesOf,
@@ -20,8 +6,6 @@ import { screenPoint, groundOf, tradeSlotPos } from './web-camera.js';
 import * as web from './web-input.js';
 import { findGame, findEntity, selectEntity, catchWild, evolveCreature, tradePet, probe, clientKind } from './game-bridge.js';
 
-// Địa chỉ dữ liệu wiki được KHOÁ lúc build (esbuild define) — bản sao wiki ở site khác không đổi được nơi lấy dữ liệu.
-// eslint-disable-next-line no-undef
 const DATA_URL = __CUTD_DATA_URL__;
 const VERSION = '__CUTD_VERSION__';
 const NS = '__cutdHelper';
@@ -97,11 +81,10 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     alert('CUTD Helper: mở trang game (cutd.site) rồi bấm bookmark này.');
     return;
   }
-  // Đang có panel: cùng phiên bản → ẩn/hiện; khác phiên bản (bản cũ) → tắt bản cũ rồi chạy bản mới.
   const old = window[NS];
   if (old) {
     if (old.version === VERSION) { old.toggle?.(); return; }
-    try { old.destroy?.(); } catch { /* bản cũ lỗi khi tắt → vẫn chạy bản mới */ }
+    try { old.destroy?.(); } catch { }
     delete window[NS];
   }
   if (!/^(https:\/\/|http:\/\/localhost[:/])/.test(DATA_URL)) return;
@@ -109,22 +92,19 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const SAFE_ID = /^[a-z0-9_-]+$/i;
   const state = createState();
   let db = null, socket = null, dirty = true, tab = 'trade', wildSort = 'value', lastRender = 0;
-  const famMax = new Map(); // gia phả → DPS cao nhất cả cây
-  let gameCat = new Map(), gameCatReady = false, ownBase = null; // catalog của chính game + căn cứ của mình (server_hello)
-  let baseRules = null; // khung căn cứ trong catalog game (bản web cần để tính vị trí trên sàn)
+  const famMax = new Map();
+  let gameCat = new Map(), gameCatReady = false, ownBase = null;
+  let baseRules = null;
 
-  // ───────────── nghe dữ liệu (chỉ đọc) ─────────────
   const desc = Object.getOwnPropertyDescriptor(MessageEvent.prototype, 'data');
   let patched = false;
   const seen = new WeakSet();
 
-  // Mốc thời gian để chẩn đoán vì sao vào trận lâu mới thấy pet (chỉ đo trên máy, không gửi đi đâu).
   const diag = { start: performance.now(), hello: null, firstMsg: null, keyframe: null, firstWild: null, firstUnit: null, longTaskMs: 0, longTasks: 0 };
   const now = () => performance.now();
 
-  // Trả true nếu đây là message của KẾT NỐI TRẬN (để chỉ bám đúng socket trận, bỏ qua socket sảnh nếu có).
   function handle(text) {
-    if (typeof text !== 'string' || text.charCodeAt(0) !== 123) return false; // chỉ frame JSON '{'
+    if (typeof text !== 'string' || text.charCodeAt(0) !== 123) return false;
     let msg;
     try { msg = JSON.parse(text); } catch { return false; }
     if (msg?.type === 'server_hello') {
@@ -143,7 +123,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     return true;
   }
   let pending = 0;
-  // Gom nhiều message thành tối đa 1 lần vẽ mỗi giây, nhưng không bao giờ để trễ quá 1 giây.
   function invalidate() {
     dirty = true;
     if (pending) return;
@@ -169,13 +148,12 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         try {
           if (!socket && this.target instanceof WebSocket && !seen.has(this)) {
             seen.add(this);
-            // Chỉ bám socket khi thấy message của trận; socket khác (sảnh…) để yên, getter vẫn chờ.
             if (handle(v)) {
               const ws = this.target;
               queueMicrotask(() => attach(ws));
             }
           }
-        } catch { /* không bao giờ làm hỏng game */ }
+        } catch { }
         return v;
       },
     });
@@ -187,7 +165,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     patched = false;
   }
 
-  // ───────────── DOM an toàn ─────────────
   function h(tag, props, ...kids) {
     const el = document.createElement(tag);
     for (const [k, v] of Object.entries(props ?? {})) {
@@ -229,7 +206,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     return DATA_URL + (u.p && SAFE_ID.test(u.p) ? `#/pet/${u.p}/${sid}` : `#/unit/${sid}`);
   };
   const pill = (text, kind = '', tip) => h('span', { class: `pill ${kind}`, text, title: tip });
-  // Tên (link wiki) + level nhỏ + chấm màu hệ + sao huyền thoại — 1 dòng, cắt bớt nếu dài.
   const title = (id, { noLevel = false } = {}) => {
     const u = U(id) ?? {};
     return h('div', { class: 'nm' },
@@ -238,13 +214,11 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       u.l && !noLevel ? h('small', { text: ` Lv${u.l}` }) : null,
       u.L ? h('b', { class: 'leg', text: ' ★' }) : null);
   };
-  // Mỗi con 1 dòng: [ảnh] [tên / dòng phụ] [nhãn bên phải]. Chi tiết nằm trong tooltip.
   const row = (id, sub, right, { cls = '', tip } = {}) => h('div', { class: `row ${cls}`, title: tip },
     img(id), h('div', { class: 'mid' }, title(id), sub ? h('div', { class: 'sub' }, sub) : null), h('div', { class: 'right' }, right));
   const statsTip = id => { const u = U(id) ?? {}; return `HP ${fmt(u.hp)} · DPS ${fmt(u.dps)} · đòn ${label(u.a)} · giáp ${label(u.at)}${u.s ? `\nKỹ năng: ${u.s.join(', ')}` : ''}`; };
   const empty = t => h('p', { class: 'empty', text: t });
 
-  // ───────────── thao tác trong game (qua tool/game-bridge.js) ─────────────
   let toast = '';
   const cycles = new Map();
   const cycle = (group, keys) => () => {
@@ -263,13 +237,10 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     busy: 'Đang thao tác lệnh trước…',
   };
   const isWeb = () => clientKind() === 'web';
-  // Nút chỉ chạy khi dữ liệu quyết định hành động lấy từ CHÍNH game (catalog /catalog) và đang ở nhà mình.
   const blockReason = () => (!gameCatReady || (isWeb() && (!baseRules || !state.origin)) ? 'data'
     : ownBase != null && state.baseId !== ownBase ? 'other' : null);
-  // Chỉ nhận cú bấm chuột thật: isTrusted + detail>0 (Enter/Space trên nút có detail=0 → bỏ qua).
   const realClick = e => e?.isTrusted && e.detail > 0;
 
-  // ── bản web: chạm đúng chỗ con đó trên canvas rồi đọc lại tên trên dock của game ──
   let webBusy = false;
   function webTarget(key) {
     const id = Number(key.slice(1));
@@ -287,16 +258,15 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const pt = screenPoint(baseRules, state.origin, web.cameraView(), r.width, r.height, pos);
     return pt ? { x: r.left + pt.x, y: r.top + pt.y } : null;
   };
-  // Trả null nếu game đã chọn đúng con (tên trên dock khớp catalog game), ngược lại mã lỗi.
   async function webSelect(key, pointerId) {
     if (!baseRules || !state.origin) return 'data';
     const t = webTarget(key);
     if (!t) return 'entity';
     const expect = gameCat.get(t.stage)?.shown;
     if (!expect) return 'data';
-    if (web.modalOpen()) { web.pressKey('escape'); await web.frames(1); } // đóng bảng đang mở
-    web.pressKey('escape'); // bỏ chọn + thoát chế độ nhắm (di chuyển / trade) → cú chạm chỉ để chọn
-    web.pressKey('home'); // camera về mặc định → biết chính xác điểm cần chạm
+    if (web.modalOpen()) { web.pressKey('escape'); await web.frames(1); }
+    web.pressKey('escape');
+    web.pressKey('home');
     await web.frames(2);
     const pt = webPoint(t.pos);
     if (!pt || !web.tap(pt.x, pt.y, pointerId)) return 'aim';
@@ -318,15 +288,12 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     toast = found ? '' : FAIL[g ? 'entity' : 'game'];
     dirty = true; render(true);
   }
-  // Bấm vào dòng = chọn trong game (trừ khi bấm link wiki hoặc nút thao tác).
   const pickable = (el, key) => {
     el.classList.add('pick');
     el.addEventListener('click', e => { if (!e.target.closest('a,.act')) selectInGame(typeof key === 'function' ? key() : key, e); });
     return el;
   };
 
-  // Nút thao tác: 1 cú bấm thật = đúng 1 lệnh; khoá 600ms chống bấm đúp; không có vòng lặp/tự động.
-  // `expect` là thứ nút hứa trên nhãn (loài đang chọn, con nhận về) — kiểm tra lại lúc bấm, lệch là không gửi.
   let lastAction = 0;
   function runAction(e, kind, key, arg, expect) {
     e.stopPropagation();
@@ -352,7 +319,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     }
     toast = fail ? FAIL[fail] : '';
   }
-  // Bản web: chọn đúng con (có kiểm tra) → bấm nút của game. Cùng các điều kiện như bản Cocos.
   function webAction(pointerId, kind, key, arg, expect) {
     webRun(async () => {
       const block = blockReason();
@@ -369,19 +335,19 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         if (row < 0 || !title) return 'rule';
         const fail = await webSelect(key, pointerId);
         if (fail) return fail;
-        if (!web.clickPrimary()) return 'rule'; // mở bảng "Chọn tiến hóa" của game
+        if (!web.clickPrimary()) return 'rule';
         await web.frames(2);
-        return web.clickRow(row, title) ? null : 'rule'; // hàng đúng nhánh (kiểm tra tên) → game gửi lệnh tiến hóa
+        return web.clickRow(row, title) ? null : 'rule';
       }
       if (kind === 'trade' && key[0] === 'u' && Number.isInteger(arg)) {
         const offer = state.offers.get(arg);
         if (!offer || offer.give !== cur.stage || offer.get !== expect.get) return 'rule';
-        const fail = await webSelect(`t${arg}`, pointerId); // chọn hàng trade…
+        const fail = await webSelect(`t${arg}`, pointerId);
         if (fail) return fail;
-        if (!web.clickPrimary()) return 'rule'; // …bấm Trade (game chờ chọn con để đổi)…
+        if (!web.clickPrimary()) return 'rule';
         await web.frames(1);
         const pt = webPoint(cur.pos);
-        if (!pt || !web.tap(pt.x, pt.y, pointerId)) { web.pressKey('escape'); return 'aim'; } // …chạm con của mình
+        if (!pt || !web.tap(pt.x, pt.y, pointerId)) { web.pressKey('escape'); return 'aim'; }
         return null;
       }
       return 'rule';
@@ -395,15 +361,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     });
   };
 
-  // ───────────── camera bằng chuột ─────────────
-  // Game trên máy tính chỉ cho WASD + lăn chuột. Tool giữ phím W/A/S/D thay người dùng:
-  //  • Giữ CHUỘT GIỮA rồi kéo: game bỏ qua chuột giữa → không chặn gì của game.
-  //  • Giữ OPTION/ALT + bấm-kéo chuột trái (trackpad): tool chặn TRỌN cú bấm đó (xuống → kéo → thả → click)
-  //    nên game không thấy nửa nào → không kẹt trạng thái chạm/nhấn, không bị hiểu là chạm sàn.
-  // Kéo tới đâu bản đồ trôi theo tới đó, dừng tay là dừng. Chỉ 4 phím camera; phím được nhả đúng nơi đã nhấn,
-  // luôn nhả khi dừng/thả/mất focus/tắt tool. Không gửi gì lên server.
   const CAM_KEYS = { up: ['KeyW', 'w'], down: ['KeyS', 's'], left: ['KeyA', 'a'], right: ['KeyD', 'd'] };
-  const held = new Map(); // hướng → phần tử đã nhận keydown (để keyup gửi đúng nơi)
+  const held = new Map();
   const DRAG_START = 4, STOP_MS = 90;
   let pan = null, stopTimer = 0;
   const camTarget = () => document.getElementById('GameCanvas') ?? document.querySelector('canvas');
@@ -429,23 +388,23 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     if (!camTarget() || e.target !== camTarget()) return;
     const alt = e.button === 0 && e.altKey;
     if (e.button !== 1 && !alt) return;
-    if (alt) swallow(e); else e.preventDefault(); // chuột giữa: chỉ tắt tự cuộn trang, game vẫn nhận
+    if (alt) swallow(e); else e.preventDefault();
     pan = { btn: e.button, alt, x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, moved: false };
   };
   const onMouseMove = e => {
     if (!pan) return;
     if (pan.alt) swallow(e);
-    if (!(e.buttons & (pan.btn === 0 ? 1 : 4))) { endPan(); return; } // lỡ mất sự kiện thả → coi như đã thả
+    if (!(e.buttons & (pan.btn === 0 ? 1 : 4))) { endPan(); return; }
     if (!pan.moved && Math.hypot(e.clientX - pan.x, e.clientY - pan.y) < DRAG_START) return;
     pan.moved = true;
     const dx = e.clientX - pan.lx, dy = e.clientY - pan.ly;
     pan.lx = e.clientX; pan.ly = e.clientY;
-    const dirs = new Set(); // kéo bản đồ: tay sang trái → camera sang phải
+    const dirs = new Set();
     if (dx < -1) dirs.add('right'); if (dx > 1) dirs.add('left');
     if (dy < -1) dirs.add('down'); if (dy > 1) dirs.add('up');
     if (dirs.size) setHeld(dirs);
     clearTimeout(stopTimer);
-    stopTimer = setTimeout(releaseAll, STOP_MS); // dừng tay → dừng camera
+    stopTimer = setTimeout(releaseAll, STOP_MS);
   };
   let swallowClick = false;
   const onMouseUp = e => {
@@ -456,11 +415,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const onClickAfterPan = e => { if (swallowClick) { swallow(e); swallowClick = false; } };
   const onBlur = () => endPan();
 
-  // ───────────── phím tắt: F = nút chính của game ─────────────
-  // Bản web (m.cutd.site) dựng UI bằng HTML: nút chính ở dock (Bắt / Tiến hóa / Trade tuỳ con đang chọn) là
-  // <button class="authored-node" data-node="Primary">. Nhấn F = bấm hộ đúng nút đó — game tự xử lý như khi
-  // bấm chuột (lệnh đi đúng đường của game). Chỉ phím thật, không lặp khi giữ phím, bỏ qua khi đang gõ chữ.
-  // Bản Cocos không có nút HTML → phím này tự bỏ qua (bản đó có sẵn phím C của game).
   const onHotkey = e => {
     if (!e.isTrusted || e.repeat || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey || e.code !== 'KeyF') return;
     if (e.target?.closest?.('input,textarea,select,[contenteditable="true"]')) return;
@@ -469,7 +423,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     web.clickPrimary();
   };
 
-  // ───────────── các tab ─────────────
   function viewTrade() {
     const list = tradeOptions(state, db);
     if (!list.length) return empty('Chưa có trade offer (trade tắt hoặc đang chờ dữ liệu).');
@@ -478,7 +431,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         : o.evolve ? pill(`+${short(o.evolve.cost)}g`, state.gold >= o.evolve.cost ? 'warn' : 'bad',
           `Nâng ${nameOf(o.evolve.unit.stage)} → ${o.evolve.steps.map(nameOf).join(' → ')}: ${fmt(o.evolve.cost)} vàng`)
         : pill('Chưa có', 'mute');
-      // Tên 1 dòng, cấp độ xuống dòng dưới → tên không bị cắt cụt.
       const side = id => h('div', { class: 'side', title: statsTip(id) }, img(id, 28),
         h('div', { class: 'mid' }, title(id, { noLevel: true }), h('div', { class: 'sub', text: U(id)?.l ? `Lv${U(id).l}` : '' })));
       return pickable(h('div', { class: `trade ${o.ready.length ? 'is-ok' : o.evolve ? 'is-warn' : ''}`, title: 'Bấm để chọn slot này trong game' },
@@ -487,7 +439,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   }
 
   function viewWild() {
-    // Gộp các con trùng loài: 1 dòng + ×số lượng.
     const groups = new Map();
     for (const w of state.wilds.values()) { if (!groups.has(w.stage)) groups.set(w.stage, []); groups.get(w.stage).push(w.id); }
     const wilds = [...groups].map(([stage, idList]) => {
@@ -557,7 +508,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         [b.name, b.lives, short(b.gold), short(b.lumber), b.creeps].map(v => h('td', { text: String(v) })))));
   }
 
-  // Tab "Đo tải": vào phòng mất bao lâu mới có pet, và chậm ở khâu nào.
   const resources = [];
   const observers = [];
   function observe(type, fn) {
@@ -565,7 +515,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       const o = new PerformanceObserver(list => list.getEntries().forEach(fn));
       o.observe({ type, buffered: true });
       observers.push(o);
-    } catch { /* trình duyệt không hỗ trợ loại này */ }
+    } catch { }
   }
   observe('resource', e => { if (resources.length < 2000) resources.push(e); });
   observe('longtask', e => { diag.longTaskMs += e.duration; diag.longTasks++; });
@@ -574,7 +524,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const base = diag.hello ?? diag.firstMsg;
     if (!base) return null;
     const sec = v => (v == null ? null : Math.max(0, (v - base) / 1000));
-    const after = resources.filter(r => r.startTime >= base - 50 && !String(r.name).startsWith(DATA_URL)); // bỏ ảnh/dữ liệu của chính tool
+    const after = resources.filter(r => r.startTime >= base - 50 && !String(r.name).startsWith(DATA_URL));
     const netEnd = after.length ? Math.max(...after.map(r => r.responseEnd)) : base;
     const bytes = after.reduce((n, r) => n + (r.transferSize || 0), 0);
     const r = {
@@ -629,7 +579,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     ];
   }
 
-  // ───────────── khung panel ─────────────
   const host = h('div', { style: 'position:fixed;top:12px;left:12px;z-index:2147483646;' });
   const root = host.attachShadow({ mode: 'closed' });
   root.append(h('style', { text: CSS }));
@@ -639,7 +588,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 
   let drag = null;
   const TABS = [['trade', 'Trade'], ['wild', 'Wild'], ['team', 'Đội'], ['wave', 'Đợt'], ['players', 'Phòng'], ['diag', 'Đo tải']];
-  let layout = 'v'; // 'v' = dọc (panel), 'h' = ngang (thanh dưới đáy màn hình)
+  let layout = 'v';
   function setLayout(next) {
     layout = next;
     Object.assign(host.style, layout === 'h' ? { top: 'auto', bottom: '12px', left: '12px' } : { top: '12px', bottom: 'auto', left: '12px' });
@@ -659,7 +608,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const kind = clientKind();
     const header = h('div', { class: 'top', title: `CUTD Helper v${VERSION} — chỉ gửi lệnh khi mày bấm nút Bắt/Tiến hóa/Trade` },
       h('b', { text: 'CUTD Helper' }),
-      // Tool tự nhận biết đang ở bản nào và tự chọn cách thao tác — không cần đổi site.
       h('span', { class: 'pill mute', text: kind === 'web' ? 'm. · web' : kind === 'cocos' ? 'Cocos' : 'đang tải', title: kind === 'web'
         ? 'Bản web (m.cutd.site): bấm dòng/nút → tool chạm đúng con trên sàn (camera về mặc định), kiểm tra tên rồi bấm nút của game. F = nút chính.'
         : 'Bản Cocos (cutd.site): bấm dòng/nút → tool gọi thẳng hàm của game.' }),
@@ -728,12 +676,10 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   patch();
   render(true);
 
-  // Tải JSON có giới hạn dung lượng (dữ liệu xấu không làm treo/tràn bộ nhớ tab game).
   const getJSON = (url, maxBytes) => fetch(url, { credentials: 'omit', cache: 'no-cache' })
     .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); })
     .then(t => { if (t.length > maxBytes) throw new Error('dữ liệu quá lớn'); return JSON.parse(t); });
 
-  // Ghép catalog của game đè lên dữ liệu wiki: tên, cấp, giá, tỉ lệ bắt, nhánh tiến hóa đều theo game.
   function mergeGameCatalog() {
     if (!db || !gameCatReady) return;
     for (const [id, g] of gameCat) db.u[id] = { ...(db.u[id] ?? {}), n: g.n, l: g.l, b: g.b, c: g.c, e: g.e };
@@ -748,7 +694,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       dirty = true; render(true);
     })
     .catch(err => { panel.replaceChildren(h('p', { class: 'empty bad', text: `CUTD Helper: không tải được dữ liệu wiki (${err.message}).` })); });
-  // Catalog của chính server game (cùng origin với trang game) — nguồn cho mọi quyết định của nút thao tác.
   getJSON('/catalog', 32 * 1024 * 1024)
     .then(raw => { gameCat = buildGameCatalog(raw); baseRules = baseRulesOf(raw); gameCatReady = true; mergeGameCatalog(); })
     .catch(() => { toast = 'Không tải được catalog của game — nút Bắt/Tiến hóa/Trade tạm khoá.'; dirty = true; render(true); });

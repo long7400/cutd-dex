@@ -58,7 +58,7 @@ test('resolver: gia phả, hệ, model giống client', () => {
   assert.equal(r.elementOf('unit_c'), 'water');
   assert.equal(r.elementOf('unit_x'), null);
   assert.equal(r.modelOf('unit_b'), 'mb');
-  assert.equal(r.modelOf('unit_a'), 'mb'); // thành viên nông nhất có map
+  assert.equal(r.modelOf('unit_a'), 'mb');
   assert.equal(r.modelOf('unit_x'), ['w1', 'w2', 'f1'][fnv1a('unit_x') % 3]);
   assert.equal(r.depthOf('unit_c'), 2);
   assert.equal(fnv1a(''), 2166136261);

@@ -3,7 +3,6 @@ import { buildIndex } from '../lib/search.js';
 import { db } from '../db.js';
 import { img, elBadge, catchBadge, legBadge, footer } from '../ui.js';
 
-// State bộ lọc sống ở module → quay lại trang vẫn giữ nguyên.
 export const filters = { q: '', el: 'all', kind: 'all', sort: 'name' };
 
 let index = null, collator = null, groups = null;

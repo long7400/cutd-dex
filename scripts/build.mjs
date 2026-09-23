@@ -1,5 +1,3 @@
-// data/*.json (dữ liệu thô từ game) → src/data/db.json (DB chuẩn hoá cho wiki).
-// Chạy: node scripts/build.mjs
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { readJSON, writeJSON } from './lib/fsx.mjs';
@@ -41,18 +39,15 @@ export function build({ raw, client, changelog = [] }) {
     return m ? { name: m[1], level: +m[2] } : { name: full, level: null };
   };
 
-  // Cạnh ngược (from) của đồ thị tiến hóa — một stage có thể có nhiều nguồn.
   const fromOf = new Map();
   for (const s of catalog.species) for (const e of s.evolutions ?? []) {
     if (!fromOf.has(e.stage_id)) fromOf.set(e.stage_id, []);
     fromOf.get(e.stage_id).push(s.id);
   }
 
-  // Tag nguồn gốc cho từng unit.
   const tags = new Map();
   const tag = (id, t) => { if (!tags.has(id)) tags.set(id, new Set()); tags.get(id).add(t); };
 
-  // Cây tiến hóa bắt đầu từ mỗi pet bắt được: BFS 1 lần, O(V+E).
   const pets = [];
   const petOfStage = new Map();
   const usedSlugs = new Set();
@@ -77,7 +72,6 @@ export function build({ raw, client, changelog = [] }) {
     pets.push({ id: s.id, slug, name, stages: order, branching: order.some(id => (spById.get(id)?.evolutions?.length ?? 0) > 1) });
   }
 
-  // Waves: chuẩn, duel bổ sung, và từng mode sinh tồn.
   const waveList = (list, setId) => list.map(w => {
     let count = 0, hp = 0, lives = 0;
     const groups = w.groups.map(g => {
@@ -102,7 +96,6 @@ export function build({ raw, client, changelog = [] }) {
     n: i, entries: entries.map(e => { tag(e.stage_id, 'wave'); return { unit: e.stage_id, weight: e.weight }; }),
   }));
 
-  // Trade.
   const trade = (catalog.trade?.slots ?? []).map(slot => ({
     slot: slot.slot,
     recipes: slot.recipes.map(r => {
@@ -112,7 +105,6 @@ export function build({ raw, client, changelog = [] }) {
     }),
   }));
 
-  // Wild pools.
   const pools = (catalog.wild?.pools ?? []).map((p, index) => {
     const total = p.entries.reduce((s, e) => s + e.weight, 0);
     return {
@@ -123,10 +115,8 @@ export function build({ raw, client, changelog = [] }) {
   const poolOf = new Map();
   for (const p of pools) for (const e of p.entries) if (!poolOf.has(e.unit)) poolOf.set(e.unit, { index: p.index, weight: e.weight, total: p.total });
 
-  // Summon targets.
   for (const a of catalog.abilities) for (const e of a.effects ?? []) if (e.kind === 'summon' && e.species_id) tag(e.species_id, 'summon');
 
-  // Abilities: chỉ những skill hiển thị của species (bỏ system, gộp shared).
   const abilities = {};
   const units = {};
   for (const s of catalog.species) {
@@ -177,7 +167,6 @@ export function build({ raw, client, changelog = [] }) {
     };
   }
 
-  // Bỏ field mang giá trị mặc định (null/false/[]/0 ở field tuỳ chọn) — client tự điền mặc định.
   const OPTIONAL_ZERO = new Set(['regen', 'armor', 'catch', 'killGold', 'leak', 'book']);
   const compact = u => {
     for (const [k, v] of Object.entries(u)) {
@@ -187,7 +176,6 @@ export function build({ raw, client, changelog = [] }) {
     return u;
   };
 
-  // Tổng kết cho card pet (sort key tiền tính: không phải duyệt cây lúc render).
   for (const p of pets) {
     const stages = p.stages.map(id => units[id]);
     const finals = stages.filter(u => !u.evo.length);
@@ -281,7 +269,6 @@ export function build({ raw, client, changelog = [] }) {
   };
 }
 
-// Data rút gọn cho CUTD Helper (bookmarklet). Chỉ là dữ liệu: tool đọc bằng JSON.parse, hiển thị bằng textContent.
 export function buildOverlay(db) {
   const slugOf = new Map(db.pets.map(p => [p.id, p.slug]));
   const u = {};

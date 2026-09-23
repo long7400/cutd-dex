@@ -1,12 +1,3 @@
-// CẦU NỐI DUY NHẤT giữa CUTD Helper và code của client game. Mọi chỗ khác trong tool KHÔNG được đụng tới
-// session / interaction / store của game (scripts/build-tool.mjs kiểm tra bằng AST).
-// Chỉ dùng đúng các hàm mà nút của chính game dùng:
-//   interaction.selectEntity(store, id)        — chọn con (chỉ đổi lựa chọn trên máy, không gửi gì)
-//   session.catchWild(wild)                    — nút Bắt
-//   session.evolveCreature(unit, nextStageId)  — nút Tiến hóa
-//   session.tradePet(unit, offerSlot)          — nút Trade
-// Đi qua session của game nên lệnh được game tự đánh số thứ tự + chờ xác nhận như khi bấm nút trong game.
-
 const KIND = { w: 'wild', u: 'creature', t: 'trade-offer' };
 let cached = null;
 
@@ -24,11 +15,10 @@ export function findGame() {
       for (const c of node.components ?? []) if (isGame(c)) return (cached = c);
       stack.push(...(node.children ?? []));
     }
-  } catch { /* cấu trúc game đổi → coi như không tìm thấy */ }
+  } catch { }
   return null;
 }
 
-// Tìm entity theo id "w12"/"u3"/"t1"; không có thì dò theo loại + wireId (phòng bản game đặt id khác). Chỉ đọc.
 export function findEntity(g, key) {
   if (!g || typeof key !== 'string' || !/^[utw]\d{1,9}$/.test(key)) return null;
   const entities = g.store.entities;
@@ -45,7 +35,6 @@ export function selectEntity(g, id) {
   g.interaction.selectEntity(g.store, id);
 }
 
-// Trả null nếu đã gửi, hoặc mã lỗi 'fn' nếu bản game không có hàm đó.
 export function catchWild(g, ent) {
   if (typeof g.session.catchWild !== 'function') return 'fn';
   g.session.catchWild(ent);
@@ -64,11 +53,8 @@ export function tradePet(g, ent, offerSlot) {
   return null;
 }
 
-// Loại client đang chạy: 'cocos' (cutd.site, có engine Cocos → nút thao tác dùng được) hoặc 'web' (m.cutd.site,
-// code game đóng kín trong module → không có đường gọi hàm game, nút thao tác không hỗ trợ).
 export const clientKind = () => (window.cc?.director ? 'cocos' : document.getElementById('GameCanvas') ? 'cocos-loading' : 'web');
 
-// Chỉ đọc: tool nhìn thấy gì trong game — để chẩn đoán khi nút không chạy.
 export function probe(toolWildKey) {
   const out = { host: location.host, client: clientKind(), hasEngine: !!window.cc?.director, found: false, fns: [], entities: 0, keys: [], sampleWild: null };
   const g = findGame();

@@ -1,5 +1,3 @@
-// Test UI thật: chạy src/main.js qua Vite SSR loader trong DOM jsdom, gõ search, bấm lọc,
-// rồi crawl MỌI link nội bộ để chắc không có trang nào vỡ / "không tìm thấy".
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';

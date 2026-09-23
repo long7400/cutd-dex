@@ -33,7 +33,7 @@ function results() {
   if (state.tag === 'other') list = list.filter(u => !u.tags?.length);
   else if (state.tag !== 'all') list = list.filter(u => u.tags?.includes(state.tag));
   if (state.el !== 'all') list = list.filter(u => (u.el ?? 'none') === state.el);
-  if (state.q && state.sort === 'name') return list; // giữ thứ tự độ liên quan
+  if (state.q && state.sort === 'name') return list;
   const get = COLS.find(c => c[0] === state.sort)?.[2] ?? COLS[0][2];
   const cmp = state.sort === 'name'
     ? (a, b) => collator.compare(a.name, b.name) || (a.level ?? 0) - (b.level ?? 0)

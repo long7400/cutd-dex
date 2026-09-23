@@ -4,8 +4,6 @@ import { footer } from '../ui.js';
 
 const SOURCE = 'https://github.com/long7400/cutd-dex/blob/main/tool/overlay.js';
 
-// Code đã khoá sẵn địa chỉ dữ liệu lúc build — trang này không chèn gì vào code (bản sao wiki ở site khác
-// cũng đưa ra đúng code, lấy dữ liệu đúng nơi).
 const consoleCode = () => tool.code;
 const bookmarklet = () => `javascript:${encodeURIComponent(consoleCode())}`;
 
@@ -91,7 +89,7 @@ export default {
   mount(root) {
     root.addEventListener('click', e => {
       if (e.target.closest('.bm')) {
-        e.preventDefault(); // bấm trên wiki không chạy — phải kéo lên thanh bookmark
+        e.preventDefault();
         root.querySelector('[data-copied]').textContent = 'Kéo nút này lên thanh bookmark, đừng bấm ở đây.';
       }
       if (e.target.closest('[data-copy-console]')) {

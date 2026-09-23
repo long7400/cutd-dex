@@ -1,9 +1,3 @@
-// Toán camera của bản web (m.cutd.site) — thuần tính toán, không đụng DOM, test được bằng node:test.
-// Chép đúng công thức của client game để biết 1 con (toạ độ gameplay do server gửi) nằm ở điểm nào trên màn hình
-// khi camera ở trạng thái mặc định (sau phím Home của game: pan = 0, zoom = 1).
-//   • Sàn: gameplay → cảnh 3D như projection.toScene của game (khu trận / bãi hoang dã / khu trade).
-//   • Camera: phối cảnh fov 26° (dọc), nghiêng 45.46°, xoay theo 3 góc nhìn; vị trí tự căn cho vừa khu trận.
-
 const SCALE = 1 / 32;
 const BOARD = { w: 21.1200008392334, d: 21.1200008392334, h: 0.16699999570846558, wildH: -1.0549999475479126 };
 const CAM = { tilt: 45.463068498014856, yaw: -23.651314388089816, fov: 26 };
@@ -12,7 +6,6 @@ const RAD = Math.PI / 180;
 const rect = (r, o) => ({ x: r.min.x + o.x, y: r.min.y + o.y, w: r.max.x - r.min.x, h: r.max.y - r.min.y });
 export const inside = (r, p) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
 
-// Khung căn cứ đang xem: luật base của catalog + gốc toạ độ căn cứ (base_keyframe.base.origin).
 export function groundOf(rules, origin) {
   if (!rules || !origin) return null;
   const arena = rect(rules.arena, origin);
@@ -22,7 +15,6 @@ export function groundOf(rules, origin) {
   };
 }
 
-// Vị trí 1 trade offer trên sàn (game xếp 2 cột × 4 hàng theo slot).
 export function tradeSlotPos(g, slot) {
   const n = Math.max(0, slot - 1), col = n % 2, row = Math.floor(n / 2);
   return { x: g.trade.x + (g.trade.w * (col + 0.5)) / 2, y: g.trade.y + (g.trade.h * (row + 0.5)) / 4 };
@@ -49,10 +41,8 @@ export function sceneOf(g) {
   };
 }
 
-// Game hiển thị (và nhận chạm) mỗi con theo khu nó đứng.
 export const zoneOf = (g, p) => (inside(g.wild, p) ? 'wild' : inside(g.trade, p) ? 'trade' : 'battle');
 
-// Hướng camera: Euler (-nghiêng, góc xoay, 0) — xoay quanh X trước rồi Y (như Quat.setFromEulerAngles).
 export function axes(view) {
   const t = -CAM.tilt * RAD, f = [CAM.yaw, 0, -CAM.yaw][view] * RAD;
   const st = Math.sin(t), ct = Math.cos(t), sf = Math.sin(f), cf = Math.cos(f);
@@ -65,7 +55,6 @@ export function axes(view) {
 
 const dot = (a, b) => a.x * b.x + a.y * b.y + a.z * b.z;
 
-// Camera sau Home (pan 0, zoom 1) cho khung hình W×H — chép hàm căn khung của game.
 export function homeCamera(g, view, W, H) {
   const { right, up, fwd } = axes([0, 1, 2].includes(view) ? view : 0);
   const sc = sceneOf(g);
@@ -94,7 +83,6 @@ export function homeCamera(g, view, W, H) {
   return { pos, right, up, fwd, tanV, aspect: w / h, W: w, H: h };
 }
 
-// Điểm cảnh 3D → toạ độ trong khung canvas (px, gốc trên-trái). null nếu nằm sau camera.
 export function project(cam, p) {
   const v = { x: p.x - cam.pos.x, y: p.y - cam.pos.y, z: p.z - cam.pos.z };
   const z = dot(v, cam.fwd);
@@ -103,7 +91,6 @@ export function project(cam, p) {
   return { x: ((nx + 1) / 2) * cam.W, y: ((1 - ny) / 2) * cam.H };
 }
 
-// Gộp lại: vị trí gameplay → điểm trên canvas (px trong khung canvas).
 export function screenPoint(rules, origin, view, W, H, pos) {
   const g = groundOf(rules, origin);
   if (!g || !pos) return null;

@@ -6,7 +6,6 @@ export function readJSON(file, fallback = null) {
   return JSON.parse(readFileSync(file, 'utf8'));
 }
 
-// Ghi ra file tạm rồi rename (atomic trên cùng filesystem) → không bao giờ để lại file ghi dở.
 export function writeAtomic(file, data) {
   mkdirSync(dirname(file), { recursive: true });
   const tmp = `${file}.${process.pid}.tmp`;

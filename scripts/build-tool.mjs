@@ -1,16 +1,3 @@
-// tool/*.js → 1 IIFE đã minify → src/data/tool.json { code, sha256, bytes, version, dataUrl }.
-// Địa chỉ dữ liệu wiki được KHOÁ vào code lúc build (esbuild define) và nằm trong mã băm SHA-256.
-//
-// Hàng rào an toàn lúc build (phân tích cú pháp bằng acorn — không phải dò chuỗi):
-//  • session / interaction / store / cc của game chỉ được đụng tới trong tool/game-bridge.js.
-//  • Trong bridge: session.* chỉ catchWild / evolveCreature / tradePet; interaction.* chỉ selectEntity;
-//    không truy cập bằng ngoặc vuông, không gán session/interaction sang biến khác, không destructuring.
-//  • Cả tool: cấm eval/Function/Reflect/XMLHttpRequest/sendBeacon/importScripts/document.cookie/storage/innerHTML…,
-//    cấm .call/.apply/.bind (trừ desc.get.call trong bộ bắt socket), fetch chỉ tới DATA_URL hoặc '/catalog' của game,
-//    WebSocket chỉ dùng cho `instanceof`.
-//  • Sự kiện giả lập: overlay.js chỉ 1 KeyboardEvent phím camera W/A/S/D. Bản web (tool/web-input.js) thêm đúng:
-//    KeyboardEvent Esc/Home, 2 PointerEvent (nhấn/nhả CHUỘT TRÁI, không phím bổ trợ) lên canvas, .click() chỉ vào
-//    nút `primary`/`row` của game, chỉ đọc localStorage 'cutd.cameraView'. File khác không được làm những việc này.
 import { build } from 'esbuild';
 import { parse } from 'acorn';
 import { ancestor } from 'acorn-walk';
@@ -51,7 +38,6 @@ export function auditSource(files) {
         const isProp = parent?.type === 'MemberExpression' && parent.property === n && !parent.computed;
         const isKey = parent?.type === 'Property' && parent.key === n && !parent.computed;
         if (isProp || isKey) return;
-        // Bản web: PointerEvent (kiểm tra ở NewExpression) và đúng 1 kiểu đọc localStorage.
         if (isWeb && n.name === 'PointerEvent' && parent?.type === 'NewExpression' && parent.callee === n) return;
         if (isWeb && n.name === 'localStorage') {
           const call = anc[anc.length - 3];
@@ -70,7 +56,6 @@ export function auditSource(files) {
       MemberExpression(n) {
         const name = propName(n);
         if (n.computed && n.property.type !== 'Literal') {
-          // Ngoặc vuông với biểu thức: cấm hẳn trên đối tượng game.
           const objName = n.object.type === 'MemberExpression' ? propName(n.object) : n.object.name;
           if (GAME_OBJECTS.has(objName)) err(file, n, `truy cập ${objName}[…] bằng ngoặc vuông`);
           return;
@@ -93,7 +78,6 @@ export function auditSource(files) {
       },
       VariableDeclarator(n) {
         const init = n.init;
-        // `k` (phím sắp giả lập) phải lấy từ bảng phím được phép của chính file đó.
         if (n.id.name === 'k') {
           const map = KEY_MAPS[file]?.[0];
           if (!map || !(init?.type === 'MemberExpression' && init.computed && init.object.name === map)) err(file, n, `phím giả lập phải lấy từ ${map ?? 'bảng phím được phép'}`);
@@ -172,13 +156,11 @@ export async function buildTool() {
   let code = out.outputFiles[0].text.trim();
   const version = `${pkg.version}-${createHash('sha256').update(code).digest('hex').slice(0, 7)}`;
   code = code.replace(/__CUTD_VERSION__/g, version);
-  // Lớp phòng thủ thứ 2 trên bản đã bundle.
   const banned = [/\beval\s*\(/, /new Function\s*\(/, /\.innerHTML\b/, /\.outerHTML\b/, /insertAdjacentHTML/, /document\.write/,
     /\.send\s*\(/, /sendBeacon/, /createElement\(\s*["'`]script/i, /importScripts/, /\bimport\s*\(/, /document\.cookie/,
     /XMLHttpRequest/, /\.dispatch\s*\(/];
   const hit = banned.filter(re => re.test(code));
   if (hit.length) throw new Error(`Bookmarklet chứa API bị cấm: ${hit.join(', ')}`);
-  // localStorage: chỉ đúng 1 kiểu đọc góc nhìn camera của game, không ghi.
   const ls = code.match(/localStorage/g)?.length ?? 0;
   const lsOk = code.match(/localStorage\.getItem\(["'`]cutd\.cameraView["'`]\)/g)?.length ?? 0;
   if (ls !== lsOk) throw new Error('Bookmarklet dùng localStorage ngoài việc đọc cutd.cameraView');

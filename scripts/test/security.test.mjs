@@ -1,4 +1,3 @@
-// Test chống hồi quy cho các lỗ bảo mật đã vá — sửa code sau này mà mở lại lỗ là test đỏ.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -110,7 +109,6 @@ test('bookmarklet: bộ kiểm tra AST chặn các kiểu lách danh sách cho p
     const bridgeFiles = [['game-bridge.js', `${base}\n${snippet}`], ...clean.filter(([f]) => f !== 'game-bridge.js')];
     assert.ok(auditSource(files).length > 0 && auditSource(bridgeFiles).length > 0, `không chặn được: ${name}`);
   }
-  // getJSON tới địa chỉ lạ, thêm phím ngoài W/A/S/D.
   assert.ok(auditSource([['overlay.js', overlay.replace("getJSON('/catalog'", "getJSON('https://evil/'")], ['game-bridge.js', base], ['logic.js', logic]]).length > 0);
   assert.ok(auditSource([['overlay.js', overlay.replace("right: ['KeyD', 'd']", "right: ['Enter', 'Enter']")], ['game-bridge.js', base], ['logic.js', logic]]).length > 0);
 });

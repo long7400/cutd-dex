@@ -1,10 +1,3 @@
-// Logic thuần của CUTD Helper (không đụng DOM) — test được bằng node:test.
-// Mô hình state dựng lại từ đúng các message server gửi cho client:
-//   base_keyframe  → thay toàn bộ state căn cứ đang xem
-//   base_delta     → upsert/xoá theo id
-//   room_summary   → pha, đợt, đợt sắp tới, bảng người chơi
-// Tool chỉ ĐỌC các message này, không bao giờ gửi gì lên server.
-
 export const TICKS_PER_SECOND = 32;
 
 const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -21,7 +14,6 @@ export function createState() {
   };
 }
 
-// Vị trí trên sàn (toạ độ gameplay của server) — bản web dùng để chạm đúng chỗ con đó.
 const posOf = p => (isObj(p) && Number.isFinite(p.x) && Number.isFinite(p.y) ? { x: p.x, y: p.y } : null);
 const unitOf = u => ({
   id: num(u.id), stage: str(u.stage_id), owner: u.owner_id ?? null, pos: posOf(u.position),
@@ -40,7 +32,6 @@ function applyBase(s, b) {
 
 const fill = (map, list, make) => { for (const x of arr(list)) if (isObj(x)) { const v = make(x); map.set(v.id ?? v.slot, v); } };
 
-// Trả true nếu message làm state đổi (để UI biết mà vẽ lại).
 export function applyMessage(s, msg) {
   if (!isObj(msg)) return false;
   s.messages++;
@@ -56,7 +47,6 @@ export function applyMessage(s, msg) {
     }
     case 'base_delta': {
       if (!isObj(msg.base)) return false;
-      // Delta của căn cứ khác (vừa chuyển sang xem nhà khác) → bỏ, chờ keyframe mới như client.
       if (s.haveKeyframe && msg.base.base_id !== s.baseId) return false;
       if (!s.haveKeyframe) s.baseId = msg.base.base_id ?? null;
       s.tick = num(msg.tick);
@@ -90,17 +80,13 @@ export function applyMessage(s, msg) {
 
 export const isGameMessage = m => isObj(m) && ['base_keyframe', 'base_delta', 'room_summary'].includes(m.type);
 
-// Chủ của căn cứ đang xem (player_id) — lấy từ room_summary.
 export const ownerOf = s => s.summary?.bases.find(b => b.baseId === s.baseId) ?? null;
 
-// Lính thuộc chủ căn cứ đang xem (khi xem nhà mình = lính của mình).
 export function myUnits(s) {
   const owner = ownerOf(s)?.playerId;
   return [...s.units.values()].filter(u => owner == null || u.owner === owner);
 }
 
-// Đường tiến hóa rẻ nhất (Dijkstra) từ stage `from` tới `to`; null nếu không tới được.
-// Bỏ qua cạnh có chi phí không hợp lệ (âm / NaN) và giới hạn số bước → dữ liệu xấu không làm treo tab.
 export function evolvePath(db, from, to) {
   if (from === to) return { cost: 0, steps: [] };
   const best = new Map([[from, 0]]), prev = new Map(), done = new Set();
@@ -122,13 +108,10 @@ export function evolvePath(db, from, to) {
   return { cost: best.get(to), steps };
 }
 
-// Catalog của CHÍNH server game (GET /catalog cùng origin) → tên, cấp, giá, tỉ lệ bắt, nhánh tiến hóa.
-// Dữ liệu dùng để quyết định nút làm gì phải lấy từ đây, không lấy từ overlay.json (file wiki có thể bị giả mạo).
 export function buildGameCatalog(raw) {
   const cat = raw?.catalog;
   if (!isObj(cat) || !Array.isArray(cat.species)) throw new Error('catalog game sai định dạng');
   const names = new Map(arr(cat.display_names).filter(isObj).map(d => [d.id, typeof d.value === 'string' ? d.value : '']));
-  // Tên đúng như game hiện trên bảng thông tin (bỏ mã màu |cAARRGGBB, |r, |n) — để kiểm tra chạm trúng con.
   const shown = v => v.replace(/\|c[0-9a-f]{8}/gi, '').replace(/\|r/gi, '').replace(/\|n/gi, ' ').trim();
   const out = new Map();
   for (const sp of cat.species) {
@@ -139,7 +122,6 @@ export function buildGameCatalog(raw) {
     out.set(sp.id, {
       n: (m ? m[1] : full).slice(0, 60), l: m ? +m[2] : undefined,
       b: num(sp.book_value), c: num(sp.catch_chance), shown: raw ? shown(raw).slice(0, 120) : null,
-      // Thứ tự nhánh y như bảng "Chọn tiến hóa" của game (hàng 0, 1, 2…).
       ev: arr(sp.evolutions).map(e => (isObj(e) && typeof e.stage_id === 'string' ? e.stage_id : null)),
       e: arr(sp.evolutions).filter(e => isObj(e) && typeof e.stage_id === 'string' && Number.isFinite(e.cost) && e.cost >= 0)
         .map(e => [e.stage_id, e.cost]),
@@ -148,7 +130,6 @@ export function buildGameCatalog(raw) {
   return out;
 }
 
-// Khung căn cứ (catalog.base) — chỉ giữ các hình chữ nhật cần để tính vị trí trên sàn, số phải hữu hạn.
 export function baseRulesOf(raw) {
   const b = raw?.catalog?.base;
   const r = k => {
@@ -160,7 +141,6 @@ export function baseRulesOf(raw) {
   return Object.values(out).every(Boolean) ? out : null;
 }
 
-// Mỗi trade offer: có sẵn lính đúng stage không, nếu không thì lính nào tiến hóa tới được rẻ nhất.
 export function tradeOptions(s, db) {
   const mine = myUnits(s).filter(u => u.active);
   return [...s.offers.values()].sort((a, b) => a.slot - b.slot).map(o => {
@@ -176,13 +156,11 @@ export function tradeOptions(s, db) {
   });
 }
 
-// Các offer đang cần 1 stage thuộc cùng gia phả với `stage` (để gợi ý khi xem wild).
 export function offersForFamily(s, db, stage) {
   const fam = db.u[stage]?.f;
   return fam ? [...s.offers.values()].filter(o => db.u[o.give]?.f === fam) : [];
 }
 
-// Hệ số sát thương tốt nhất theo loại giáp (bảng damage của game).
 export function bestAttacks(db, armorType) {
   return Object.entries(db.dmg ?? {})
     .map(([atk, row]) => [atk, row?.[armorType] ?? 1])

@@ -1,10 +1,3 @@
-// Port 1:1 logic client dùng để gán model (portrait) và hệ cho MỌI species,
-// kể cả creep/boss không có trong map unit→model của bundle.
-//  - Gia phả tiến hóa gom bằng union-find, gốc = id nhỏ nhất.
-//  - Hệ của cả gia phả = affinity của wild pool đầu tiên chứa một thành viên.
-//  - Model: map trực tiếp → model của thành viên nông nhất có map → hash FNV-1a của gốc
-//    chọn trong danh sách model cùng hệ (hoặc toàn bộ model nếu không có hệ).
-
 export function fnv1a(s) {
   let h = 2166136261;
   for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619) >>> 0;

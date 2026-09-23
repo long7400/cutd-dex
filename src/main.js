@@ -2,7 +2,6 @@ import './style.css';
 import { html, toString } from './lib/html.js';
 import { loadDB } from './db.js';
 
-// Mỗi trang là 1 chunk riêng, chỉ tải khi mở lần đầu.
 const ROUTES = {
   pets: () => import('./pages/pets.js'),
   pet: () => import('./pages/pet.js'),
@@ -56,7 +55,7 @@ async function render() {
 
   if (current?.unmount) current.unmount();
   const [mod] = await Promise.all([ROUTES[route.name](), loadDB()]);
-  if (key !== location.hash) return; // người dùng đã chuyển trang khác trong lúc tải
+  if (key !== location.hash) return;
 
   const page = mod.default;
   const title = page.title?.(route) ?? '';
