@@ -4,7 +4,7 @@ import {
 } from './logic.js';
 import { screenPoint, groundOf, tradeSlotPos } from './web-camera.js';
 import * as web from './web-input.js';
-import { findGame, findEntity, selectEntity, catchWild, evolveCreature, tradePet, probe, clientKind } from './game-bridge.js';
+import { findGame, findEntity, selectEntity, catchWild, evolveCreature, tradePet, probe, clientKind, armWebCapture, disarmWebCapture, webCaptured } from './game-bridge.js';
 
 const DATA_URL = __CUTD_DATA_URL__;
 const VERSION = '__CUTD_VERSION__';
@@ -234,22 +234,30 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     data: 'Chưa tải xong dữ liệu của game — đợi 1–2 giây.',
     other: 'Đang xem căn cứ của người khác — về nhà mình để thao tác.',
     aim: 'Chạm chưa trúng con này (game đổi camera?) — không bấm gì thêm. Thử lại, hoặc chọn tay rồi nhấn F.',
+    stack: 'Con này đang đứng CHỒNG với con khác (con mới bắt, chưa kéo ra sân) — game chỉ chọn được con trên cùng. Kéo nó ra chỗ trống rồi bấm lại.',
     busy: 'Đang thao tác lệnh trước…',
   };
   const isWeb = () => clientKind() === 'web';
-  const blockReason = () => (!gameCatReady || (isWeb() && (!baseRules || !state.origin)) ? 'data'
+  const tapMode = () => isWeb() && !findGame();
+  const blockReason = () => (!gameCatReady || (tapMode() && (!baseRules || !state.origin)) ? 'data'
     : ownBase != null && state.baseId !== ownBase ? 'other' : null);
   const realClick = e => e?.isTrusted && e.detail > 0;
 
   let webBusy = false;
+  const STACK_R = 24;
+  const crowd = x => (x?.pos ? [...state.units.values(), ...state.wilds.values()].filter(o => o !== x && o.pos && o.stage !== x.stage
+    && Math.hypot(o.pos.x - x.pos.x, o.pos.y - x.pos.y) < STACK_R).length : 0);
   function webTarget(key) {
     const id = Number(key.slice(1));
     if (key[0] === 't') {
       const o = state.offers.get(id), g = groundOf(baseRules, state.origin);
-      return o && g ? { pos: tradeSlotPos(g, o.slot), stage: o.get } : null;
+      return o && g ? { key, pos: tradeSlotPos(g, o.slot), stage: o.get, crowded: 0 } : null;
     }
-    const x = (key[0] === 'w' ? state.wilds : state.units).get(id);
-    return x?.pos ? { pos: x.pos, stage: x.stage } : null;
+    const wild = key[0] === 'w', x = (wild ? state.wilds : state.units).get(id);
+    if (!x?.pos) return null;
+    const pool = wild ? [...state.wilds.values()] : myUnits(state).filter(u => u.active);
+    const best = [x, ...pool.filter(o => o !== x && o.stage === x.stage && o.pos)].sort((a, b) => crowd(a) - crowd(b))[0];
+    return { key: `${key[0]}${best.id}`, pos: best.pos, stage: best.stage, crowded: crowd(best) };
   }
   const webPoint = pos => {
     const canvas = web.canvasEl();
@@ -270,7 +278,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     await web.frames(2);
     const pt = webPoint(t.pos);
     if (!pt || !web.tap(pt.x, pt.y, pointerId)) return 'aim';
-    return (await web.until(() => web.selectedName() === expect, 600)) ? null : 'aim';
+    return (await web.until(() => web.selectedName() === expect, 600)) ? null : t.crowded ? 'stack' : 'aim';
   }
   async function webRun(job) {
     if (webBusy) { toast = FAIL.busy; dirty = true; render(true); return; }
@@ -280,7 +288,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 
   function selectInGame(key, e) {
     if (!realClick(e)) return;
-    if (isWeb()) { webRun(() => webSelect(key, e.pointerId)); return; }
+    if (tapMode()) { webRun(() => webSelect(key, e.pointerId)); return; }
     const g = findGame();
     const found = g && findEntity(g, key);
     if (found) selectEntity(g, found.id);
@@ -303,7 +311,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     lastAction = t;
     e.currentTarget.disabled = true;
     setTimeout(() => { dirty = true; render(true); }, 600);
-    if (isWeb()) { webAction(e.pointerId, kind, key, arg, expect); return; }
+    if (tapMode()) { webAction(e.pointerId, kind, key, arg, expect); return; }
     let fail = blockReason();
     const g = fail ? null : findGame();
     if (!fail && !g) fail = 'game';
@@ -345,7 +353,9 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         if (fail) return fail;
         if (!web.clickPrimary()) return 'rule';
         await web.frames(1);
-        const pt = webPoint(cur.pos);
+        const mine = webTarget(key);
+        if (mine?.crowded) { web.pressKey('escape'); return 'stack'; }
+        const pt = mine && webPoint(mine.pos);
         if (!pt || !web.tap(pt.x, pt.y, pointerId)) { web.pressKey('escape'); return 'aim'; }
         return null;
       }
@@ -476,6 +486,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       return pickable(row(u.stage,
         h('div', { class: 'hp', title: `${fmt(u.hp)} / ${fmt(u.maxHp)} HP` }, h('i', { style: `width:${Math.max(0, Math.min(100, pct))}%` })),
         [!u.active ? pill('Gục', 'bad') : null,
+          tapMode() && crowd(u) ? pill('Chồng', 'warn', 'Đang đứng chồng với con khác (mới bắt, chưa kéo ra sân) — bản web chỉ chọn được con trên cùng. Kéo ra chỗ trống để tool chọn được.') : null,
           trades.length ? act(`Trade S${trades[0].slot}`, 'trade', `u${u.id}`, trades[0].slot, { stage: u.stage, get: trades[0].get }, 'ok', `Đổi lấy ${nameOf(trades[0].get)}`) : null,
           evo.length ? evo.map(([to, cost]) => act(`↑${evo.length > 1 ? `${U(to)?.n ?? ''} ` : ''}${short(cost)}g`, 'evolve', `u${u.id}`, to, { stage: u.stage },
             cost <= state.gold ? 'ok' : 'bad', `Tiến hóa lên ${nameOf(to)}: ${fmt(cost)} vàng`)) : pill('Max', 'mute', 'Dạng cuối')],
@@ -549,6 +560,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const probeRows = [
       h('div', { class: 'sec', text: 'Kiểm tra nút' }),
       h('div', { class: 'kv' }, h('span', { text: 'Trang / bản game' }), h('b', { text: `${p.host} · ${p.client === 'web' ? 'bản web (chạm hộ)' : 'Cocos'}` })),
+      p.client === 'web' ? h('div', { class: 'kv' }, h('span', { text: 'Móc hàm game' }), h('b', { text: p.webHooked ? 'có (gọi thẳng)' : `chưa — đang chờ: ${p.webArmed.join(', ') || 'không (dán giữa trận → dùng chạm)'}` })) : null,
       p.client === 'web' ? h('div', { class: 'kv' }, h('span', { text: 'Chạm hộ' }),
         h('b', { text: `canvas ${web.canvasEl() ? 'có' : 'không'} · khung sàn ${baseRules ? 'có' : 'chưa'} · gốc căn cứ ${state.origin ? 'có' : 'chưa'} · góc nhìn ${web.cameraView()} · đang chọn: ${web.selectedName().slice(0, 40) || '—'}` })) : null,
       h('div', { class: 'kv' }, h('span', { text: 'Tìm thấy game' }), h('b', { text: p.found ? 'có' : p.hasEngine ? 'không (chưa vào trận?)' : 'không thấy engine' })),
@@ -607,8 +619,9 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const kind = clientKind();
     const header = h('div', { class: 'top', title: `CUTD Helper v${VERSION} — chỉ gửi lệnh khi mày bấm nút Bắt/Tiến hóa/Trade` },
       h('b', { text: 'CUTD Helper' }),
-      h('span', { class: 'pill mute', text: kind === 'web' ? 'm. · web' : kind === 'cocos' ? 'Cocos' : 'đang tải', title: kind === 'web'
-        ? 'Bản web (m.cutd.site): bấm dòng/nút → tool chạm đúng con trên sàn (camera về mặc định), kiểm tra tên rồi bấm nút của game. F = nút chính.'
+      h('span', { class: 'pill mute', text: kind === 'web' ? (webCaptured() ? 'm. · móc' : 'm. · chạm') : kind === 'cocos' ? 'Cocos' : 'đang tải', title: kind === 'web'
+        ? (webCaptured() ? 'Bản web: đã móc được hàm của game (dán tool từ sảnh) → bấm dòng/nút gọi thẳng hàm game như bản Cocos.'
+          : 'Bản web: chưa móc được hàm game (tool dán giữa trận) → bấm dòng/nút = chạm hộ trên sàn. Muốn gọi thẳng: dán tool ở sảnh/phòng chờ TRƯỚC khi bấm Start.')
         : 'Bản Cocos (cutd.site): bấm dòng/nút → tool gọi thẳng hàm của game.' }),
       h('span', { class: 'grow' }),
       h('button', { class: 'x', text: layout === 'h' ? '▯' : '▭', title: layout === 'h' ? 'Chuyển sang dọc' : 'Chuyển sang ngang', onClick: () => setLayout(layout === 'h' ? 'v' : 'h') }),
@@ -666,12 +679,14 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     window.removeEventListener('click', onClickAfterPan, true);
     window.removeEventListener('blur', onBlur);
     window.removeEventListener('keydown', onHotkey, true);
+    disarmWebCapture();
     endPan();
     host.remove();
     delete window[NS];
   }
 
   window[NS] = { toggle, destroy, version: VERSION };
+  if (isWeb()) armWebCapture();
   patch();
   render(true);
 

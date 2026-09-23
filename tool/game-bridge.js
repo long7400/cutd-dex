@@ -5,9 +5,51 @@ const isGame = c => c && typeof c.interaction?.selectEntity === 'function'
   && typeof c.store?.entities?.get === 'function' && typeof c.store.entities.values === 'function'
   && c.session && typeof c.session === 'object';
 
+const TRAPS = {
+  nextSequence: o => ['catchWild', 'evolveCreature', 'tradePet', 'dispatch'].every(k => typeof o[k] === 'function'),
+  _selectedEntityId: o => ['selectEntity', 'tapGround', 'clearSelection'].every(k => typeof o[k] === 'function'),
+};
+const caught = { nextSequence: null, _selectedEntityId: null };
+const armed = new Set();
+
+function disarm(key) {
+  if (!armed.has(key)) return;
+  armed.delete(key);
+  const d = Object.getOwnPropertyDescriptor(Object.prototype, key);
+  if (d?.set?.cutd) delete Object.prototype[key];
+}
+
+export function armWebCapture() {
+  for (const key of Object.keys(TRAPS)) {
+    if (armed.has(key) || caught[key] || Object.getOwnPropertyDescriptor(Object.prototype, key)) continue;
+    const set = function (v) {
+      Object.defineProperty(this, key, { value: v, writable: true, enumerable: true, configurable: true });
+      try { if (!caught[key] && TRAPS[key](this)) { caught[key] = this; disarm(key); } } catch { }
+    };
+    set.cutd = true;
+    Object.defineProperty(Object.prototype, key, { set, configurable: true, enumerable: false });
+    armed.add(key);
+  }
+}
+
+export function disarmWebCapture() {
+  for (const key of [...armed]) disarm(key);
+}
+
+export const webCaptured = () => !!(caught.nextSequence && caught._selectedEntityId);
+
+function webGame() {
+  const s = caught.nextSequence, i = caught._selectedEntityId;
+  if (!s || !i) return null;
+  const g = { store: s.store, session: s, interaction: i };
+  return isGame(g) ? g : null;
+}
+
 export function findGame() {
   if (isGame(cached)) return cached;
   cached = null;
+  const web = webGame();
+  if (web) return (cached = web);
   try {
     const stack = [window.cc?.director?.getScene?.()].filter(Boolean);
     for (let seen = 0; stack.length && seen < 5000; seen++) {
@@ -56,7 +98,7 @@ export function tradePet(g, ent, offerSlot) {
 export const clientKind = () => (window.cc?.director ? 'cocos' : document.getElementById('GameCanvas') ? 'cocos-loading' : 'web');
 
 export function probe(toolWildKey) {
-  const out = { host: location.host, client: clientKind(), hasEngine: !!window.cc?.director, found: false, fns: [], entities: 0, keys: [], sampleWild: null };
+  const out = { host: location.host, client: clientKind(), hasEngine: !!window.cc?.director, webHooked: webCaptured(), webArmed: [...armed], found: false, fns: [], entities: 0, keys: [], sampleWild: null };
   const g = findGame();
   if (!g) return out;
   out.found = true;

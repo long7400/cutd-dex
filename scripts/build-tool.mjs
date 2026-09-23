@@ -60,7 +60,8 @@ export function auditSource(files) {
           if (GAME_OBJECTS.has(objName)) err(file, n, `truy cập ${objName}[…] bằng ngoặc vuông`);
           return;
         }
-        const allowedUse = (name === 'call' && src(code, n.object) === 'desc.get') || (name === 'prototype' && src(code, n.object) === 'MessageEvent');
+        const allowedUse = (name === 'call' && src(code, n.object) === 'desc.get') || (name === 'prototype' && src(code, n.object) === 'MessageEvent')
+          || (isBridge && name === 'prototype' && src(code, n.object) === 'Object');
         if (name && BANNED_PROPERTIES.has(name) && !allowedUse) {
           err(file, n, `cấm dùng .${name}`);
         }
@@ -81,6 +82,10 @@ export function auditSource(files) {
         if (n.id.name === 'k') {
           const map = KEY_MAPS[file]?.[0];
           if (!map || !(init?.type === 'MemberExpression' && init.computed && init.object.name === map)) err(file, n, `phím giả lập phải lấy từ ${map ?? 'bảng phím được phép'}`);
+        }
+        if (n.id.name === 'TRAPS') {
+          const keys = init?.type === 'ObjectExpression' ? init.properties.map(p => p.key?.name) : [null];
+          if (!isBridge || keys.some(k => !['nextSequence', '_selectedEntityId'].includes(k))) err(file, n, 'móc hàm game chỉ được bẫy nextSequence/_selectedEntityId trong game-bridge.js');
         }
         const keyMap = Object.entries(KEY_MAPS).find(([, [name]]) => name === n.id.name);
         if (keyMap) {

@@ -472,7 +472,7 @@ test('bookmarklet: bản m.cutd.site — tự nhận bản web, chạm đúng co
   ], { base: { base_id: 7, lives: 30, gold: 50000, lumber: 0, alive: true, research: [], origin }, wilds: [{ id: 1, stage_id: scenario.a, position: wildPos }] }));
   await tick(1200);
   const root = log.roots[0];
-  assert.match(root.querySelector('.top').textContent, /m\. · web/, 'tự nhận bản web');
+  assert.match(root.querySelector('.top').textContent, /m\. · chạm/, 'tự nhận bản web (dán giữa trận → chạm hộ)');
   assert.ok(!root.querySelector('.webnote'), 'không còn gợi ý chuyển sang cutd.site');
   const btn = text => [...root.querySelectorAll('button.act')].find(b => b.textContent.startsWith(text));
   const tab = name => [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith(name)).click();
@@ -535,6 +535,101 @@ test('bookmarklet: bản web — chạm lệch (tên trên dock không khớp) t
   assert.equal(game.taps, 1);
   assert.deepEqual(game.commands, [], 'chạm lệch → không bấm nút Bắt');
   assert.match(root.querySelector('.toast').textContent, /Chạm chưa trúng/);
+});
+
+test('bookmarklet: bản web — lính đứng chồng (mới bắt chưa kéo ra): gắn nhãn, báo rõ, không bấm nhầm con trên cùng', async t => {
+  const { w, log, code, FakeWS } = setupDom('https://m.cutd.site/?room=805A6070');
+  t.after(() => w.close());
+  w.document.getElementById('GameCanvas').remove();
+  const { game } = fakeWebGame(w);
+  const origin = { x: 2048, y: 2336 }, center = { x: origin.x + 608, y: origin.y + 1040 };
+  game.origin = origin;
+  game.entities = [
+    { key: 'u1', kind: 'unit', stage: scenario.c, pos: center },
+    { key: 'u2', kind: 'unit', stage: scenario.a, pos: center },
+  ];
+  w.eval(code);
+  const ws = new FakeWS();
+  ws.addEventListener('message', e => e.data);
+  const emit = m => ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
+  emit(summary);
+  await tick(0);
+  emit(keyframe([
+    { id: 1, stage_id: scenario.c, owner_id: 11, health: 5, max_health: 10, active: true, position: center },
+    { id: 2, stage_id: scenario.a, owner_id: 11, health: 5, max_health: 10, active: true, position: center },
+  ], { base: { base_id: 7, lives: 30, gold: 50000, lumber: 0, alive: true, research: [], origin }, wilds: [] }));
+  await tick(1200);
+  const root = log.roots[0];
+  [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith('Đội')).click();
+  await tick(50);
+  assert.equal([...root.querySelectorAll('.pill')].filter(p => p.textContent === 'Chồng').length, 2, 'cả 2 con bị gắn nhãn Chồng');
+  const row = [...root.querySelectorAll('.row')].find(r => r.textContent.includes(overlay.u[scenario.a].n));
+  trustedClick(w, [...row.querySelectorAll('button.act')].find(b => b.textContent.startsWith('↑')));
+  await tick(900);
+  assert.deepEqual(game.commands, [], 'game chọn con trên cùng (khác loại) → không tiến hóa nhầm');
+  assert.match(root.querySelector('.toast').textContent, /CHỒNG/);
+});
+
+test('bookmarklet: bản web — dán từ sảnh → móc session/interaction lúc game tạo, gọi thẳng hàm game, gỡ bẫy sạch', async t => {
+  const { w, log, code, FakeWS } = setupDom('https://m.cutd.site/?room=805A6070');
+  t.after(() => w.close());
+  w.document.getElementById('GameCanvas').remove();
+  w.eval(code);
+  assert.ok(Object.getOwnPropertyDescriptor(w.Object.prototype, 'nextSequence')?.set, 'đã đặt bẫy ở sảnh');
+  w.eval(`
+    window.__calls = [];
+    window.Session = class { constructor(store) { this.pending = new Map(); this.nextSequence = 1; this.store = store; }
+      dispatch(c) { this.nextSequence += 1; window.__calls.push(c); }
+      catchWild(e) { this.dispatch(['catch', e.id]); } evolveCreature(e, to) { this.dispatch(['evolve', e.id, to]); }
+      tradePet(e, slot) { this.dispatch(['trade', e.id, slot]); } sellCreature() { throw new Error('không được bán'); } }
+    window.Interaction = class { constructor() { this._selectedEntityId = null; this._moveTargeting = false; }
+      selectEntity(s, id) { this._selectedEntityId = id; window.__calls.push(['select', id]); } tapGround() {} clearSelection() {} }
+    window.__notGame = {}; window.__notGame.nextSequence = 5;
+  `);
+  const stageA = JSON.stringify(scenario.a), stageC = JSON.stringify(scenario.c);
+  w.eval(`
+    const entities = new Map([['w1', { id: 'w1', kind: 'wild', contentId: ${stageA} }], ['u1', { id: 'u1', kind: 'creature', contentId: ${stageC} }], ['u2', { id: 'u2', kind: 'creature', contentId: ${stageA} }]]);
+    window.__session = new Session({ entities }); window.__interaction = new Interaction();
+  `);
+  assert.equal(Object.getOwnPropertyDescriptor(w.Object.prototype, 'nextSequence'), undefined, 'gỡ bẫy sau khi móc');
+  assert.equal(Object.getOwnPropertyDescriptor(w.Object.prototype, '_selectedEntityId'), undefined);
+  assert.equal(w.__notGame.nextSequence, 5, 'object khác vẫn gán bình thường');
+  assert.equal(w.__session.nextSequence, 1);
+  const ws = new FakeWS();
+  ws.addEventListener('message', e => e.data);
+  const emit = m => ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
+  emit(summary);
+  await tick(0);
+  emit(keyframe([
+    { id: 1, stage_id: scenario.c, owner_id: 11, health: 5, max_health: 10, active: true },
+    { id: 2, stage_id: scenario.a, owner_id: 11, health: 5, max_health: 10, active: true },
+  ]));
+  await tick(1200);
+  const root = log.roots[0];
+  assert.match(root.querySelector('.top').textContent, /m\. · móc/);
+  const btn = text => [...root.querySelectorAll('button.act')].find(b => b.textContent.startsWith(text));
+  trustedClick(w, btn('Trade'));
+  assert.deepEqual([...w.__calls.at(-1)], ['trade', 'u1', 1]);
+  await tick(700);
+  [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith('Wild')).click();
+  trustedClick(w, btn('Bắt'));
+  assert.deepEqual([...w.__calls.at(-1)], ['catch', 'w1']);
+  trustedClick(w, root.querySelector('.row.pick .mid'));
+  assert.deepEqual([...w.__calls.at(-1)], ['select', 'w1']);
+  assert.equal(w.__session.nextSequence, 3, 'số thứ tự do chính game tăng');
+  assert.equal(log.sent, 0);
+});
+
+test('bookmarklet: bản web — tắt tool trước khi vào trận thì gỡ bẫy', t => {
+  const { w, code } = setupDom('https://m.cutd.site/');
+  t.after(() => w.close());
+  w.document.getElementById('GameCanvas').remove();
+  w.eval(code);
+  assert.ok(Object.getOwnPropertyDescriptor(w.Object.prototype, '_selectedEntityId'));
+  w.__cutdHelper.destroy();
+  assert.equal(Object.getOwnPropertyDescriptor(w.Object.prototype, '_selectedEntityId'), undefined);
+  assert.equal(Object.getOwnPropertyDescriptor(w.Object.prototype, 'nextSequence'), undefined);
+  assert.ok(!('nextSequence' in {}));
 });
 
 test('web-camera: khớp số tính bằng PlayCanvas + hàm căn khung của game (m.cutd.site)', () => {
