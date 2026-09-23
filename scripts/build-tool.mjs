@@ -2,6 +2,7 @@
 // Trang #/tool của wiki chèn URL site vào chỗ __CUTD_DATA_URL__ rồi tạo link bookmarklet.
 import { build } from 'esbuild';
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { readJSON, writeJSON } from './lib/fsx.mjs';
@@ -21,8 +22,20 @@ export async function buildTool() {
   // Kiểm tra cứng: bản build không được chứa các API nguy hiểm.
   const banned = [/\beval\s*\(/, /new Function\s*\(/, /\.innerHTML\b/, /\.outerHTML\b/, /insertAdjacentHTML/, /document\.write/,
     /\.send\s*\(/, /createElement\(\s*["'`]script/i, /importScripts/, /\bimport\s*\(/, /localStorage/, /document\.cookie/];
+  // Hàm gửi lệnh của client game (bắt/trade/tiến hóa/bán/di chuyển/…) tuyệt đối không được nhắc tới.
+  // Chỉ 3 lệnh được phép (catchWild / evolveCreature / tradePet — qua session của game); mọi lệnh khác cấm.
+  banned.push(/\.dispatch\s*\(/, /\b(sellCreature|sellForWood|moveCreature|moveSelected|dismissWild|setFinder|toggleMoveTargeting|toggleTradeTargeting|tapGround|sendChat|subscribeTo|switchBase|leaveRoom|research)\s*\(/);
   const hit = banned.filter(re => re.test(code));
   if (hit.length) throw new Error(`Bookmarklet chứa API bị cấm: ${hit.join(', ')}`);
+  // Với object interaction của game, chỉ được dùng đúng selectEntity (đổi lựa chọn trên máy).
+  const src = readFileSync(join(ROOT, 'tool/overlay.js'), 'utf8').replace(/\/\/.*$/gm, '');
+  const used = [...src.matchAll(/interaction\??\.(\w+)/g)].map(m => m[1]);
+  const extra = [...new Set(used)].filter(n => n !== 'selectEntity');
+  if (extra.length) throw new Error(`Bookmarklet dùng hàm game ngoài selectEntity: ${extra.join(', ')}`);
+  const ALLOWED_SESSION = new Set(['catchWild', 'evolveCreature', 'tradePet']);
+  const sessionUsed = [...src.matchAll(/session\??\.(\w+)/g)].map(m => m[1]);
+  const extraSession = [...new Set(sessionUsed)].filter(n => !ALLOWED_SESSION.has(n));
+  if (extraSession.length) throw new Error(`Bookmarklet dùng lệnh game ngoài danh sách cho phép: ${extraSession.join(', ')}`);
   if (!code.includes('"__CUTD_DATA_URL__"')) throw new Error('Thiếu placeholder __CUTD_DATA_URL__');
   const result = { code, sha256: createHash('sha256').update(code).digest('hex'), bytes: Buffer.byteLength(code), version };
   writeJSON(join(ROOT, 'src/data/tool.json'), result);

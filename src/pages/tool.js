@@ -48,7 +48,8 @@ export default {
       <section class="tool-card">
         <h2>Có gì</h2>
         <ul class="steps">
-          <li><b>Trade:</b> 7 slot đang mở — nhận con gì, cần đưa con gì, mày có sẵn chưa; chưa có thì lính nào tiến hóa tới được và tốn bao nhiêu vàng.</li>
+          <li><b>Trade:</b> 7 slot đang mở — nhận con gì, cần đưa con gì; có sẵn lính thì có nút <b>Trade</b>, chưa có thì hiện lính nào tiến hóa tới được và tốn bao nhiêu vàng.</li>
+          <li><b>Nút thao tác nhanh:</b> <b>Bắt</b> ở tab Wild, <b>↑ tiến hóa</b> (mỗi nhánh 1 nút) ở tab Đội, <b>Trade</b> ở tab Trade/Đội. Bấm vào dòng để chọn con đó trong game.</li>
           <li><b>Wild:</b> toàn bộ sinh vật hoang dã trên bãi — giá bắt (đủ tiền không), tỉ lệ bắt, DPS tối đa cả cây, cây nào đang có trade cần.</li>
           <li><b>Đội hình:</b> lính của mày — máu, giá bán, các nhánh tiến hóa kèm giá, con nào đem trade được ngay.</li>
           <li><b>Đợt tới:</b> quái sắp tới căn cứ — tổng máu, số mạng mất nếu lọt, loại đòn khắc chế giáp của nó.</li>
@@ -63,8 +64,10 @@ export default {
         <ul class="steps">
           <li>Toàn bộ code nằm sẵn trong bookmark (${num(Math.round(tool.bytes / 102.4) / 10)}KB). Không nạp script từ bất kỳ đâu nên không ai tráo được code.</li>
           <li>Chỉ tải 1 file <b>dữ liệu</b> <code>overlay.json</code> từ wiki. File này chỉ được đọc như dữ liệu và hiển thị dạng chữ, không bao giờ bị chạy như code.</li>
-          <li><b>Chỉ đọc:</b> không gửi bất cứ gì lên server game, không tự thao tác, không đọc/ghi cookie hay localStorage.</li>
-          <li>Build tự fail nếu code có <code>eval</code>, <code>innerHTML</code>, <code>socket.send</code>, nạp script ngoài…</li>
+          <li><b>Chỉ hành động khi mày bấm:</b> nút Bắt / Tiến hóa / Trade gọi đúng hàm của game (như bấm nút trong game) — 1 cú bấm = 1 lệnh, khoá 0,6s chống bấm đúp, không có vòng lặp hay tự mua. Click do script khác tạo ra bị bỏ qua.</li>
+          <li>Bấm vào 1 dòng = chọn con đó trong game (chỉ đổi lựa chọn trên máy, không gửi gì).</li>
+          <li>Không đọc/ghi cookie hay localStorage.</li>
+          <li>Build tự fail nếu code có <code>eval</code>, <code>innerHTML</code>, <code>socket.send</code>, nạp script ngoài, hoặc gọi hàm game nào khác ngoài 4 hàm trên (bán, thả, di chuyển, chat… đều bị chặn).</li>
           <li>Phiên bản <code>${tool.version}</code> · SHA-256 <code class="hash">${tool.sha256}</code></li>
           <li>Mã nguồn: <a class="rootlink" href="${SOURCE}" target="_blank" rel="noopener noreferrer">tool/overlay.js</a></li>
         </ul>

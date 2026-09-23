@@ -113,7 +113,7 @@ test('bookmarklet: chỉ đọc, bắt socket rồi trả getter, hiển thị t
   const root = log.roots[0];
   const text = () => root.querySelector('.panel').textContent;
   assert.match(text(), /S1/);
-  assert.match(text(), /Có sẵn/);
+  assert.ok(root.querySelector('.trade.is-ok button.act'), 'slot có sẵn lính phải có nút Trade');
   assert.doesNotMatch(text(), /Vàng/, 'không lặp lại chỉ số game đã hiện');
   assert.ok(root.querySelector('.trade.is-ok'), 'slot trade được phải được đánh dấu');
 
@@ -207,4 +207,77 @@ test('bookmarklet: bấm ở sảnh → bỏ qua socket sảnh, bám đúng sock
   btn('Chuyển sang dọc').click();
   assert.ok(root.querySelector('.panel').classList.contains('v'));
   assert.equal(log.sent, 0);
+});
+
+// Click "thật" (isTrusted) trong jsdom — mô phỏng người dùng bấm chuột.
+import { createRequire } from 'node:module';
+const jsdomUtils = createRequire(import.meta.url)('jsdom/lib/jsdom/living/generated/utils.js');
+function trustedClick(w, el) {
+  const ev = new w.MouseEvent('click', { bubbles: true, composed: true, cancelable: true });
+  jsdomUtils.implForWrapper(ev).isTrusted = true;
+  jsdomUtils.implForWrapper(el)._dispatch(jsdomUtils.implForWrapper(ev));
+}
+
+test('bookmarklet: nút Bắt/Tiến hóa/Trade gọi đúng hàm game, chỉ khi người bấm, 1 cú = 1 lệnh', async t => {
+  const { w, log, code, FakeWS } = setupDom();
+  t.after(() => w.close());
+  const calls = [], touched = new Set();
+  const spy = name => (...args) => calls.push([name, ...args.map(a => (typeof a === 'object' ? a.key : a))]);
+  const session = new Proxy({ catchWild: spy('catchWild'), evolveCreature: spy('evolveCreature'), tradePet: spy('tradePet'),
+    sellCreature: spy('sellCreature'), dispatch: spy('dispatch') }, { get(o, k) { touched.add(k); return o[k]; } });
+  const entities = new Map([
+    ['w1', { key: 'w1', kind: 'wild', contentId: scenario.a }],
+    ['u1', { key: 'u1', kind: 'creature', contentId: scenario.c }],
+    ['u2', { key: 'u2', kind: 'creature', contentId: scenario.a }],
+  ]);
+  const interaction = { selectEntity: spy('selectEntity') };
+  const game = { store: { entities }, session, interaction };
+  w.cc = { director: { getScene: () => ({ components: [], children: [{ name: 'Game', components: [game], children: [] }] }) } };
+
+  w.eval(code);
+  const ws = new FakeWS();
+  ws.addEventListener('message', e => e.data);
+  const emit = m => ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
+  emit(summary);
+  await tick(0);
+  emit(keyframe([
+    { id: 1, stage_id: scenario.c, owner_id: 11, health: 5, max_health: 10, active: true },
+    { id: 2, stage_id: scenario.a, owner_id: 11, health: 5, max_health: 10, active: true },
+  ]));
+  await tick(1200);
+  const root = log.roots[0];
+  const btn = text => [...root.querySelectorAll('button.act')].find(b => b.textContent.startsWith(text));
+  const tab = name => [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith(name)).click();
+
+  // Trade: nút Trade trên slot có sẵn lính.
+  btn('Trade').click();                         // click do script → bị bỏ qua
+  assert.deepEqual(calls, []);
+  trustedClick(w, btn('Trade'));
+  assert.deepEqual(calls.at(-1), ['tradePet', 'u1', 1]);
+
+  // Bấm đúp trong 600ms chỉ tính 1 lệnh.
+  await tick(700);
+  tab('Wild');
+  trustedClick(w, btn('Bắt'));
+  trustedClick(w, btn('Bắt'));
+  assert.equal(calls.filter(c => c[0] === 'catchWild').length, 1);
+  assert.deepEqual(calls.at(-1), ['catchWild', 'w1']);
+
+  // Tiến hóa: đúng nhánh của con đó.
+  await tick(700);
+  tab('Đội');
+  const up = [...root.querySelectorAll('button.act')].find(b => b.textContent.startsWith('↑'));
+  trustedClick(w, up);
+  assert.equal(calls.at(-1)[0], 'evolveCreature');
+  assert.ok(overlay.u[entities.get(calls.at(-1)[1]).contentId].e.some(([to]) => to === calls.at(-1)[2]), 'nhánh tiến hóa phải hợp lệ');
+
+  // Bấm vào dòng = chọn trong game (không gửi lệnh).
+  await tick(700);
+  trustedClick(w, root.querySelector('.row.pick .mid'));
+  assert.equal(calls.at(-1)[0], 'selectEntity');
+
+  // Không bao giờ đụng các hàm khác của game.
+  assert.ok(!calls.some(c => ['sellCreature', 'dispatch'].includes(c[0])));
+  assert.deepEqual([...touched].filter(k => !['catchWild', 'evolveCreature', 'tradePet'].includes(k)), []);
+  assert.equal(log.sent, 0, 'không tự gửi gì qua socket');
 });

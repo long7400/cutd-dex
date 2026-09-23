@@ -3,7 +3,10 @@
 // Cam kết an toàn (kiểm chứng được bằng cách đọc file này):
 //  • Toàn bộ code nằm trong bookmark. KHÔNG nạp <script> từ đâu, KHÔNG eval / new Function / innerHTML.
 //  • Chỉ fetch 1 file DỮ LIỆU (overlay.json của wiki) → JSON.parse → hiển thị bằng textContent.
-//  • KHÔNG gửi gì lên server game (không gọi socket.send), không điều khiển, không tự động thao tác.
+//  • Không tự gửi gì qua socket (không socket.send). Chỉ khi NGƯỜI DÙNG BẤM nút Bắt / Tiến hóa / Trade,
+//    tool gọi đúng hàm tương ứng của client game (session.catchWild / evolveCreature / tradePet) —
+//    y như bấm nút trong game: game tự đánh số lệnh, server tự kiểm tra. 1 cú bấm = 1 lệnh, không tự động.
+//    Bấm vào dòng = interaction.selectEntity (chỉ đổi con đang chọn trên máy). Mọi hàm game khác bị cấm lúc build.
 //  • Đọc dữ liệu: bọc getter MessageEvent.data ĐÚNG 1 lần để lấy tham chiếu WebSocket của game,
 //    gắn listener chỉ-đọc rồi trả getter về nguyên bản ngay.
 //  • UI nằm trong Shadow DOM đóng → không đụng CSS/DOM của game. Không ghi cookie/localStorage.
@@ -74,6 +77,11 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .kv span{color:#8fb7e8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.kv b{white-space:nowrap}
 .kv.hl b{color:#ffde8f}.kv.file span{font-family:ui-monospace,monospace;font-size:11px}
 .sec{padding:8px 10px 2px;color:#6f8fb8;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.pick{cursor:pointer}.pick:active{background:#22375a}
+.act{all:unset;cursor:pointer;padding:2px 8px;border-radius:6px;font-size:11.5px;font-weight:700;background:#1b2a44;color:#8fb7e8;white-space:nowrap;border:1px solid transparent}
+.act.ok{background:#1d3a2a;color:#9fd6a8;border-color:#2f5c40}.act.bad{background:#3d2226;color:#ff9c9c;border-color:#5c2f35}
+.act:hover{filter:brightness(1.25)}.act:disabled{opacity:.5;cursor:wait}
+.toast{margin:6px 10px;padding:6px 10px;border-radius:8px;background:#3d2226;color:#ff9c9c;font-size:12px}
 [hidden]{display:none!important}
 `;
 
@@ -217,30 +225,99 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const statsTip = id => { const u = U(id) ?? {}; return `HP ${fmt(u.hp)} · DPS ${fmt(u.dps)} · đòn ${label(u.a)} · giáp ${label(u.at)}${u.s ? `\nKỹ năng: ${u.s.join(', ')}` : ''}`; };
   const empty = t => h('p', { class: 'empty', text: t });
 
+  // ───────────── chọn hộ trong game ─────────────
+  // Chỉ dùng đúng các hàm mà nút của game dùng:
+  //   interaction.selectEntity(store, id)          — đổi con đang chọn (trên máy, không gửi gì)
+  //   session.catchWild(wild)                      — nút Bắt
+  //   session.evolveCreature(unit, nextStageId)    — nút Tiến hóa
+  //   session.tradePet(unit, offerSlot)            — nút Trade
+  // Đi qua session của game nên lệnh được game tự đánh số thứ tự + chờ xác nhận như khi bấm trong game.
+  let gameRef = null;
+  function findGame() {
+    const ok = c => c && typeof c.interaction?.selectEntity === 'function' && typeof c.store?.entities?.get === 'function' && typeof c.store.entities.has === 'function' && c.session
+      && typeof c.session.catchWild === 'function' && typeof c.session.evolveCreature === 'function' && typeof c.session.tradePet === 'function';
+    if (ok(gameRef)) return gameRef;
+    gameRef = null;
+    try {
+      const stack = [window.cc?.director?.getScene?.()].filter(Boolean);
+      for (let seen = 0; stack.length && seen < 5000; seen++) {
+        const node = stack.pop();
+        for (const c of node.components ?? []) if (ok(c)) return (gameRef = c);
+        stack.push(...(node.children ?? []));
+      }
+    } catch { /* cấu trúc game đổi → coi như không chọn được */ }
+    return null;
+  }
+  let toast = '';
+  const cycles = new Map();
+  const cycle = (group, keys) => () => {
+    const i = ((cycles.get(group) ?? -1) + 1) % Math.max(1, keys.length);
+    cycles.set(group, i);
+    return keys[i];
+  };
+  function selectInGame(key, e) {
+    if (!e?.isTrusted) return; // chỉ nhận cú bấm thật của người dùng
+    const g = findGame();
+    const done = !!g && typeof key === 'string' && /^[utw]\d{1,9}$/.test(key) && g.store.entities.has(key);
+    if (done) g.interaction.selectEntity(g.store, key);
+    toast = done ? '' : 'Không chọn được — game chưa sẵn sàng hoặc con này đã biến mất.';
+    dirty = true; render(true);
+  }
+  // Bấm vào dòng = chọn trong game (trừ khi bấm link wiki hoặc nút thao tác).
+  const pickable = (el, key) => {
+    el.classList.add('pick');
+    el.addEventListener('click', e => { if (!e.target.closest('a,.act')) selectInGame(typeof key === 'function' ? key() : key, e); });
+    return el;
+  };
+
+  // Nút thao tác: 1 cú bấm thật = đúng 1 lệnh; khoá 600ms chống bấm đúp; không có vòng lặp/tự động.
+  let lastAction = 0;
+  function runAction(e, kind, key, arg) {
+    e.stopPropagation();
+    if (!e.isTrusted) return;
+    const t = performance.now();
+    if (t - lastAction < 600) return;
+    const g = findGame();
+    const ent = g && /^[uw]\d{1,9}$/.test(key) ? g.store.entities.get(key) : undefined;
+    let sent = false;
+    if (ent) {
+      if (kind === 'catch' && key[0] === 'w') { g.session.catchWild(ent); sent = true; }
+      else if (kind === 'evolve' && key[0] === 'u' && typeof arg === 'string' && (U(ent.contentId)?.e ?? []).some(([to]) => to === arg)) { g.session.evolveCreature(ent, arg); sent = true; }
+      else if (kind === 'trade' && key[0] === 'u' && Number.isInteger(arg) && state.offers.get(arg)?.give === ent.contentId) { g.session.tradePet(ent, arg); sent = true; }
+    }
+    lastAction = t;
+    toast = sent ? '' : 'Không thực hiện được — game chưa sẵn sàng hoặc con này đã đổi.';
+    e.currentTarget.disabled = true;
+    setTimeout(() => { dirty = true; render(true); }, 600);
+  }
+  const act = (label, kind, key, arg, cls = '', tip) => h('button', {
+    class: `act ${cls}`, text: label, title: tip, onClick: e => runAction(e, kind, key, arg),
+  });
+
   // ───────────── các tab ─────────────
   function viewTrade() {
     const list = tradeOptions(state, db);
     if (!list.length) return empty('Chưa có trade offer (trade tắt hoặc đang chờ dữ liệu).');
     return list.map(o => {
-      const status = o.ready.length ? pill('Có sẵn', 'ok')
+      const status = o.ready.length ? act('Trade', 'trade', `u${o.ready[0].id}`, o.slot, 'ok', `Đổi ${nameOf(o.give)} lấy ${nameOf(o.get)}`)
         : o.evolve ? pill(`+${short(o.evolve.cost)}g`, state.gold >= o.evolve.cost ? 'warn' : 'bad',
           `Nâng ${nameOf(o.evolve.unit.stage)} → ${o.evolve.steps.map(nameOf).join(' → ')}: ${fmt(o.evolve.cost)} vàng`)
         : pill('Chưa có', 'mute');
       // Tên 1 dòng, cấp độ xuống dòng dưới → tên không bị cắt cụt.
       const side = id => h('div', { class: 'side', title: statsTip(id) }, img(id, 28),
         h('div', { class: 'mid' }, title(id, { noLevel: true }), h('div', { class: 'sub', text: U(id)?.l ? `Lv${U(id).l}` : '' })));
-      return h('div', { class: `trade ${o.ready.length ? 'is-ok' : o.evolve ? 'is-warn' : ''}` },
-        h('span', { class: 'slot', text: `S${o.slot}` }), side(o.give), h('span', { class: 'arrow', text: '→' }), side(o.get), status);
+      return pickable(h('div', { class: `trade ${o.ready.length ? 'is-ok' : o.evolve ? 'is-warn' : ''}`, title: 'Bấm để chọn slot này trong game' },
+        h('span', { class: 'slot', text: `S${o.slot}` }), side(o.give), h('span', { class: 'arrow', text: '→' }), side(o.get), status), `t${o.slot}`);
     });
   }
 
   function viewWild() {
     // Gộp các con trùng loài: 1 dòng + ×số lượng.
     const groups = new Map();
-    for (const w of state.wilds.values()) groups.set(w.stage, (groups.get(w.stage) ?? 0) + 1);
-    const wilds = [...groups].map(([stage, count]) => {
+    for (const w of state.wilds.values()) { if (!groups.has(w.stage)) groups.set(w.stage, []); groups.get(w.stage).push(w.id); }
+    const wilds = [...groups].map(([stage, idList]) => {
       const u = U(stage) ?? {};
-      return { stage, count, u, maxDps: famMax.get(u.f) ?? u.dps ?? 0, trades: offersForFamily(state, db, stage) };
+      return { stage, idList, count: idList.length, u, maxDps: famMax.get(u.f) ?? u.dps ?? 0, trades: offersForFamily(state, db, stage) };
     });
     const sorters = {
       value: (a, b) => (b.u.L ?? 0) - (a.u.L ?? 0) || b.trades.length - a.trades.length || b.maxDps - a.maxDps,
@@ -252,12 +329,12 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     return [
       h('div', { class: 'bar-row' }, sortBtn('value', 'Đáng bắt'), sortBtn('cheap', 'Rẻ'), sortBtn('catch', 'Dễ bắt'),
         h('span', { class: 'muted', text: `${state.wilds.size} con` })),
-      wilds.length ? wilds.map(({ stage, count, u, maxDps, trades }) => row(stage,
+      wilds.length ? wilds.map(({ stage, idList, count, u, maxDps, trades }) => pickable(row(stage,
         `bắt ${Math.round((u.c ?? 0) * 100)}% · max DPS ${short(maxDps)}`,
         [count > 1 ? pill(`×${count}`, 'mute') : null,
           trades.length ? pill('Trade', 'warn', trades.map(t => `S${t.slot}: cần ${nameOf(t.give)} → nhận ${nameOf(t.get)}`).join('\n')) : null,
-          pill(`${short(u.b ?? 0)}g`, (u.b ?? 0) <= state.gold ? 'ok' : 'bad', 'Giá bắt')],
-        { tip: statsTip(stage) }))
+          act(`Bắt ${short(u.b ?? 0)}g`, 'catch', `w${idList[0]}`, null, (u.b ?? 0) <= state.gold ? 'ok' : 'bad', 'Bắt 1 con (giá bắt)')],
+        { tip: `${statsTip(stage)}\nBấm để chọn trong game${count > 1 ? ' (bấm tiếp để đổi con)' : ''}` }), cycle(`w:${stage}`, idList.map(id => `w${id}`))))
         : empty('Bãi đang trống.'),
     ];
   }
@@ -269,16 +346,15 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     for (const o of state.offers.values()) wanted.set(o.give, [...(wanted.get(o.give) ?? []), o]);
     return mine.sort((a, b) => (U(b.stage)?.dps ?? 0) - (U(a.stage)?.dps ?? 0)).map(u => {
       const evo = U(u.stage)?.e ?? [];
-      const cheapest = evo.reduce((m, e) => (!m || e[1] < m[1] ? e : m), null);
-      const trades = wanted.get(u.stage) ?? [];
+        const trades = wanted.get(u.stage) ?? [];
       const pct = u.maxHp ? Math.round((u.hp / u.maxHp) * 100) : 0;
-      return row(u.stage,
+      return pickable(row(u.stage,
         h('div', { class: 'hp', title: `${fmt(u.hp)} / ${fmt(u.maxHp)} HP` }, h('i', { style: `width:${Math.max(0, Math.min(100, pct))}%` })),
         [!u.active ? pill('Gục', 'bad') : null,
-          trades.length ? pill(`Trade S${trades[0].slot}`, 'ok', trades.map(t => `S${t.slot} → nhận ${nameOf(t.get)}`).join('\n')) : null,
-          cheapest ? pill(`↑${short(cheapest[1])}g`, cheapest[1] <= state.gold ? 'ok' : 'bad',
-            evo.map(([to, cost]) => `${nameOf(to)}: ${fmt(cost)} vàng`).join('\n')) : pill('Max', 'mute', 'Dạng cuối')],
-        { tip: `${statsTip(u.stage)}\nBán: ${fmt(Math.floor(u.book * (db.sell ?? 0)))} vàng` });
+          trades.length ? act(`Trade S${trades[0].slot}`, 'trade', `u${u.id}`, trades[0].slot, 'ok', `Đổi lấy ${nameOf(trades[0].get)}`) : null,
+          evo.length ? evo.map(([to, cost]) => act(`↑${evo.length > 1 ? `${U(to)?.n ?? ''} ` : ''}${short(cost)}g`, 'evolve', `u${u.id}`, to,
+            cost <= state.gold ? 'ok' : 'bad', `Tiến hóa lên ${nameOf(to)}: ${fmt(cost)} vàng`)) : pill('Max', 'mute', 'Dạng cuối')],
+        { tip: `${statsTip(u.stage)}\nBán: ${fmt(Math.floor(u.book * (db.sell ?? 0)))} vàng\nBấm để chọn trong game` }), `u${u.id}`);
     });
   }
 
@@ -389,7 +465,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const status = !db ? 'Đang tải dữ liệu wiki…'
       : !socket && !state.messages ? 'Đang chờ dữ liệu trận… (vào phòng chơi)'
       : !state.haveKeyframe ? 'Đã kết nối — chờ ảnh chụp đầy đủ của căn cứ…' : null;
-    const header = h('div', { class: 'top', title: `CUTD Helper v${VERSION} — chỉ đọc dữ liệu trận, không gửi gì lên server` },
+    const header = h('div', { class: 'top', title: `CUTD Helper v${VERSION} — chỉ gửi lệnh khi mày bấm nút Bắt/Tiến hóa/Trade` },
       h('b', { text: 'CUTD Helper' }),
       h('span', { class: 'grow' }),
       h('button', { class: 'x', text: layout === 'h' ? '▯' : '▭', title: layout === 'h' ? 'Chuyển sang dọc' : 'Chuyển sang ngang', onClick: () => setLayout(layout === 'h' ? 'v' : 'h') }),
@@ -411,7 +487,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     } catch (err) {
       content = h('p', { class: 'empty bad', text: `Lỗi hiển thị: ${err?.message ?? err}` });
     }
-    const body = bodyEl = h('div', { class: 'body' }, content);
+    const body = bodyEl = h('div', { class: 'body' }, toast ? h('p', { class: 'toast', text: toast }) : null, content);
     panel.className = `panel ${layout}`;
     panel.replaceChildren(header, tabs, body);
     body.scrollTop = scroll;
