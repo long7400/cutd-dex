@@ -14,7 +14,7 @@ import {
   createState, applyMessage, isGameMessage, myUnits, tradeOptions, offersForFamily,
   bestAttacks, nextWaveForBase, buildGameCatalog,
 } from './logic.js';
-import { findGame, findEntity, selectEntity, catchWild, evolveCreature, tradePet, probe } from './game-bridge.js';
+import { findGame, findEntity, selectEntity, catchWild, evolveCreature, tradePet, probe, clientKind } from './game-bridge.js';
 
 // Địa chỉ dữ liệu wiki được KHOÁ lúc build (esbuild define) — bản sao wiki ở site khác không đổi được nơi lấy dữ liệu.
 // eslint-disable-next-line no-undef
@@ -254,9 +254,10 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     rule: 'Không hợp lệ (sai nhánh / sai slot / con đã đổi) — thử lại sau khi panel cập nhật.',
     data: 'Chưa tải xong dữ liệu của game — đợi 1–2 giây.',
     other: 'Đang xem căn cứ của người khác — về nhà mình để thao tác.',
+    web: 'Bản m.cutd.site đóng kín code game nên tool không bấm hộ được — mở phòng này trên cutd.site để dùng nút.',
   };
   // Nút chỉ chạy khi dữ liệu quyết định hành động lấy từ CHÍNH game (catalog /catalog) và đang ở nhà mình.
-  const blockReason = () => (!gameCatReady ? 'data' : ownBase != null && state.baseId !== ownBase ? 'other' : null);
+  const blockReason = () => (clientKind() === 'web' ? 'web' : !gameCatReady ? 'data' : ownBase != null && state.baseId !== ownBase ? 'other' : null);
   // Chỉ nhận cú bấm chuột thật: isTrusted + detail>0 (Enter/Space trên nút có detail=0 → bỏ qua).
   const realClick = e => e?.isTrusted && e.detail > 0;
 
@@ -475,7 +476,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const base = diag.hello ?? diag.firstMsg;
     if (!base) return null;
     const sec = v => (v == null ? null : Math.max(0, (v - base) / 1000));
-    const after = resources.filter(r => r.startTime >= base - 50);
+    const after = resources.filter(r => r.startTime >= base - 50 && !String(r.name).startsWith(DATA_URL)); // bỏ ảnh/dữ liệu của chính tool
     const netEnd = after.length ? Math.max(...after.map(r => r.responseEnd)) : base;
     const bytes = after.reduce((n, r) => n + (r.transferSize || 0), 0);
     const r = {
@@ -500,6 +501,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const p = probe(firstWild ? `w${firstWild.id}` : null);
     const probeRows = [
       h('div', { class: 'sec', text: 'Kiểm tra nút' }),
+      h('div', { class: 'kv' }, h('span', { text: 'Trang / bản game' }), h('b', { text: `${p.host} · ${p.client === 'web' ? 'bản web (không hỗ trợ nút)' : 'Cocos'}` })),
       h('div', { class: 'kv' }, h('span', { text: 'Tìm thấy game' }), h('b', { text: p.found ? 'có' : p.hasEngine ? 'không (chưa vào trận?)' : 'không thấy engine' })),
       p.found ? h('div', { class: 'kv' }, h('span', { text: 'Hàm có sẵn' }), h('b', { text: p.fns.join(', ') || 'không có' })) : null,
       p.found ? h('div', { class: 'kv' }, h('span', { text: 'Entity trong game' }), h('b', { text: `${p.entities} · ${p.keys.join(' ')}` })) : null,

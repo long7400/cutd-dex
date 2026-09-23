@@ -64,9 +64,13 @@ export function tradePet(g, ent, offerSlot) {
   return null;
 }
 
+// Loại client đang chạy: 'cocos' (cutd.site, có engine Cocos → nút thao tác dùng được) hoặc 'web' (m.cutd.site,
+// code game đóng kín trong module → không có đường gọi hàm game, nút thao tác không hỗ trợ).
+export const clientKind = () => (window.cc?.director ? 'cocos' : document.getElementById('GameCanvas') ? 'cocos-loading' : 'web');
+
 // Chỉ đọc: tool nhìn thấy gì trong game — để chẩn đoán khi nút không chạy.
 export function probe(toolWildKey) {
-  const out = { hasEngine: !!window.cc?.director, found: false, fns: [], entities: 0, keys: [], sampleWild: null };
+  const out = { host: location.host, client: clientKind(), hasEngine: !!window.cc?.director, found: false, fns: [], entities: 0, keys: [], sampleWild: null };
   const g = findGame();
   if (!g) return out;
   out.found = true;
