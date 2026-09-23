@@ -76,9 +76,11 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .tier{min-width:26px;text-align:center;padding:1px 6px;border-radius:6px;font-size:11.5px;font-weight:800;background:#1b2a44;color:#8fb7e8}
 .tier.t-sp{background:#ffde8f;color:#0b1526}.tier.t-s{background:#f0a35e;color:#0b1526}.tier.t-a{background:#1d3a2a;color:#9fd6a8}
 .tier.t-b{background:#1b2a44;color:#8fb7e8}.tier.t-c,.tier.t-x{background:transparent;color:#6f8fb8;border:1px solid #2a3d5c}
-.pg{display:flex;flex-wrap:wrap;align-items:center;gap:2px 3px;margin-top:3px;font-size:10.5px;color:#6f8fb8;white-space:nowrap}
-.pg i{font-style:normal;opacity:.6}.pg b{font-weight:800;padding:0 4px;border-radius:4px;background:#1b2a44;color:#8fb7e8}
-.pg b.t-sp{background:#ffde8f;color:#0b1526}.pg b.t-s{background:#f0a35e;color:#0b1526}.pg b.t-a{background:#1d3a2a;color:#9fd6a8}.pg b.t-c{background:transparent;color:#6f8fb8;border:1px solid #2a3d5c}
+.line2{display:flex;align-items:center;gap:6px;margin-top:3px;min-width:0}
+.line2 .hp{flex:1;margin:0;max-width:110px}
+.strip{display:inline-flex;gap:2px;flex-shrink:0}.strip i{width:9px;height:9px;border-radius:2px;background:#4a6fa5}
+.strip i.t-sp{background:#ffde8f}.strip i.t-s{background:#f0a35e}.strip i.t-a{background:#5f9e6a}.strip i.t-c{background:transparent;box-shadow:inset 0 0 0 1px #3a5480}
+.rare{color:#ff9c9c;font-size:11px;font-weight:700}
 .toast{margin:6px 10px;padding:6px 10px;border-radius:8px;background:#3d2226;color:#ff9c9c;font-size:12px}
 [hidden]{display:none!important}
 `;
@@ -380,14 +382,13 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const TIER_CLASS = { 'S+': 't-sp', S: 't-s', A: 't-a', B: 't-b', C: 't-c' };
   const powerOf = stage => U(stage)?.pw ?? -1;
   const levelOf = id => (U(id)?.l ? `Lv${U(id).l}` : nameOf(id));
-  function progression(stage) {
+  function strip(stage) {
     const steps = [stage, ...(U(stage)?.pg ?? []).slice(1)].filter(id => U(id)?.st);
     if (steps.length < 2) return null;
-    const keep = steps.filter((id, i) => i === 0 || i === steps.length - 1 || U(id).st !== U(steps[i - 1]).st);
-    const shown = keep.length > 6 ? [...keep.slice(0, 4), keep[keep.length - 1]] : keep;
-    return h('span', { class: 'pg', title: `Hạng từng dạng so với các con cùng tầm cấp — cả chuỗi: ${steps.map(id => `${levelOf(id)} ${U(id).st}`).join(' › ')}` },
-      shown.map((id, i) => [i ? h('i', { text: '›' }) : null, `${levelOf(id)} `, h('b', { class: TIER_CLASS[U(id).st], text: U(id).st })]));
+    return h('span', { class: 'strip', title: `Hạng từng cấp (so với con cùng tầm cấp):\n${steps.map(id => `${levelOf(id)} ${U(id).st}`).join(' › ')}` },
+      steps.map(id => h('i', { class: TIER_CLASS[U(id).st] })));
   }
+
   const tierPill = stage => {
     const u = U(stage);
     if (!u?.pk || !Number.isFinite(u.pw)) return null;
@@ -418,11 +419,11 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       h('div', { class: 'bar-row' }, sortBtn('value', 'Đáng bắt'), sortBtn('cheap', 'Rẻ'), sortBtn('catch', 'Dễ bắt'),
         h('span', { class: 'muted', text: `${state.wilds.size} con` })),
       wilds.length ? wilds.map(({ stage, idList, count, u, peak, trades }) => pickable(row(stage,
-        [`bắt ${Math.round((u.c ?? 0) * 100)}% · đỉnh ${short(peak)} DPS`, progression(stage)],
+        h('div', { class: 'line2' }, strip(stage), (u.c ?? 1) < 0.5 ? h('span', { class: 'rare', text: `${Math.round((u.c ?? 0) * 100)}%`, title: 'Tỉ lệ bắt thấp' }) : null),
         [tierPill(stage), count > 1 ? pill(`×${count}`, 'mute') : null,
           trades.length ? pill('Trade', 'warn', trades.map(t => `S${t.slot}: cần ${nameOf(t.give)} → nhận ${nameOf(t.get)}`).join('\n')) : null,
           act(`Bắt ${short(u.b ?? 0)}g`, 'catch', `w${idList[0]}`, null, { stage }, (u.b ?? 0) <= state.gold ? 'ok' : 'bad', `Bắt 1 con ${nameOf(stage)}`)],
-        { tip: `${statsTip(stage)}\nBấm để chọn trong game${count > 1 ? ' (bấm tiếp để đổi con)' : ''}` }), cycle(`w:${stage}`, idList.map(id => `w${id}`))))
+        { tip: `Bắt ${Math.round((u.c ?? 0) * 100)}% · đỉnh ${short(peak)} DPS thật\n${statsTip(stage)}\nBấm để chọn trong game${count > 1 ? ' (bấm tiếp để đổi con)' : ''}` }), cycle(`w:${stage}`, idList.map(id => `w${id}`))))
         : empty('Bãi đang trống.'),
     ];
   }
@@ -437,7 +438,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       const trades = wanted.get(u.stage) ?? [];
       const pct = u.maxHp ? Math.round((u.hp / u.maxHp) * 100) : 0;
       return pickable(row(u.stage,
-        [h('div', { class: 'hp', title: `${fmt(u.hp)} / ${fmt(u.maxHp)} HP` }, h('i', { style: `width:${Math.max(0, Math.min(100, pct))}%` })), progression(u.stage)],
+        h('div', { class: 'line2' }, h('div', { class: 'hp', title: `${fmt(u.hp)} / ${fmt(u.maxHp)} HP` }, h('i', { style: `width:${Math.max(0, Math.min(100, pct))}%` })), strip(u.stage)),
         [tierPill(u.stage), !u.active ? pill('Gục', 'bad') : null,
           trades.length ? act(`Trade S${trades[0].slot}`, 'trade', `u${u.id}`, trades[0].slot, { stage: u.stage, get: trades[0].get }, 'ok', `Đổi lấy ${nameOf(trades[0].get)}`) : null,
           evo.length ? evo.map(([to, cost]) => {
@@ -459,7 +460,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       const u = U(g.stage) ?? {};
       const best = bestAttacks(db, u.at);
       const counters = mine.filter(x => (db.dmg?.[U(x.stage)?.a]?.[u.at] ?? 1) > 1).length;
-      return row(g.stage, `HP ${short((u.hp ?? 0) * g.count)} · lọt −${(u.lk ?? 0) * g.count} mạng`,
+      return row(g.stage, `${short((u.hp ?? 0) * g.count)} HP · −${(u.lk ?? 0) * g.count} mạng`,
         [pill(`×${g.count}`, 'mute'),
           best[0] && best[0][1] > 1 ? pill(`${label(best[0][0])} ${Math.round(best[0][1] * 100)}%`, 'warn',
             `Khắc giáp ${label(u.at)}: ${best.filter(b => b[1] > 1).map(([a, m]) => `${label(a)} ${Math.round(m * 100)}%`).join(', ')}\n${counters} lính của mày đánh lợi thế`) : null],
@@ -576,7 +577,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const header = h('div', { class: 'top', title: `CUTD Helper v${VERSION} — chỉ gửi lệnh khi mày bấm nút Bắt/Tiến hóa/Trade` },
       h('b', { text: 'CUTD Helper' }),
       kind === 'web' && !webCaptured() && !frame ? h('button', { class: 'chip on', text: 'Móc', title: 'Mở lại đúng trận này trong khung (game tự vào lại) để tool móc hàm game → chọn đúng con theo id, Bắt / Tiến hóa / Trade gọi thẳng hàm game. Game ở trang cũ sẽ tự ngắt.', onClick: hookViaFrame }) : null,
-      h('span', { class: 'pill mute', text: kind === 'web' ? (webCaptured() ? 'm. · móc' : frame ? 'm. · đang móc…' : 'm. · chưa móc') : kind === 'cocos' ? 'Cocos' : 'đang tải', title: kind === 'web'
+      kind === 'web' && !webCaptured() && !frame ? null : h('span', { class: 'pill mute', text: kind === 'web' ? (webCaptured() ? 'm. · móc' : 'm. · đang móc…') : kind === 'cocos' ? 'Cocos' : 'đang tải', title: kind === 'web'
         ? (webCaptured() ? 'Bản web: đã móc được hàm của game (dán tool từ sảnh) → bấm dòng/nút gọi thẳng hàm game như bản Cocos.'
           : 'Bản web: chưa móc được hàm game (tool dán lúc trận đã dựng xong) → bấm "Móc" để dùng nút.')
         : 'Bản Cocos (cutd.site): bấm dòng/nút → tool gọi thẳng hàm của game.' }),

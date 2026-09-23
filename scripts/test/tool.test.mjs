@@ -122,7 +122,9 @@ test('bookmarklet: chỉ đọc, bắt socket rồi trả getter, hiển thị t
   const tier = root.querySelector('.tier');
   assert.ok(tier && /^(S\+|S|A|B|C|—)$/.test(tier.textContent), 'wild có huy hiệu hạng');
   assert.match(tier.title, /sức mạnh cá nhân/);
-  assert.match(root.querySelector('.row .pg')?.textContent ?? '', /Lv\d+ (S\+|S|A|B|C)/, 'chuỗi hạng theo cấp');
+  const strip = root.querySelector('.row .strip');
+  assert.ok(strip && strip.querySelectorAll('i').length >= 2, 'dải hạng theo cấp (không chữ)');
+  assert.match(strip.title, /Lv\d+ (S\+|S|A|B|C)/);
   assert.doesNotMatch(tier.title, /đợt tới|đồng đội:/, 'không tính quái / đội');
   clickTab('Đội');
   assert.ok(root.querySelector('.row .tier'), 'đội có huy hiệu hạng');
@@ -395,7 +397,7 @@ test('bookmarklet: bản m.cutd.site chưa móc — tự nhận bản web, nút 
   emit(keyframe([{ id: 1, stage_id: scenario.c, owner_id: 11, health: 5, max_health: 10, active: true }]));
   await tick(1200);
   const root = log.roots[0];
-  assert.match(root.querySelector('.top').textContent, /m\. · chưa móc/);
+  assert.ok([...root.querySelectorAll('.top button')].some(b => b.textContent === 'Móc'), 'chưa móc → hiện nút Móc');
   const acts = [...root.querySelectorAll('button.act')];
   assert.ok(acts.length && acts.every(b => b.disabled && /Móc/.test(b.title)), 'chưa móc → nút khoá, gợi ý bấm Móc');
   trustedClick(w, root.querySelector('.trade.pick .side'));
