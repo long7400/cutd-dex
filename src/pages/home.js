@@ -42,7 +42,9 @@ function filtered() {
     const hits = index.query(filters.q);
     if (hits) {
       const set = new Set(hits);
-      list = list.filter(p => set.has(p));
+      const ranked = list.filter(p => set.has(p));
+      if (filters.sort === 'name') return ranked;
+      return [...ranked].sort(SORTERS[filters.sort] ?? SORTERS.name);
     }
   }
   return [...list].sort(SORTERS[filters.sort] ?? SORTERS.name);
@@ -63,33 +65,22 @@ window.__actions.homeSort = el => { filters.sort = el.value; renderHome(); };
 const debouncedRender = debounce(renderHome, 90);
 
 export function renderHome() {
-  const mount = document.getElementById('home-root');
-  if (mount) {
-    mount.innerHTML = listHTML();
-    window.__bind?.();
-  }
+  const grid = document.getElementById('home-grid');
+  if (!grid) return;
+  grid.innerHTML = gridHTML();
+  document.querySelectorAll('[data-el]').forEach(el =>
+    el.classList.toggle('on', filters.el === el.dataset.el));
+  document.querySelectorAll('[data-kind]').forEach(el =>
+    el.classList.toggle('on', filters.kind === el.dataset.kind));
+  const count = document.getElementById('result-count');
+  if (count) count.textContent = String(filtered().length);
+  window.__bind?.();
 }
 
-function listHTML() {
+function gridHTML() {
   const list = filtered();
-  const counts = { all: pets.length, leg: listLeg.length, normal: listNorm.length };
-  return `
-  <div class="controls">
-    <input type="search" placeholder="Tìm pet / tiến hóa / skill…" value="${esc(filters.q)}"
-           data-action="input" data-fn="homeFilter" data-field="q">
-    <span class="chip ${filters.el === 'all' ? 'on' : ''}" data-action="click" data-fn="homeSet" data-el="all">Tất cả hệ</span>
-    ${allElements.map(e => elChip(e)).join('')}
-    <span class="chip ${filters.kind === 'all' ? 'on' : ''}" data-action="click" data-fn="homeFilter" data-kind="all">Tất cả (${counts.all})</span>
-    <span class="chip ${filters.kind === 'leg' ? 'on' : ''}" data-action="click" data-fn="homeFilter" data-kind="leg">★ Legendary (${counts.leg})</span>
-    <span class="chip ${filters.kind === 'normal' ? 'on' : ''}" data-action="click" data-fn="homeFilter" data-kind="normal">Thường (${counts.normal})</span>
-    <select class="chip" data-action="change" data-fn="homeSort">
-      ${[['name', 'Tên A-Z'], ['catchDesc', 'Catch khó nhất'], ['catchAsc', 'Catch dễ nhất'], ['dps', 'DPS max cao nhất'], ['hp', 'HP max cao nhất'], ['stages', 'Nhiều cấp tiến hóa nhất']]
-        .map(([v, l]) => `<option value="${v}" ${filters.sort === v ? 'selected' : ''}>${l}</option>`).join('')}
-    </select>
-    <span class="badge" style="margin-left:auto">${list.length}</span>
-  </div>
-  <div class="grid">${list.map(card).join('') || '<div class="empty">Không tìm thấy</div>'}</div>
-  <p class="footnote">${esc(meta.catalogHash.slice(0, 12))} · ${new Date(meta.builtAt).toLocaleString('vi-VN')}</p>`;
+  if (!list.length) return `<div class="empty">Không tìm thấy</div><p class="footnote">${esc(meta.catalogHash.slice(0, 12))} · ${new Date(meta.builtAt).toLocaleString('vi-VN')}</p>`;
+  return list.map(card).join('') + `<p class="footnote">${esc(meta.catalogHash.slice(0, 12))} · ${new Date(meta.builtAt).toLocaleString('vi-VN')}</p>`;
 }
 
 function elChip(e) {
@@ -121,9 +112,24 @@ function card(p) {
 const fmt = n => n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace('.0', '') + 'k' : String(n);
 
 export function homePage() {
+  const counts = { all: pets.length, leg: listLeg.length, normal: listNorm.length };
   return `<main>
     <h1>Pokédex</h1>
     <p class="sub">${pets.length} pet · ${listLeg.length} legendary</p>
-    <div id="home-root">${listHTML()}</div>
+    <div class="controls">
+      <input type="search" placeholder="Tìm pet / tiến hóa / skill…" value="${esc(filters.q)}"
+             data-action="input" data-fn="homeFilter" data-field="q">
+      <span class="chip ${filters.el === 'all' ? 'on' : ''}" data-action="click" data-fn="homeSet" data-el="all">Tất cả hệ</span>
+      ${allElements.map(e => elChip(e)).join('')}
+      <span class="chip ${filters.kind === 'all' ? 'on' : ''}" data-action="click" data-fn="homeFilter" data-kind="all">Tất cả (${counts.all})</span>
+      <span class="chip ${filters.kind === 'leg' ? 'on' : ''}" data-action="click" data-fn="homeFilter" data-kind="leg">★ Legendary (${counts.leg})</span>
+      <span class="chip ${filters.kind === 'normal' ? 'on' : ''}" data-action="click" data-fn="homeFilter" data-kind="normal">Thường (${counts.normal})</span>
+      <select class="chip" data-action="change" data-fn="homeSort">
+        ${[['name', 'Tên A-Z'], ['catchDesc', 'Catch khó nhất'], ['catchAsc', 'Catch dễ nhất'], ['dps', 'DPS max cao nhất'], ['hp', 'HP max cao nhất'], ['stages', 'Nhiều cấp tiến hóa nhất']]
+          .map(([v, l]) => `<option value="${v}" ${filters.sort === v ? 'selected' : ''}>${l}</option>`).join('')}
+      </select>
+      <span class="badge" style="margin-left:auto" id="result-count">${filtered().length}</span>
+    </div>
+    <div id="home-grid" class="grid">${gridHTML()}</div>
   </main>`;
 }
