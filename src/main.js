@@ -16,7 +16,7 @@ function nav(active) {
   return `
   <header class="topbar">
     <a class="brand" href="#/pets">
-      <img src="./images/pet_xiaohuolong.png" alt="logo">
+      <img src="images/pet_xiaohuolong.png" alt="logo">
       <span>CUTD <em>Dex</em></span>
     </a>
     <nav>${links.map(([href, label]) =>

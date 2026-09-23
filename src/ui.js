@@ -6,7 +6,7 @@ export const trade = data.trade;
 export const pools = data.pools;
 export const elements = data.elements;
 
-export const img = file => `/images/${file ?? 'icon-list.png'}`;
+export const img = file => `images/${file ?? 'icon-list.png'}`;
 
 export function elBadge(el) {
   const c = elements[el] ?? elements.normal;
