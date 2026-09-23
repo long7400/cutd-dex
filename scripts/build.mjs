@@ -3,6 +3,8 @@ import { dirname, join } from 'node:path';
 import { readJSON, writeJSON } from './lib/fsx.mjs';
 import { createResolver } from './lib/game.mjs';
 import { createDescriber, TICKS_PER_SECOND } from './lib/describe.mjs';
+import { skillValue, ROLE_NAMES } from './lib/skillvalue.mjs';
+import { buildStrategy } from './lib/strategy.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const PATHS = {
@@ -166,6 +168,7 @@ export function build({ raw, client, changelog = [] }) {
       groundOnly: !!s.attack_ground_only,
       splash: s.attack_splash ?? null,
       auras: teamAuras(s),
+      ...(sv => ({ eff: sv.eff, pctHit: sv.pct || null, roles: sv.roles, unsure: sv.uncertain }))(skillValue(s, { abilityById, modifierById })),
       bounce: s.attack_bounce ?? null,
       armor: s.armor ?? 0,
       armorType: s.armor_type ?? 'normal',
@@ -181,6 +184,54 @@ export function build({ raw, client, changelog = [] }) {
       pool: poolOf.get(s.id) ?? null,
       notes: s.notes ?? [],
     };
+  }
+
+  for (const u of Object.values(units)) {
+    if (u.auras?.length) u.roles = [...new Set([...u.roles, 'aura'])].sort();
+    if ((u.level ?? 0) >= 20 && (u.armor >= 15 || u.hp / Math.max(1, u.eff) >= 18) && !u.roles.includes('tank')) u.roles = [...u.roles, 'tank'].sort();
+  }
+  const bestAhead = new Map();
+  const ahead = id => {
+    if (bestAhead.has(id)) return bestAhead.get(id);
+    bestAhead.set(id, units[id].eff);
+    const v = Math.max(units[id].eff, ...units[id].evo.filter(e => units[e.to]).map(e => ahead(e.to)));
+    bestAhead.set(id, v);
+    return v;
+  };
+  for (const u of Object.values(units)) {
+    for (const e of u.evo) {
+      const next = units[e.to];
+      if (next && next.eff < u.eff * 0.98) e.trap = ahead(e.to) <= u.eff * 1.02 ? 'trap' : 'dip';
+    }
+  }
+
+  const MID_GOLD = 1500;
+  const midOf = id => {
+    const cost = new Map([[id, 0]]), queue = [id];
+    let best = units[id].eff;
+    const unlocks = new Map();
+    while (queue.length) {
+      const cur = queue.shift();
+      for (const e of units[cur].evo) {
+        const c = cost.get(cur) + e.cost;
+        if (!units[e.to] || !Number.isFinite(c) || c > MID_GOLD || cost.get(e.to) <= c) continue;
+        cost.set(e.to, c); queue.push(e.to); best = Math.max(best, units[e.to].eff);
+        for (const r of units[e.to].roles) {
+          if (!units[id].roles.includes(r) && !(unlocks.get(r)?.[1] <= c)) unlocks.set(r, [e.to, c]);
+        }
+      }
+    }
+    return { best, unlocks };
+  };
+  const mids = Object.values(units).filter(u => u.catchable || u.pet).map(u => [u.id, midOf(u.id)]);
+  const ref = mids.map(([, v]) => v.best).sort((a, b) => a - b)[Math.floor(mids.length * 0.95)] || 1;
+  for (const [id, { best, unlocks }] of mids) {
+    const u = units[id];
+    const roles = new Set([...u.roles, ...unlocks.keys()]);
+    const roleBonus = (roles.has('aura') ? 0.35 : 0) + Math.min(0.2, 0.1 * [...roles].filter(r => ['cc', 'sustain', 'taunt', 'boss'].includes(r)).length);
+    u.mid = Math.round(best);
+    u.strategic = Math.round(Math.min(1, best / ref + roleBonus) * 100) / 100;
+    u.unlocks = [...unlocks].map(([r, [to, c]]) => [r, to, c]);
   }
 
   const OPTIONAL_ZERO = new Set(['regen', 'armor', 'catch', 'killGold', 'leak', 'book']);
@@ -281,6 +332,7 @@ export function build({ raw, client, changelog = [] }) {
       counts: { units: catalog.species.length, pets: pets.length, abilities: Object.keys(abilities).length },
     },
     elements, labels, pets, units, abilities, trade, pools, waveSets, roster, research, game, damage,
+    roleNames: ROLE_NAMES, strategy: buildStrategy({ units, pets, waveSets, damage }),
     changelog: changelog.slice(0, 60),
   };
 }
@@ -296,12 +348,15 @@ export function buildOverlay(db) {
       k: x.catchable ? 1 : undefined, lk: x.leak || undefined, f: x.family, p: x.pet ? slugOf.get(x.pet) : undefined,
       s: x.skills?.length ? x.skills.map(id => db.abilities[id]?.name).filter(Boolean) : undefined,
       e: x.evo?.length ? x.evo.filter(e => Number.isFinite(e.cost) && e.cost >= 0).map(e => [e.to, e.cost]) : undefined,
+      ed: x.eff, pt: x.pctHit || undefined, r: x.roles?.length ? x.roles : undefined, sv: x.strategic || undefined, md: x.mid || undefined,
+      ul: x.unlocks?.length ? x.unlocks : undefined,
+      tp: x.evo?.some(e => e.trap) ? Object.fromEntries(x.evo.filter(e => e.trap).map(e => [e.to, e.trap === 'trap' ? 2 : 1])) : undefined,
     };
   }
   return {
     v: db.meta.catalogHash.slice(0, 12), sell: db.game.rules.sellGold,
     el: Object.fromEntries(Object.entries(db.elements).map(([k, e]) => [k, { n: e.name, c: e.mid }])),
-    lb: db.labels, u, dmg: db.damage.table, ac: db.damage.armorCoefficient, lc: db.game.rules.legendaryCap,
+    lb: db.labels, u, dmg: db.damage.table, ac: db.damage.armorCoefficient, lc: db.game.rules.legendaryCap, rn: ROLE_NAMES,
     rs: Object.fromEntries(db.research.map(r => [r.id, [r.el, r.kind, r.magnitude]])),
     wv: Object.fromEntries(db.waveSets.map(set => [set.id, Object.fromEntries(set.waves.map(w => [w.n, w.groups.map(g => [g.unit, g.count])]))])),
   };

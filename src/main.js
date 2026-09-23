@@ -12,12 +12,13 @@ const ROUTES = {
   pools: () => import('./pages/pools.js'),
   research: () => import('./pages/research.js'),
   rules: () => import('./pages/rules.js'),
+  strategy: () => import('./pages/strategy.js'),
   changelog: () => import('./pages/changelog.js'),
   tool: () => import('./pages/tool.js'),
 };
 const NAV = [
   ['pets', 'Pets'], ['units', 'Sinh vật'], ['waves', 'Đợt quái'], ['trade', 'Trade'],
-  ['pools', 'Wild'], ['research', 'Nghiên cứu'], ['rules', 'Luật chơi'], ['tool', 'Công cụ'],
+  ['pools', 'Wild'], ['strategy', 'Chiến thuật'], ['research', 'Nghiên cứu'], ['rules', 'Luật chơi'], ['tool', 'Công cụ'],
 ];
 const ACTIVE = { pet: 'pets', unit: 'units' };
 

@@ -197,6 +197,7 @@ function researchBonus(s, db, el) {
 export function rateStages(s, db, stages) {
   const { pvp, list: threats } = threatsOf(s, db);
   const total = threats.reduce((n, t) => n + t.weight, 0);
+  const threatHp = total ? threats.reduce((n, t) => n + (t.weight / total) * (db.u[t.stage].hp ?? 0), 0) : 0;
   const vsThreats = u => {
     if (!total) return { mult: 1, armor: 1 };
     let mult = 0, armor = 0;
@@ -211,11 +212,15 @@ export function rateStages(s, db, stages) {
     const u = db.u[id];
     if (!u) return 0;
     const v = vsThreats(u);
-    return (u.dps ?? 0) * v.mult * v.armor * (1 + researchBonus(s, db, u.el).speed) * (u.sp ? 1.25 : 1);
+    const hit = (u.ed ?? u.dps ?? 0) * v.mult * v.armor + (u.pt ?? 0) * threatHp;
+    return hit * (1 + researchBonus(s, db, u.el).speed) * (u.sp ? 1.25 : 1);
   };
   const offense = id => {
     const u = db.u[id];
-    return u ? (u.hp ?? 0) * (1 + (db.ac ?? 0.06) * Math.max(0, u.ar ?? 0)) * Math.max(1, u.lk ?? 1) * Math.min(1.5, (u.ms ?? 300) / 300) : 0;
+    if (!u) return 0;
+    const roles = u.r ?? [];
+    const survive = (roles.includes('evade') ? 2 : 1) * (roles.includes('sustain') ? 1.3 : 1) * (roles.includes('tank') ? 1.2 : 1);
+    return (u.hp ?? 0) * (1 + (db.ac ?? 0.06) * Math.max(0, u.ar ?? 0)) * survive * Math.max(1, u.lk ?? 1) * Math.min(1.5, (u.ms ?? 300) / 300);
   };
 
   const team = myUnits(s).filter(u => u.active && db.u[u.stage]);
@@ -235,6 +240,9 @@ export function rateStages(s, db, stages) {
     }
     return [...cost].reduce((best, [st, c]) => (defense(st) > defense(best[0]) ? [st, c] : best), [id, 0]);
   };
+  const NEED = ['cc', 'sustain', 'tank', 'taunt', 'boss'];
+  const teamRoles = new Map();
+  for (const t of team) for (const r of db.u[t.stage].r ?? []) teamRoles.set(r, (teamRoles.get(r) ?? 0) + 1);
   const label = id => `${db.u[id].n}${db.u[id].l ? ` Lv${db.u[id].l}` : ''}`;
 
   const out = new Map();
@@ -287,14 +295,25 @@ export function rateStages(s, db, stages) {
     }
     if (tradeReason) reasons.push(tradeReason);
     const blocked = !!(u.L && hasLegend && (db.lc ?? 1) <= 1 && !owned);
+    let fills = 0;
+    for (const r of u.r ?? []) {
+      if (!NEED.includes(r)) continue;
+      const providers = (teamRoles.get(r) ?? 0) - (owned ? 1 : 0);
+      if (providers <= 0) { fills++; reasons.push(`${owned ? 'Duy nhất trong đội' : 'Đội đang thiếu'}: ${db.rn?.[r] ?? r}`); }
+    }
     if (blocked) reasons.unshift('Đã có huyền thoại — không bắt thêm được');
-    out.set(id, { def: power + aura + trade, off: offense(id), reasons: reasons.slice(0, 4), blocked });
+    for (const [r, to, cost] of u.ul ?? []) {
+      if (['aura', 'cc', 'sustain', 'taunt', 'boss'].includes(r) && db.u[to]) reasons.push(`Lên ${label(to)} (${Math.round(cost)} vàng) mở ${db.rn?.[r] ?? r}`);
+    }
+    if ((u.sv ?? 0) >= 0.7 && u.md) reasons.push(`Mạnh giữa trận: ~${Math.round(u.md)} DPS thật trong 1.500 vàng`);
+    out.set(id, { def: power + aura + trade, off: offense(id), sv: u.sv ?? 0, fills, reasons: reasons.slice(0, 5), blocked });
   }
   const maxDef = Math.max(1e-9, ...[...out.values()].map(r => r.def));
   const maxOff = Math.max(1e-9, ...[...out.values()].map(r => r.off));
   for (const r of out.values()) {
     if (pvp && r.off / maxOff >= 0.6) r.reasons.push('Làm quái trâu (sang đánh đối thủ)');
-    r.score = pvp ? 0.7 * (r.def / maxDef) + 0.3 * (r.off / maxOff) : r.def / maxDef;
+    const now = pvp ? 0.7 * (r.def / maxDef) + 0.3 * (r.off / maxOff) : r.def / maxDef;
+    r.score = Math.min(1, 0.6 * now + 0.4 * (r.sv ?? 0) + 0.08 * Math.min(2, r.fills));
     r.tier = r.blocked ? '—' : tierOf(r.score);
   }
   return { pvp, threats: threats.length, ratings: out };

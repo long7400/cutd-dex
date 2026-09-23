@@ -222,7 +222,12 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   };
   const row = (id, sub, right, { cls = '', tip } = {}) => h('div', { class: `row ${cls}`, title: tip },
     img(id), h('div', { class: 'mid' }, title(id), sub ? h('div', { class: 'sub' }, sub) : null), h('div', { class: 'right' }, right));
-  const statsTip = id => { const u = U(id) ?? {}; return `HP ${fmt(u.hp)} · DPS ${fmt(u.dps)} · đòn ${label(u.a)} · giáp ${label(u.at)}${u.s ? `\nKỹ năng: ${u.s.join(', ')}` : ''}`; };
+  const statsTip = id => {
+    const u = U(id) ?? {};
+    const roles = (u.r ?? []).map(r => db?.rn?.[r] ?? r);
+    return `HP ${fmt(u.hp)} · DPS ${fmt(u.dps)}${u.ed && Math.round(u.ed) !== Math.round(u.dps) ? ` (thật ${fmt(u.ed)} nhờ kỹ năng)` : ''} · đòn ${label(u.a)} · giáp ${label(u.at)}`
+      + `${roles.length ? `\nVai trò: ${roles.join(', ')}` : ''}${u.s ? `\nKỹ năng: ${u.s.join(', ')}` : ''}`;
+  };
   const empty = t => h('p', { class: 'empty', text: t });
 
   let toast = '';
@@ -425,8 +430,13 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         h('div', { class: 'hp', title: `${fmt(u.hp)} / ${fmt(u.maxHp)} HP` }, h('i', { style: `width:${Math.max(0, Math.min(100, pct))}%` })),
         [tierPill(u.stage), !u.active ? pill('Gục', 'bad') : null,
           trades.length ? act(`Trade S${trades[0].slot}`, 'trade', `u${u.id}`, trades[0].slot, { stage: u.stage, get: trades[0].get }, 'ok', `Đổi lấy ${nameOf(trades[0].get)}`) : null,
-          evo.length ? evo.map(([to, cost]) => act(`↑${evo.length > 1 ? `${U(to)?.n ?? ''} ` : ''}${short(cost)}g`, 'evolve', `u${u.id}`, to, { stage: u.stage },
-            cost <= state.gold ? 'ok' : 'bad', `Tiến hóa lên ${nameOf(to)}: ${fmt(cost)} vàng`)) : pill('Max', 'mute', 'Dạng cuối')],
+          evo.length ? evo.map(([to, cost]) => {
+            const trap = U(u.stage)?.tp?.[to];
+            const drop = `${fmt(U(u.stage)?.ed ?? U(u.stage)?.dps)} → ${fmt(U(to)?.ed ?? U(to)?.dps)} DPS thật`;
+            const warn = trap === 2 ? `\n⚠ BẪY: ${drop}, lên tiếp cũng không hồi lại — nên dừng ở đây` : trap === 1 ? `\n⚠ Tạm tụt: ${drop}, các cấp sau mới mạnh hơn` : '';
+            return act(`↑${evo.length > 1 ? `${U(to)?.n ?? ''} ` : ''}${short(cost)}g${trap ? ' ⚠' : ''}`, 'evolve', `u${u.id}`, to, { stage: u.stage },
+              trap === 2 || cost > state.gold ? 'bad' : 'ok', `Tiến hóa lên ${nameOf(to)}: ${fmt(cost)} vàng${warn}`);
+          }) : pill('Max', 'mute', 'Dạng cuối')],
         { tip: `${statsTip(u.stage)}\nBán: ${fmt(Math.floor(u.book * (db.sell ?? 0)))} vàng\nBấm để chọn trong game` }), `u${u.id}`);
     });
   }

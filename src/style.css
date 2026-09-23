@@ -260,3 +260,8 @@ a.bm { cursor: grab; font-size: 15px; padding: 9px 18px; }
   .trade-grid { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.tierb { display: inline-block; min-width: 30px; text-align: center; padding: 2px 6px; border-radius: 6px; font-weight: 800; font-size: 12px; background: var(--panel2, #1b2a44); }
+.tierb.t-sp { background: #ffde8f; color: #0b1526; } .tierb.t-s { background: #f0a35e; color: #0b1526; } .tierb.t-a { background: #1d3a2a; color: #9fd6a8; }
+.tierb.t-b { color: #8fb7e8; } .tierb.t-c { background: transparent; color: #6f8fb8; border: 1px solid #2a3d5c; }
+table.strat td { vertical-align: top; } table.strat .leg { color: var(--gold); }
+ul.notes { margin: 8px 0 18px; padding-left: 20px; line-height: 1.6; } ul.notes li { margin: 4px 0; }
