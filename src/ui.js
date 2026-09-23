@@ -7,7 +7,6 @@ export const elements = data.elements;
 export const meta = {
   catalogHash: data.catalogHash ?? '',
   builtAt: data.builtAt ?? '',
-  ruleset: data.rulesetVersion ?? '',
 };
 
 export const img = file => `images/${file ?? 'icon-list.png'}`;

@@ -37,17 +37,16 @@ const SORTERS = {
 };
 
 function filtered() {
-  let list = baseList();
+  const base = baseList();
   if (filters.q) {
     const hits = index.query(filters.q);
     if (hits) {
-      const set = new Set(hits);
-      const ranked = list.filter(p => set.has(p));
-      if (filters.sort === 'name') return ranked;
-      return [...ranked].sort(SORTERS[filters.sort] ?? SORTERS.name);
+      const baseSet = new Set(base);
+      const ranked = hits.map(i => pets[i]).filter(p => baseSet.has(p));
+      return filters.sort === 'name' ? ranked : [...ranked].sort(SORTERS[filters.sort] ?? SORTERS.name);
     }
   }
-  return [...list].sort(SORTERS[filters.sort] ?? SORTERS.name);
+  return [...base].sort(SORTERS[filters.sort] ?? SORTERS.name);
 }
 
 window.__actions.homeFilter = el => {

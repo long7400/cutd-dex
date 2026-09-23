@@ -210,6 +210,3 @@ select.chip { appearance: none; padding-right: 26px; }
   .controls { position: static; }
 }
 
-/* link actions ở topbar */
-.brand2 { margin-left: auto; color: var(--dim); font-size: 17px; padding: 4px 8px; border-radius: 8px; }
-.brand2:hover { color: var(--gold); background: var(--card); }

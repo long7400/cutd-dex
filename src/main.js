@@ -3,7 +3,6 @@ import { homePage } from './pages/home.js';
 import { petPage } from './pages/pet.js';
 import { tradePage } from './pages/trade.js';
 import { poolsPage } from './pages/pools.js';
-import { filters as homeFilters } from './pages/home.js';
 
 const app = document.getElementById('app');
 
@@ -22,7 +21,6 @@ function nav(active) {
     <nav>${links.map(([href, label]) =>
       `<a class="navlink ${active === href.slice(2) ? 'on' : ''}" href="${href}">${label}</a>`
     ).join('')}</nav>
-    <a class="brand2" href="https://github.com/long7400/cutd-dex/actions" target="_blank" rel="noopener" title="Actions">⚙</a>
   </header>`;
 }
 
@@ -54,8 +52,6 @@ function render() {
 
   app.innerHTML = html;
   bindAll();
-  const search = document.querySelector('input[type=search]');
-  if (search && homeFilters.q) { search.focus(); search.setSelectionRange(9999, 9999); }
 }
 
 window.addEventListener('hashchange', render);
