@@ -217,40 +217,6 @@ select.chip { appearance: none; padding-right: 26px; }
   .controls { position: static; }
 }
 
-/* ===== Update button + modal ===== */
-.upd-btn {
-  margin-left: auto; cursor: pointer;
-  background: var(--card2); color: var(--txt);
-  border: 1px solid var(--line2); border-radius: 9px;
-  padding: 6px 12px; font: 600 13px ui-sans-serif, system-ui;
-  display: inline-flex; align-items: center; gap: 7px;
-}
-.upd-btn:hover { border-color: var(--gold2); color: var(--gold); }
-.upd-btn .vhash { color: var(--dim); font-size: 11px; font-family: ui-monospace, monospace; }
-
-.upd-overlay {
-  position: fixed; inset: 0; z-index: 100;
-  background: #04080fd9; backdrop-filter: blur(4px);
-  display: flex; align-items: center; justify-content: center; padding: 18px;
-}
-.upd-overlay[hidden] { display: none; }
-.upd-modal {
-  background: var(--card); border: 1px solid var(--line2); border-radius: 16px;
-  width: min(560px, 100%); padding: 20px; box-shadow: 0 18px 60px #000c;
-}
-.upd-title { font-weight: 800; font-size: 17px; color: var(--gold); margin-bottom: 12px; }
-.upd-body { min-height: 64px; margin-bottom: 14px; }
-.upd-body .upd-msg, .upd-body .upd-err { background: var(--bg2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font-size: 14px; line-height: 1.6; }
-.upd-body .upd-err { border-color: #6e2b2b; color: var(--red); }
-.upd-body code { background: #04080f; padding: 1px 6px; border-radius: 5px; font-size: 12px; color: var(--green); }
-.upd-body small { color: var(--dim); }
-.upd-foot input {
-  width: 100%; background: var(--bg2); color: var(--txt);
-  border: 1px solid var(--line2); border-radius: 9px; padding: 9px 12px;
-  font-size: 13px; outline: none; margin-bottom: 10px;
-}
-.upd-actions { display: flex; gap: 8px; justify-content: flex-end; }
-.upd-actions .chip { cursor: pointer; }
-.upd-help { color: var(--dim); font-size: 12px; margin-top: 12px; line-height: 1.6; }
-.upd-help a { color: var(--purple); }
-.upd-help code { background: #04080f; padding: 1px 5px; border-radius: 4px; }
+/* link actions ở topbar */
+.brand2 { margin-left: auto; color: var(--dim); font-size: 17px; padding: 4px 8px; border-radius: 8px; }
+.brand2:hover { color: var(--gold); background: var(--card); }

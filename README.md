@@ -35,19 +35,18 @@ src/
 - **Trade** — 7 slot × 3 recipe, ảnh 2 bên, link về chuỗi tiến hóa pet đem đổi
 - **Wild Pools** — 7 pool theo hệ, thanh tỉ lệ xuất hiện, catch %
 
-## Tự cập nhật — nút 🔄 trên web (đã bỏ cron)
+## Tự cập nhật — cron, không cần nút hay token
 
-Bấm nút **🔄** góc phải topbar → flow chống spam request:
+GitHub Action chạy **mỗi 2 tiếng** (`7 */2 * * *`), flow tự chống spam request:
 
-1. **Stream + early-exit**: fetch `m.cutd.site/catalog` nhưng chỉ đọc ~1KB đầu rồi abort stream —
-   `catalog_hash` nằm TRƯỚC blob 1.7MB nên đủ parse → check chỉ tốn ~1KB
-2. Hash trùng → dừng ngay, **0 request lên GitHub** ("đã mới nhất ✓")
-3. Hash khác → mới gọi `workflow_dispatch` (cần GitHub fine-grained token, quyền Actions RW, chỉ repo này;
-   token lưu localStorage của máy mày). Workflow tự check hash lần nữa rồi bóc: pet mới / pet bị xoá /
-   tải ảnh thiếu / **xoá ảnh rác** / build lại data → commit → Deploy tự chạy
-4. Web theo dõi run xong → poll asset mới trên Pages (tên file JS hash theo nội dung) → **tự reload**
+1. So `catalog_hash` mới vs cũ — trùng thì thoát ngay, **0 request thừa**
+2. Khác → bóc lại bundle JS (map unit→model, hệ, màu), báo cáo **pet mới / pet bị xoá**
+3. Tải ảnh portrait thiếu, **tự xoá ảnh rác** của pet không còn trong game
+   (guard: bóc mapping bất thường < 100 unit thì bỏ qua bước xoá)
+4. Build lại `data.json` (sinh từ đầu → pet bị remove tự biến mất) → commit → Deploy tự chạy
 
-Chạy tay: `npm run update` (check hash) hoặc `npm run update:force` (ép bóc toàn bộ).
+Chạy tay khi muốn: `npm run update` (check hash, bóc nếu đổi) / `npm run update:force` (ép bóc toàn bộ).
+Xem lịch sử update: tab **Actions** trên GitHub (link ⚙ góc phải web).
 
 ## Thuật toán & cấu trúc dữ liệu
 
