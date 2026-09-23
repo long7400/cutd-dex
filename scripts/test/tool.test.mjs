@@ -120,7 +120,7 @@ test('bookmarklet: chỉ đọc, bắt socket rồi trả getter, hiển thị t
   const clickTab = name => [...root.querySelectorAll('button')].find(b => b.textContent.startsWith(name)).click();
   clickTab('Wild');
   assert.match(text(), new RegExp(overlay.u[scenario.a].n));
-  clickTab('Đợt tới');
+  clickTab('Đợt');
   assert.match(text(), /×3/);
   assert.doesNotMatch(text(), /×9/, 'không hiện quái của nhà khác');
   clickTab('Phòng');
@@ -170,4 +170,41 @@ test('bookmarklet: không chạy ngoài trang game', t => {
   assert.equal(log.alerts.length, 1);
   assert.equal(log.fetches.length, 0);
   assert.equal(w.__cutdHelper, undefined);
+});
+
+test('bookmarklet: bấm ở sảnh → bỏ qua socket sảnh, bám đúng socket trận; ngang/dọc; tab Đo tải', async t => {
+  const { w, log, code, FakeWS } = setupDom();
+  t.after(() => w.close());
+  const original = Object.getOwnPropertyDescriptor(w.MessageEvent.prototype, 'data');
+  w.eval(code);
+
+  // Socket sảnh: message không phải của trận → không bám, getter vẫn chờ.
+  const lobby = new FakeWS();
+  lobby.addEventListener('message', e => e.data);
+  lobby.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify({ type: 'room_list', rooms: [] }) }));
+  await tick(0);
+  assert.notEqual(Object.getOwnPropertyDescriptor(w.MessageEvent.prototype, 'data').get, original.get, 'vẫn phải chờ socket trận');
+
+  // Vào phòng: socket trận mới → server_hello → bám, trả getter.
+  const game = new FakeWS();
+  game.addEventListener('message', e => e.data);
+  const emit = m => game.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
+  emit({ type: 'server_hello', protocol_version: '16' });
+  await tick(0);
+  assert.equal(Object.getOwnPropertyDescriptor(w.MessageEvent.prototype, 'data').get, original.get);
+  emit(summary);
+  emit(keyframe([{ id: 1, stage_id: scenario.c, owner_id: 11, health: 5, max_health: 10, active: true }]));
+  await tick(1200);
+
+  const root = log.roots[0];
+  const btn = title => [...root.querySelectorAll('button')].find(b => b.title === title || b.textContent.startsWith(title));
+  btn('Đo tải').click();
+  assert.match(root.querySelector('.panel').textContent, /Có pet hoang dã/);
+  assert.ok(root.querySelector('.verdict'));
+
+  btn('Chuyển sang ngang').click();
+  assert.ok(root.querySelector('.panel').classList.contains('h'));
+  btn('Chuyển sang dọc').click();
+  assert.ok(root.querySelector('.panel').classList.contains('v'));
+  assert.equal(log.sent, 0);
 });

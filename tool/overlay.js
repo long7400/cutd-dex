@@ -63,6 +63,15 @@ table{width:100%;border-collapse:collapse}th,td{text-align:right;padding:5px 10p
 th{color:#6f8fb8;font-weight:600;font-size:11px}td:first-child,th:first-child{text-align:left}
 tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .mini{all:unset;cursor:pointer;padding:5px 11px;border-radius:9px;background:#0f1a2d;color:#ffde8f;border:1px solid #b69c62;font-weight:700;box-shadow:0 4px 14px #0008}
+.panel.h{width:min(1180px,calc(100vw - 24px));max-height:min(340px,45vh)}
+.panel.h .body{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));align-content:start;column-gap:4px}
+.panel.h .body>.bar-row,.panel.h .body>.empty,.panel.h .body>table,.panel.h .body>.verdict,.panel.h .body>.sec{grid-column:1/-1}
+.panel.h .tab{flex:0 0 auto;padding:7px 14px}
+.verdict{margin:8px 10px;padding:8px 10px;border-radius:8px;background:#3a3016;color:#ffde8f;font-weight:600}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:4px 10px;border-bottom:1px solid #1d2c47}
+.kv span{color:#8fb7e8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.kv b{white-space:nowrap}
+.kv.hl b{color:#ffde8f}.kv.file span{font-family:ui-monospace,monospace;font-size:11px}
+.sec{padding:8px 10px 2px;color:#6f8fb8;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
 [hidden]{display:none!important}
 `;
 
@@ -84,11 +93,25 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   let patched = false;
   const seen = new WeakSet();
 
+  // Mốc thời gian để chẩn đoán vì sao vào trận lâu mới thấy pet (chỉ đo trên máy, không gửi đi đâu).
+  const diag = { start: performance.now(), hello: null, firstMsg: null, keyframe: null, firstWild: null, firstUnit: null, longTaskMs: 0, longTasks: 0 };
+  const now = () => performance.now();
+
+  // Trả true nếu đây là message của KẾT NỐI TRẬN (để chỉ bám đúng socket trận, bỏ qua socket sảnh nếu có).
   function handle(text) {
-    if (typeof text !== 'string' || text.charCodeAt(0) !== 123) return; // chỉ frame JSON '{'
+    if (typeof text !== 'string' || text.charCodeAt(0) !== 123) return false; // chỉ frame JSON '{'
     let msg;
-    try { msg = JSON.parse(text); } catch { return; }
-    if (isGameMessage(msg) && applyMessage(state, msg)) invalidate();
+    try { msg = JSON.parse(text); } catch { return false; }
+    if (msg?.type === 'server_hello') { diag.hello ??= now(); return true; }
+    if (!isGameMessage(msg)) return false;
+    diag.firstMsg ??= now();
+    if (msg.type === 'base_keyframe') diag.keyframe ??= now();
+    if (applyMessage(state, msg)) {
+      if (state.wilds.size) diag.firstWild ??= now();
+      if (state.units.size) diag.firstUnit ??= now();
+      invalidate();
+    }
+    return true;
   }
   let pending = 0;
   // Gom nhiều message thành tối đa 1 lần vẽ mỗi giây, nhưng không bao giờ để trễ quá 1 giây.
@@ -117,9 +140,11 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         try {
           if (!socket && this.target instanceof WebSocket && !seen.has(this)) {
             seen.add(this);
-            handle(v);
-            const ws = this.target;
-            queueMicrotask(() => attach(ws));
+            // Chỉ bám socket khi thấy message của trận; socket khác (sảnh…) để yên, getter vẫn chờ.
+            if (handle(v)) {
+              const ws = this.target;
+              queueMicrotask(() => attach(ws));
+            }
           }
         } catch { /* không bao giờ làm hỏng game */ }
         return v;
@@ -279,6 +304,62 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         [b.name, b.lives, short(b.gold), short(b.lumber), b.creeps].map(v => h('td', { text: String(v) })))));
   }
 
+  // Tab "Đo tải": vào phòng mất bao lâu mới có pet, và chậm ở khâu nào.
+  const resources = [];
+  const observers = [];
+  function observe(type, fn) {
+    try {
+      const o = new PerformanceObserver(list => list.getEntries().forEach(fn));
+      o.observe({ type, buffered: true });
+      observers.push(o);
+    } catch { /* trình duyệt không hỗ trợ loại này */ }
+  }
+  observe('resource', e => { if (resources.length < 2000) resources.push(e); });
+  observe('longtask', e => { diag.longTaskMs += e.duration; diag.longTasks++; });
+
+  function diagReport() {
+    const base = diag.hello ?? diag.firstMsg;
+    if (!base) return null;
+    const sec = v => (v == null ? null : Math.max(0, (v - base) / 1000));
+    const after = resources.filter(r => r.startTime >= base - 50);
+    const netEnd = after.length ? Math.max(...after.map(r => r.responseEnd)) : base;
+    const bytes = after.reduce((n, r) => n + (r.transferSize || 0), 0);
+    const r = {
+      helloSeen: diag.hello != null, keyframe: sec(diag.keyframe), wild: sec(diag.firstWild), unit: sec(diag.firstUnit),
+      net: sec(netEnd), files: after.length, mb: bytes / 1048576, longMs: diag.longTaskMs, longN: diag.longTasks,
+      slow: [...after].sort((a, b) => b.duration - a.duration).slice(0, 6)
+        .map(x => ({ file: String(x.name).split('?')[0].split('/').slice(-2).join('/'), ms: Math.round(x.duration), kb: Math.round((x.transferSize || 0) / 1024) })),
+    };
+    const wild = r.wild ?? Infinity;
+    r.verdict = r.wild == null ? 'Server chưa gửi pet nào — đợi thêm.'
+      : r.keyframe > 5 ? `Server phản hồi chậm: ${fmt(r.keyframe)}s mới gửi ảnh chụp căn cứ.`
+      : wild - r.keyframe > 5 ? 'Pet do server thả muộn (luật/đếm ngược của game), không phải do máy mày.'
+      : r.net > 5 && r.net >= wild * 0.6 ? 'Chậm do TẢI FILE (mạng / file nặng) — xem danh sách file chậm bên dưới.'
+      : r.longMs > 5000 ? 'Chậm do MÁY xử lý (CPU/GPU) lúc dựng trận.'
+      : 'Dữ liệu pet tới nhanh; nếu game vẫn hiện chậm là do game dựng hình 3D — dùng tab Wild để chọn trước.';
+    return r;
+  }
+
+  function viewDiag() {
+    const r = diagReport();
+    if (!r) return empty('Bấm bookmark ở SẢNH trước khi vào phòng, tool sẽ đo từ lúc vào trận tới lúc có pet.');
+    const s = v => (v == null ? '—' : `${fmt(v)}s`);
+    const kv = (k, v, cls = '') => h('div', { class: `kv ${cls}` }, h('span', { text: k }), h('b', { text: v }));
+    return [
+      h('p', { class: 'verdict', text: r.verdict }),
+      kv('Vào phòng', r.helloSeen ? '0s' : 'bấm bookmark muộn'),
+      kv('Ảnh chụp căn cứ', s(r.keyframe)), kv('Có pet hoang dã', s(r.wild), 'hl'), kv('Có lính', s(r.unit)),
+      kv('Tải xong file trận', `${s(r.net)} · ${r.files} file · ${fmt(r.mb)}MB`),
+      kv('Máy bị khựng', `${s(r.longMs / 1000)} · ${r.longN} lần`),
+      r.slow.length ? h('div', { class: 'sec', text: 'File tải lâu nhất' }) : null,
+      r.slow.map(x => kv(x.file, `${fmt(x.ms)}ms · ${fmt(x.kb)}KB`, 'file')),
+      h('div', { class: 'bar-row' }, h('button', { class: 'chip', text: 'Chép báo cáo', onClick: e => {
+        const text = JSON.stringify({ v: VERSION, ...r }, null, 1);
+        navigator.clipboard?.writeText(text).then(() => { e.target.textContent = 'Đã chép'; }, () => { e.target.textContent = 'Không chép được'; });
+      } })),
+    ];
+  }
+
   // ───────────── khung panel ─────────────
   const host = h('div', { style: 'position:fixed;top:12px;left:12px;z-index:2147483646;' });
   const root = host.attachShadow({ mode: 'closed' });
@@ -288,7 +369,13 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   document.documentElement.append(host);
 
   let drag = null;
-  const TABS = [['trade', 'Trade'], ['wild', 'Wild'], ['team', 'Đội'], ['wave', 'Đợt tới'], ['players', 'Phòng']];
+  const TABS = [['trade', 'Trade'], ['wild', 'Wild'], ['team', 'Đội'], ['wave', 'Đợt'], ['players', 'Phòng'], ['diag', 'Đo tải']];
+  let layout = 'v'; // 'v' = dọc (panel), 'h' = ngang (thanh dưới đáy màn hình)
+  function setLayout(next) {
+    layout = next;
+    Object.assign(host.style, layout === 'h' ? { top: 'auto', bottom: '12px', left: '12px' } : { top: '12px', bottom: 'auto', left: '12px' });
+    dirty = true; render(true);
+  }
 
   let clockEl = null, bodyEl = null;
   function render(force = false) {
@@ -304,6 +391,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const header = h('div', { class: 'top', title: `CUTD Helper v${VERSION} — chỉ đọc dữ liệu trận, không gửi gì lên server` },
       h('b', { text: 'CUTD Helper' }),
       h('span', { class: 'grow' }),
+      h('button', { class: 'x', text: layout === 'h' ? '▯' : '▭', title: layout === 'h' ? 'Chuyển sang dọc' : 'Chuyển sang ngang', onClick: () => setLayout(layout === 'h' ? 'v' : 'h') }),
       h('button', { class: 'x', text: '–', title: 'Thu nhỏ', onClick: () => toggle() }),
       h('button', { class: 'x', text: '×', title: 'Tắt tool', onClick: () => destroy() }));
     header.addEventListener('pointerdown', e => {
@@ -320,19 +408,20 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       t, count[k] ? h('small', { text: ` ${count[k]}` }) : null)));
     let content;
     try {
-      content = status ? empty(status) : ({
-        trade: viewTrade, wild: viewWild, team: viewTeam, wave: viewWave, players: viewPlayers,
+      content = status && tab !== 'diag' ? empty(status) : ({
+        trade: viewTrade, wild: viewWild, team: viewTeam, wave: viewWave, players: viewPlayers, diag: viewDiag,
       })[tab]();
     } catch (err) {
       content = h('p', { class: 'empty bad', text: `Lỗi hiển thị: ${err?.message ?? err}` });
     }
     const body = bodyEl = h('div', { class: 'body' }, content);
+    panel.className = `panel ${layout}`;
     panel.replaceChildren(header, stats ?? '', tabs, body);
     body.scrollTop = scroll;
   }
   const clock = () => (state.summary ? `Đợt ${state.summary.wave} · ${state.summary.phase === 'wave' ? 'đánh' : 'nghỉ'} ${fmt(Math.ceil(secondsLeft(state) ?? 0))}s` : '');
 
-  const onMove = e => { if (drag) { host.style.left = `${Math.max(0, e.clientX - drag.dx)}px`; host.style.top = `${Math.max(0, e.clientY - drag.dy)}px`; } };
+  const onMove = e => { if (drag) { host.style.bottom = 'auto'; host.style.left = `${Math.max(0, e.clientX - drag.dx)}px`; host.style.top = `${Math.max(0, e.clientY - drag.dy)}px`; } };
   const onUp = () => { drag = null; };
   window.addEventListener('pointermove', onMove);
   window.addEventListener('pointerup', onUp);
@@ -348,6 +437,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     socket?.removeEventListener('close', onClose);
     clearInterval(timer);
     clearTimeout(pending);
+    observers.forEach(o => o.disconnect());
     window.removeEventListener('pointermove', onMove);
     window.removeEventListener('pointerup', onUp);
     host.remove();
