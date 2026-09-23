@@ -23,7 +23,8 @@ const BASE = (process.env.CUTD_BASE ?? 'https://m.cutd.site').replace(/\/$/, '')
 const FORCE = process.argv.includes('--force');
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const STATE = join(ROOT, 'data/state.json');
-const ASSET_DIRS = { portraits: join(ROOT, 'public/portraits'), research: join(ROOT, 'public/research') };
+const ASSET_DIRS = { portraits: join(ROOT, 'public/portraits'), research: join(ROOT, 'public/research'), skills: join(ROOT, 'public/skills') };
+const ASSET_SIZE = { skills: 96 };
 const CONCURRENCY = 8;
 
 const c = (code, s) => (process.stdout.isTTY ? `\x1b[${code}m${s}\x1b[0m` : String(s));
@@ -102,6 +103,9 @@ for (const s of raw.catalog.species) {
   if (model) wanted.set(`portraits/${model}.webp`, `/resources/art/portraits/${model}.png`);
 }
 for (const r of raw.catalog.research ?? []) wanted.set(`research/${r.id}.webp`, `/resources/art/ui/research-icons-v1/${r.id}.png`);
+for (const icon of new Set(['icon-ability', ...Object.values(client.abilityIcon ?? {})])) {
+  wanted.set(`skills/${icon}.webp`, `/resources/art/ui/monster-dock/${icon}.png`);
+}
 
 const localPath = key => join(ROOT, 'public', key);
 
@@ -133,7 +137,7 @@ const results = await mapLimit(todo, CONCURRENCY, async ([key, url]) => {
   const have = existsSync(localPath(key));
   const res = await request(BASE + url, { validator: have ? state.assets[key] : undefined, retries: 2 });
   if (res.notModified) { unchanged++; return; }
-  writeAtomic(localPath(key), await toWebp(res.body));
+  writeAtomic(localPath(key), await toWebp(res.body, { size: ASSET_SIZE[key.split('/')[0]] }));
   state.assets[key] = res.validator; // ETag của PNG gốc trên server
   fetched++;
 });

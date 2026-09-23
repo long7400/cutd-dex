@@ -131,7 +131,7 @@ export function build({ raw, client, changelog = [] }) {
   for (const s of catalog.species) {
     const { name, level } = splitName(s.id);
     const skills = D.visibleAbilities(s);
-    for (const id of skills) abilities[id] ??= D.ability(id);
+    for (const id of skills) abilities[id] ??= { icon: client.abilityIcon?.[id] ?? 'icon-ability', ...D.ability(id) };
     const dice = s.attack_damage_dice ?? 0, sides = s.attack_damage_sides ?? 0, base = s.attack_damage_base ?? 0;
     units[s.id] = {
       id: s.id,

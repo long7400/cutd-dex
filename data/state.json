@@ -907,6 +907,450 @@
   "research/research_r00r.webp": {
    "etag": "\"6ab020f7-bc89\"",
    "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "skills/icon-ability.webp": {
+   "etag": "\"6ab020f7-2010\"",
+   "lastModified": "Sun, 20 Sep 2026 18:07:51 GMT"
+  },
+  "skills/skill-001.webp": {
+   "etag": "\"6aaf5437-10f19\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-002.webp": {
+   "etag": "\"6aaf5437-11f90\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-003.webp": {
+   "etag": "\"6aaf5437-12411\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-004.webp": {
+   "etag": "\"6aaf5437-101bf\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-005.webp": {
+   "etag": "\"6aaf5437-1146b\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-006.webp": {
+   "etag": "\"6aaf5437-1135b\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-007.webp": {
+   "etag": "\"6aaf5437-12618\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-008.webp": {
+   "etag": "\"6aaf5437-f845\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-009.webp": {
+   "etag": "\"6aaf5437-12138\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-010.webp": {
+   "etag": "\"6aaf5437-10613\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-011.webp": {
+   "etag": "\"6aaf5437-12220\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-012.webp": {
+   "etag": "\"6aaf5437-106f9\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-013.webp": {
+   "etag": "\"6aaf5437-11122\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-014.webp": {
+   "etag": "\"6aaf5437-11341\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-015.webp": {
+   "etag": "\"6aaf5437-106ff\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-016.webp": {
+   "etag": "\"6aaf5437-f6b3\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-017.webp": {
+   "etag": "\"6aaf5437-f064\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-018.webp": {
+   "etag": "\"6aaf5437-11339\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-019.webp": {
+   "etag": "\"6aaf5437-10b85\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-020.webp": {
+   "etag": "\"6aaf5437-1199b\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-021.webp": {
+   "etag": "\"6aaf5437-fdd3\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-022.webp": {
+   "etag": "\"6aaf5437-12536\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-023.webp": {
+   "etag": "\"6aaf5437-116d5\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-024.webp": {
+   "etag": "\"6aaf5437-101dc\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-025.webp": {
+   "etag": "\"6aaf5437-10cff\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-026.webp": {
+   "etag": "\"6aaf5437-12edd\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-027.webp": {
+   "etag": "\"6aaf5437-102f7\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-028.webp": {
+   "etag": "\"6aaf5437-1114c\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-029.webp": {
+   "etag": "\"6aaf5437-126a9\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-030.webp": {
+   "etag": "\"6aaf5437-11e59\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-031.webp": {
+   "etag": "\"6aaf5437-11094\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-032.webp": {
+   "etag": "\"6aaf5437-106f5\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-033.webp": {
+   "etag": "\"6aaf5437-10ffc\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-034.webp": {
+   "etag": "\"6aaf5437-113f1\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-035.webp": {
+   "etag": "\"6aaf5437-11a24\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-036.webp": {
+   "etag": "\"6aaf5437-12648\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-037.webp": {
+   "etag": "\"6aaf5437-116bf\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-038.webp": {
+   "etag": "\"6aaf5437-130b1\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-039.webp": {
+   "etag": "\"6aaf5437-11501\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-040.webp": {
+   "etag": "\"6aaf5437-1228a\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-041.webp": {
+   "etag": "\"6aaf5437-10076\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-042.webp": {
+   "etag": "\"6aaf5437-11562\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-043.webp": {
+   "etag": "\"6aaf5437-120d3\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:15 GMT"
+  },
+  "skills/skill-044.webp": {
+   "etag": "\"6aaf5438-10173\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-045.webp": {
+   "etag": "\"6aaf5438-1236b\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-046.webp": {
+   "etag": "\"6aaf5438-1223f\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-047.webp": {
+   "etag": "\"6aaf5438-fb0a\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-048.webp": {
+   "etag": "\"6aaf5438-12b82\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-049.webp": {
+   "etag": "\"6aaf5438-102b6\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-050.webp": {
+   "etag": "\"6aaf5438-128a1\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-051.webp": {
+   "etag": "\"6aaf5438-1023b\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-052.webp": {
+   "etag": "\"6aaf5438-1121a\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-053.webp": {
+   "etag": "\"6aaf5438-12f77\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-054.webp": {
+   "etag": "\"6aaf5438-129a7\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-055.webp": {
+   "etag": "\"6aaf5438-12278\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-056.webp": {
+   "etag": "\"6aaf5438-12631\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-057.webp": {
+   "etag": "\"6aaf5438-11a5b\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-058.webp": {
+   "etag": "\"6aaf5438-127a9\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-059.webp": {
+   "etag": "\"6aaf5438-fab6\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-060.webp": {
+   "etag": "\"6aaf5438-10f3a\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-061.webp": {
+   "etag": "\"6aaf5438-11073\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-062.webp": {
+   "etag": "\"6aaf5438-103a2\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-063.webp": {
+   "etag": "\"6aaf5438-114fb\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-064.webp": {
+   "etag": "\"6aaf5438-1171d\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-065.webp": {
+   "etag": "\"6aaf5438-114db\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-066.webp": {
+   "etag": "\"6aaf5438-12f08\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-067.webp": {
+   "etag": "\"6aaf5438-12bea\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-068.webp": {
+   "etag": "\"6aaf5438-1282f\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-069.webp": {
+   "etag": "\"6aaf5438-11fd5\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-070.webp": {
+   "etag": "\"6aaf5438-11d1a\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-071.webp": {
+   "etag": "\"6aaf5438-11141\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-072.webp": {
+   "etag": "\"6aaf5438-e010\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-073.webp": {
+   "etag": "\"6aaf5438-fe33\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-074.webp": {
+   "etag": "\"6aaf5438-11090\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-075.webp": {
+   "etag": "\"6aaf5438-1181e\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-076.webp": {
+   "etag": "\"6aaf5438-110f7\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-077.webp": {
+   "etag": "\"6aaf5438-126a0\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-078.webp": {
+   "etag": "\"6aaf5438-11bf7\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-079.webp": {
+   "etag": "\"6aaf5438-11950\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-080.webp": {
+   "etag": "\"6aaf5438-11ac7\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-081.webp": {
+   "etag": "\"6aaf5438-11dba\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-082.webp": {
+   "etag": "\"6aaf5438-10fd0\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-083.webp": {
+   "etag": "\"6aaf5438-117da\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-084.webp": {
+   "etag": "\"6aaf5438-12458\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-085.webp": {
+   "etag": "\"6aaf5438-10f8d\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-086.webp": {
+   "etag": "\"6aaf5438-11a0b\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-087.webp": {
+   "etag": "\"6aaf5438-115d9\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-088.webp": {
+   "etag": "\"6aaf5438-10adb\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-089.webp": {
+   "etag": "\"6aaf5438-137c4\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:16 GMT"
+  },
+  "skills/skill-090.webp": {
+   "etag": "\"6aaf5439-12670\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:17 GMT"
+  },
+  "skills/skill-091.webp": {
+   "etag": "\"6aaf5439-12726\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:17 GMT"
+  },
+  "skills/skill-092.webp": {
+   "etag": "\"6aaf5439-11f94\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:17 GMT"
+  },
+  "skills/skill-093.webp": {
+   "etag": "\"6aaf5439-11935\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:17 GMT"
+  },
+  "skills/skill-094.webp": {
+   "etag": "\"6aaf5439-10c2e\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:17 GMT"
+  },
+  "skills/skill-095.webp": {
+   "etag": "\"6aaf5439-10aab\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:17 GMT"
+  },
+  "skills/skill-096.webp": {
+   "etag": "\"6aaf5439-1216d\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:17 GMT"
+  },
+  "skills/skill-097.webp": {
+   "etag": "\"6aaf5439-127b2\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:17 GMT"
+  },
+  "skills/skill-098.webp": {
+   "etag": "\"6aaf5439-11075\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:17 GMT"
+  },
+  "skills/skill-099.webp": {
+   "etag": "\"6aaf5439-11233\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:17 GMT"
+  },
+  "skills/skill-100.webp": {
+   "etag": "\"6aaf5439-11903\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:17 GMT"
+  },
+  "skills/skill-101.webp": {
+   "etag": "\"6aaf5439-1122b\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:17 GMT"
+  },
+  "skills/skill-102.webp": {
+   "etag": "\"6aaf5439-125b2\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:17 GMT"
+  },
+  "skills/skill-103.webp": {
+   "etag": "\"6aaf5439-1172c\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:17 GMT"
+  },
+  "skills/skill-104.webp": {
+   "etag": "\"6aaf5439-11118\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:17 GMT"
+  },
+  "skills/skill-105.webp": {
+   "etag": "\"6aaf5439-e44d\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:17 GMT"
+  },
+  "skills/skill-106.webp": {
+   "etag": "\"6aaf5439-12809\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:17 GMT"
+  },
+  "skills/skill-107.webp": {
+   "etag": "\"6aaf5439-fe96\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:17 GMT"
+  },
+  "skills/skill-108.webp": {
+   "etag": "\"6aaf5439-10ce8\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:17 GMT"
+  },
+  "skills/skill-109.webp": {
+   "etag": "\"6aaf5439-12050\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:17 GMT"
+  },
+  "skills/skill-110.webp": {
+   "etag": "\"6aaf5439-11281\"",
+   "lastModified": "Sun, 20 Sep 2026 03:34:17 GMT"
   }
  },
  "bundle": "/assets/index-BSrOIqaL.js",

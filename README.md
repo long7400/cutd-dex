@@ -23,7 +23,7 @@ data/                    # dữ liệu thô từ game (commit vào git → xem d
   client.json            #   bóc từ bundle JS: model, unit→model, màu hệ, bảng dịch vi
   changelog.json         #   lịch sử thay đổi tự sinh
   state.json             #   ETag/Last-Modified cho conditional GET
-public/portraits, research/   # ảnh portrait + icon nghiên cứu (WebP, chuyển từ PNG của game bằng sharp)
+public/portraits, research/, skills/   # portrait, icon nghiên cứu, icon skill (WebP, chuyển từ PNG của game bằng sharp)
 scripts/
   sync.mjs               # đồng bộ: check → tải → validate → ghi atomic → build
   build.mjs              # data/ → src/data/db.json (chuẩn hoá, gitignored)

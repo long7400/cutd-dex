@@ -11,7 +11,7 @@ function side(id, label, give) {
     <span class="who">${u.name}${u.level != null ? ` · Lv${u.level}` : ''}</span>
     ${elBadge(u.el)}
     <span class="bystats">HP ${num(u.hp)} · ST ${num(u.dmg)} · DPS ${num(u.dps)}</span>
-    <div class="skillnames">${(u.skills ?? []).map(s => html`<span class="badge">${db.abilities[s]?.name}</span>`)}</div>
+    <div class="skillnames">${(u.skills ?? []).map(s => html`<span class="badge"><img class="skill-icon sm" src="${`skills/${db.abilities[s]?.icon ?? 'icon-ability'}.webp`}" alt="" width="18" height="18" loading="lazy">${db.abilities[s]?.name}</span>`)}</div>
     ${give ? (pet ? html`<a class="rootlink" href="#/pet/${pet.slug}">↗ Cây ${pet.name}</a>` : html`<span class="rootlink dim">không thuộc pet nào</span>`) : ''}
   </div>`;
 }

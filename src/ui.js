@@ -59,6 +59,7 @@ export function skillList(ids, open = false) {
     const off = !s.available || s.inert;
     return html`<div class="skill-card ${open ? 'open' : ''} ${off ? 'off' : ''}">
       <div class="skill-head">
+        <img class="skill-icon" src="${`skills/${s.icon ?? 'icon-ability'}.webp`}" alt="" width="36" height="36" loading="lazy" decoding="async">
         <span class="sname">${s.name}</span>
         <span class="trig">${s.inert ? 'Không có tác dụng' : s.summary}</span>
         ${s.cd ? html`<span class="badge">CD ${num(s.cd)}s</span>` : ''}

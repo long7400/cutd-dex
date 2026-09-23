@@ -47,6 +47,7 @@ test('mọi portrait và icon research đều có file trong public/', () => {
   const missing = [...new Set(Object.values(units).map(u => u.model))].filter(m => !existsSync(join(ROOT, 'public/portraits', `${m}.webp`)));
   assert.deepEqual(missing, []);
   for (const r of db.research) assert.ok(existsSync(join(ROOT, 'public/research', `${r.id}.webp`)), r.id);
+  for (const [id, a] of Object.entries(db.abilities)) assert.ok(existsSync(join(ROOT, 'public/skills', `${a.icon}.webp`)), `${id} → ${a.icon}`);
 });
 
 test('hệ theo wild pool khớp research theo hệ cho gần như mọi pet', () => {
