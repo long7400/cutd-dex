@@ -81,6 +81,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .strip{display:inline-flex;gap:2px;flex-shrink:0}.strip i{width:9px;height:9px;border-radius:2px;background:#4a6fa5}
 .strip i.t-sp{background:#ffde8f}.strip i.t-s{background:#f0a35e}.strip i.t-a{background:#5f9e6a}.strip i.t-c{background:transparent;box-shadow:inset 0 0 0 1px #3a5480}
 .rare{color:#ff9c9c;font-size:11px;font-weight:700}
+.legend{display:flex;flex-wrap:nowrap;white-space:nowrap;align-items:center;gap:3px 7px;padding:2px 10px 5px;font-size:10.5px;color:#6f8fb8}
+.legend span{display:inline-flex;align-items:center;gap:3px}.legend .strip i{width:8px;height:8px}
 .toast{margin:6px 10px;padding:6px 10px;border-radius:8px;background:#3d2226;color:#ff9c9c;font-size:12px}
 [hidden]{display:none!important}
 `;
@@ -382,6 +384,9 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const TIER_CLASS = { 'S+': 't-sp', S: 't-s', A: 't-a', B: 't-b', C: 't-c' };
   const powerOf = stage => U(stage)?.pw ?? -1;
   const levelOf = id => (U(id)?.l ? `Lv${U(id).l}` : nameOf(id));
+  const legend = () => h('div', { class: 'legend', title: 'Huy hiệu bên phải = hạng của cả dòng (dạng mạnh nhất có thể lên). Dải ô màu = hạng từng cấp tiến hóa so với các con cùng tầm cấp.' },
+    h('span', { text: 'Hạng từng cấp →' }),
+    ['S+', 'S', 'A', 'B', 'C'].map(t => h('span', null, h('span', { class: 'strip' }, h('i', { class: TIER_CLASS[t] })), t)));
   function strip(stage) {
     const steps = [stage, ...(U(stage)?.pg ?? []).slice(1)].filter(id => U(id)?.st);
     if (steps.length < 2) return null;
@@ -418,6 +423,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     return [
       h('div', { class: 'bar-row' }, sortBtn('value', 'Đáng bắt'), sortBtn('cheap', 'Rẻ'), sortBtn('catch', 'Dễ bắt'),
         h('span', { class: 'muted', text: `${state.wilds.size} con` })),
+      wilds.length ? legend() : null,
       wilds.length ? wilds.map(({ stage, idList, count, u, peak, trades }) => pickable(row(stage,
         h('div', { class: 'line2' }, strip(stage), (u.c ?? 1) < 0.5 ? h('span', { class: 'rare', text: `${Math.round((u.c ?? 0) * 100)}%`, title: 'Tỉ lệ bắt thấp' }) : null),
         [tierPill(stage), count > 1 ? pill(`×${count}`, 'mute') : null,
@@ -433,7 +439,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     if (!mine.length) return empty('Chưa có lính (hoặc đang chờ dữ liệu).');
     const wanted = new Map();
     for (const o of state.offers.values()) wanted.set(o.give, [...(wanted.get(o.give) ?? []), o]);
-    return mine.sort((a, b) => powerOf(b.stage) - powerOf(a.stage) || (U(b.stage)?.ed ?? 0) - (U(a.stage)?.ed ?? 0)).map(u => {
+    return [legend(), ...mine.sort((a, b) => powerOf(b.stage) - powerOf(a.stage) || (U(b.stage)?.ed ?? 0) - (U(a.stage)?.ed ?? 0)).map(u => {
       const evo = U(u.stage)?.e ?? [];
       const trades = wanted.get(u.stage) ?? [];
       const pct = u.maxHp ? Math.round((u.hp / u.maxHp) * 100) : 0;
@@ -449,7 +455,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
               trap === 2 || cost > state.gold ? 'bad' : 'ok', `Tiến hóa lên ${nameOf(to)}: ${fmt(cost)} vàng${warn}`);
           }) : pill('Max', 'mute', 'Dạng cuối')],
         { tip: `${statsTip(u.stage)}\nBán: ${fmt(Math.floor(u.book * (db.sell ?? 0)))} vàng\nBấm để chọn trong game` }), `u${u.id}`);
-    });
+    })];
   }
 
   function viewWave() {
