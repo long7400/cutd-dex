@@ -10,30 +10,39 @@ const TRAPS = {
   _selectedEntityId: o => ['selectEntity', 'tapGround', 'clearSelection'].every(k => typeof o[k] === 'function'),
 };
 const caught = { nextSequence: null, _selectedEntityId: null };
-const armed = new Set();
+const armed = new Map();
 
 function disarm(key) {
-  if (!armed.has(key)) return;
+  const proto = armed.get(key);
+  if (!proto) return;
   armed.delete(key);
-  const d = Object.getOwnPropertyDescriptor(Object.prototype, key);
-  if (d?.set?.cutd) delete Object.prototype[key];
+  const d = Object.getOwnPropertyDescriptor(proto, key);
+  if (d?.set?.cutd) delete proto[key];
 }
 
-export function armWebCapture() {
+export function armWebCapture(win = window) {
+  disarmWebCapture();
+  const proto = win.Object.prototype;
   for (const key of Object.keys(TRAPS)) {
-    if (armed.has(key) || caught[key] || Object.getOwnPropertyDescriptor(Object.prototype, key)) continue;
+    if (caught[key] || Object.getOwnPropertyDescriptor(proto, key)) continue;
     const set = function (v) {
       Object.defineProperty(this, key, { value: v, writable: true, enumerable: true, configurable: true });
       try { if (!caught[key] && TRAPS[key](this)) { caught[key] = this; disarm(key); } } catch { }
     };
     set.cutd = true;
-    Object.defineProperty(Object.prototype, key, { set, configurable: true, enumerable: false });
-    armed.add(key);
+    Object.defineProperty(proto, key, { set, configurable: true, enumerable: false });
+    armed.set(key, proto);
   }
 }
 
+export function forgetWebCapture() {
+  caught.nextSequence = null;
+  caught._selectedEntityId = null;
+  cached = null;
+}
+
 export function disarmWebCapture() {
-  for (const key of [...armed]) disarm(key);
+  for (const key of [...armed.keys()]) disarm(key);
 }
 
 export const webCaptured = () => !!(caught.nextSequence && caught._selectedEntityId);
@@ -98,7 +107,7 @@ export function tradePet(g, ent, offerSlot) {
 export const clientKind = () => (window.cc?.director ? 'cocos' : document.getElementById('GameCanvas') ? 'cocos-loading' : 'web');
 
 export function probe(toolWildKey) {
-  const out = { host: location.host, client: clientKind(), hasEngine: !!window.cc?.director, webHooked: webCaptured(), webArmed: [...armed], found: false, fns: [], entities: 0, keys: [], sampleWild: null };
+  const out = { host: location.host, client: clientKind(), hasEngine: !!window.cc?.director, webHooked: webCaptured(), webArmed: [...armed.keys()], found: false, fns: [], entities: 0, keys: [], sampleWild: null };
   const g = findGame();
   if (!g) return out;
   out.found = true;

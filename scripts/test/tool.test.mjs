@@ -644,6 +644,27 @@ test('bookmarklet: bản web — tắt tool trước khi vào trận thì gỡ b
   assert.ok(!('nextSequence' in {}));
 });
 
+test('bookmarklet: bản web — nút Móc (dán giữa trận): chỉ nhận cú bấm thật, mở lại đúng trang game trong khung', async t => {
+  const { w, log, code } = setupDom('https://m.cutd.site/?room=805A6070');
+  t.after(() => w.close());
+  w.document.getElementById('GameCanvas').remove();
+  w.eval(code);
+  await tick(50);
+  const root = log.roots[0];
+  const hook = () => [...root.querySelectorAll('button')].find(b => b.textContent === 'Móc');
+  assert.ok(hook(), 'chế độ chạm có nút Móc');
+  hook().click();
+  assert.equal(w.document.querySelectorAll('iframe').length, 0, 'click do script → bỏ qua');
+  trustedClick(w, hook());
+  const frames = w.document.querySelectorAll('iframe');
+  assert.equal(frames.length, 1);
+  assert.equal(frames[0].src, 'https://m.cutd.site/?room=805A6070', 'chỉ mở lại chính trang game');
+  await tick(50);
+  assert.ok(!hook(), 'đang móc → ẩn nút');
+  assert.match(root.querySelector('.top').textContent, /đang móc/);
+  w.__cutdHelper.destroy();
+});
+
 test('web-camera: khớp số tính bằng PlayCanvas + hàm căn khung của game (m.cutd.site)', () => {
   const rules = readJSON(PATHS.catalog).catalog.base;
   const origin = { x: 2048, y: 2336 };

@@ -1,11 +1,13 @@
+import { gameDoc } from './realm.js';
+
 const WEB_KEYS = { escape: ['Escape', 'Escape'], home: ['Home', 'Home'], move: ['KeyM', 'm'] };
 const PRIMARY = 'button.authored-node[data-node="Primary"]';
 const ROWS = 'button.authored-node[data-node^="Row"]';
 const NODES = '.authored-node[data-node]';
 
 export const canvasEl = () => {
-  const c = document.getElementById('world');
-  return c instanceof HTMLCanvasElement ? c : null;
+  const c = gameDoc().getElementById('world');
+  return c?.tagName === 'CANVAS' ? c : null;
 };
 
 const visible = el => !!el && !el.closest('[hidden]') && el.getClientRects().length > 0;
@@ -33,18 +35,18 @@ export function cameraView() {
 }
 
 export function modalOpen() {
-  const shade = [...document.querySelectorAll(NODES)].find(el => el.dataset.node === 'ModalShade');
+  const shade = [...gameDoc().querySelectorAll(NODES)].find(el => el.dataset.node === 'ModalShade');
   return visible(shade);
 }
 
 export function selectedName() {
-  const panel = [...document.querySelectorAll(NODES)].find(el => el.dataset.node === 'MonsterPanel');
+  const panel = [...gameDoc().querySelectorAll(NODES)].find(el => el.dataset.node === 'MonsterPanel');
   if (!visible(panel)) return '';
   const name = [...panel.querySelectorAll(NODES)].find(el => el.dataset.node === 'Name' && !el.parentElement?.closest('[data-node^="Skill"]'));
   return (name?.textContent ?? '').trim();
 }
 
-const findPrimary = () => [...document.querySelectorAll(PRIMARY)].find(b => !b.disabled && visible(b)) ?? null;
+const findPrimary = () => [...gameDoc().querySelectorAll(PRIMARY)].find(b => !b.disabled && visible(b)) ?? null;
 export const primaryReady = () => !!findPrimary();
 
 export function clickPrimary() {
@@ -56,7 +58,7 @@ export function clickPrimary() {
 
 export function clickRow(i, expectTitle) {
   if (!modalOpen() || !Number.isInteger(i) || i < 0 || i > 9 || !expectTitle) return false;
-  const row = [...document.querySelectorAll(ROWS)].find(b => b.dataset.node === `Row${i}` && b.closest('[data-node="ModalShade"]'));
+  const row = [...gameDoc().querySelectorAll(ROWS)].find(b => b.dataset.node === `Row${i}` && b.closest('[data-node="ModalShade"]'));
   if (!row || row.disabled || !visible(row)) return false;
   const titleEl = [...row.querySelectorAll(NODES)].find(el => el.dataset.node === 'Title');
   if ((titleEl?.textContent ?? '').trim() !== expectTitle) return false;

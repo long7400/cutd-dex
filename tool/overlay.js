@@ -4,7 +4,8 @@ import {
 } from './logic.js';
 import { screenPoint, groundOf, tradeSlotPos } from './web-camera.js';
 import * as web from './web-input.js';
-import { findGame, findEntity, selectEntity, catchWild, evolveCreature, tradePet, probe, clientKind, armWebCapture, disarmWebCapture, webCaptured } from './game-bridge.js';
+import { findGame, findEntity, selectEntity, catchWild, evolveCreature, tradePet, probe, clientKind, armWebCapture, disarmWebCapture, webCaptured, forgetWebCapture } from './game-bridge.js';
+import { realm, gameDoc } from './realm.js';
 
 const DATA_URL = __CUTD_DATA_URL__;
 const VERSION = '__CUTD_VERSION__';
@@ -96,8 +97,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   let gameCat = new Map(), gameCatReady = false, ownBase = null;
   let baseRules = null;
 
-  const desc = Object.getOwnPropertyDescriptor(MessageEvent.prototype, 'data');
-  let patched = false;
+  let savedDesc = null, patchedWin = null;
   const seen = new WeakSet();
 
   const diag = { start: performance.now(), hello: null, firstMsg: null, keyframe: null, firstWild: null, firstUnit: null, longTaskMs: 0, longTasks: 0 };
@@ -140,13 +140,18 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     invalidate();
   }
   function patch() {
-    if (patched || !desc?.get) return;
-    Object.defineProperty(MessageEvent.prototype, 'data', {
+    const win = realm.win;
+    if (patchedWin) return;
+    const desc = Object.getOwnPropertyDescriptor(win.MessageEvent.prototype, 'data');
+    if (!desc?.get) return;
+    const WS = win.WebSocket;
+    savedDesc = desc;
+    Object.defineProperty(win.MessageEvent.prototype, 'data', {
       configurable: true, enumerable: desc.enumerable,
       get() {
         const v = desc.get.call(this);
         try {
-          if (!socket && this.target instanceof WebSocket && !seen.has(this)) {
+          if (!socket && this.target instanceof WS && !seen.has(this)) {
             seen.add(this);
             if (handle(v)) {
               const ws = this.target;
@@ -157,12 +162,12 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         return v;
       },
     });
-    patched = true;
+    patchedWin = win;
   }
   function unpatch() {
-    if (!patched) return;
-    Object.defineProperty(MessageEvent.prototype, 'data', desc);
-    patched = false;
+    if (!patchedWin) return;
+    Object.defineProperty(patchedWin.MessageEvent.prototype, 'data', savedDesc);
+    patchedWin = null;
   }
 
   function h(tag, props, ...kids) {
@@ -422,7 +427,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const held = new Map();
   const DRAG_START = 4, STOP_MS = 90;
   let pan = null, stopTimer = 0;
-  const camTarget = () => document.getElementById('GameCanvas') ?? document.querySelector('canvas');
+  const camTarget = () => gameDoc().getElementById('GameCanvas') ?? gameDoc().getElementById('world') ?? gameDoc().querySelector('canvas');
   function camKey(dir, down, target) {
     const k = CAM_KEYS[dir];
     if (!k || !target) return;
@@ -667,7 +672,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const kind = clientKind();
     const header = h('div', { class: 'top', title: `CUTD Helper v${VERSION} — chỉ gửi lệnh khi mày bấm nút Bắt/Tiến hóa/Trade` },
       h('b', { text: 'CUTD Helper' }),
-      h('span', { class: 'pill mute', text: kind === 'web' ? (webCaptured() ? 'm. · móc' : 'm. · chạm') : kind === 'cocos' ? 'Cocos' : 'đang tải', title: kind === 'web'
+      kind === 'web' && !webCaptured() && !frame ? h('button', { class: 'chip on', text: 'Móc', title: 'Mở lại đúng trận này trong khung (game tự vào lại) để tool móc hàm game → chọn đúng con theo id kể cả khi đứng chồng. Game ở trang cũ sẽ tự ngắt.', onClick: hookViaFrame }) : null,
+      h('span', { class: 'pill mute', text: kind === 'web' ? (webCaptured() ? 'm. · móc' : frame ? 'm. · đang móc…' : 'm. · chạm') : kind === 'cocos' ? 'Cocos' : 'đang tải', title: kind === 'web'
         ? (webCaptured() ? 'Bản web: đã móc được hàm của game (dán tool từ sảnh) → bấm dòng/nút gọi thẳng hàm game như bản Cocos.'
           : 'Bản web: chưa móc được hàm game (tool dán lúc trận đã dựng xong) → bấm dòng/nút = chạm hộ trên sàn. Muốn gọi thẳng: nhấn F5 rồi dán tool NGAY lúc đang tải (game tự vào lại trận), hoặc dán ở sảnh trước khi Start.')
         : 'Bản Cocos (cutd.site): bấm dòng/nút → tool gọi thẳng hàm của game.' }),
@@ -701,12 +707,48 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const onUp = () => { drag = null; };
   window.addEventListener('pointermove', onMove);
   window.addEventListener('pointerup', onUp);
-  window.addEventListener('mousedown', onMouseDown, true);
-  window.addEventListener('mousemove', onMouseMove, true);
-  window.addEventListener('mouseup', onMouseUp, true);
-  window.addEventListener('click', onClickAfterPan, true);
-  window.addEventListener('blur', onBlur);
-  window.addEventListener('keydown', onHotkey, true);
+  const GAME_LISTENERS = [['mousedown', onMouseDown, true], ['mousemove', onMouseMove, true], ['mouseup', onMouseUp, true],
+    ['click', onClickAfterPan, true], ['blur', onBlur, false], ['keydown', onHotkey, true]];
+  const listen = win => GAME_LISTENERS.forEach(([type, fn, capture]) => win.addEventListener(type, fn, capture));
+  const unlisten = win => GAME_LISTENERS.forEach(([type, fn, capture]) => win.removeEventListener(type, fn, capture));
+  listen(window);
+
+  let frame = null;
+  function switchRealm(win) {
+    unpatch();
+    socket?.removeEventListener('message', onMessage);
+    socket?.removeEventListener('close', onClose);
+    socket = null;
+    endPan();
+    realm.win = win;
+    forgetWebCapture();
+    armWebCapture(win);
+    patch();
+    listen(win);
+    dirty = true; render(true);
+  }
+  function hookViaFrame(e) {
+    if (!realClick(e) || frame || !tapMode()) return;
+    frame = document.createElement('iframe');
+    frame.src = location.href;
+    frame.allow = 'fullscreen; autoplay';
+    frame.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;border:0;z-index:2147483645;background:#08161a';
+    document.documentElement.append(frame);
+    toast = '';
+    let tries = 0;
+    const arm = () => {
+      if (!frame) return;
+      let win = null;
+      try {
+        win = frame.contentWindow;
+        if (!win || win.location.href === 'about:blank' || win.document.readyState === 'uninitialized') win = null;
+      } catch { win = null; }
+      if (win) { switchRealm(win); return; }
+      if (++tries < 20000) setTimeout(arm, 0);
+    };
+    arm();
+    dirty = true; render(true);
+  }
 
   function toggle() { panel.hidden = !panel.hidden; mini.hidden = !panel.hidden; dirty = true; render(true); }
   const mini = h('button', { class: 'mini', text: 'CUTD Helper', onClick: () => toggle() });
@@ -721,12 +763,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     observers.forEach(o => o.disconnect());
     window.removeEventListener('pointermove', onMove);
     window.removeEventListener('pointerup', onUp);
-    window.removeEventListener('mousedown', onMouseDown, true);
-    window.removeEventListener('mousemove', onMouseMove, true);
-    window.removeEventListener('mouseup', onMouseUp, true);
-    window.removeEventListener('click', onClickAfterPan, true);
-    window.removeEventListener('blur', onBlur);
-    window.removeEventListener('keydown', onHotkey, true);
+    unlisten(window);
+    if (realm.win !== window) unlisten(realm.win);
     disarmWebCapture();
     endPan();
     host.remove();

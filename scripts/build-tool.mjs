@@ -60,8 +60,8 @@ export function auditSource(files) {
           if (GAME_OBJECTS.has(objName)) err(file, n, `truy cập ${objName}[…] bằng ngoặc vuông`);
           return;
         }
-        const allowedUse = (name === 'call' && src(code, n.object) === 'desc.get') || (name === 'prototype' && src(code, n.object) === 'MessageEvent')
-          || (isBridge && name === 'prototype' && src(code, n.object) === 'Object');
+        const allowedUse = (name === 'call' && src(code, n.object) === 'desc.get') || (name === 'prototype' && /(^|\.)MessageEvent$/.test(src(code, n.object)))
+          || (isBridge && name === 'prototype' && /(^|\.)Object$/.test(src(code, n.object)));
         if (name && BANNED_PROPERTIES.has(name) && !allowedUse) {
           err(file, n, `cấm dùng .${name}`);
         }
