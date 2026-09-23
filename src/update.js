@@ -113,9 +113,10 @@ export function modalHTML() {
           <button class="chip on" id="upd-check">Kiểm tra &amp; cập nhật</button>
         </div>
       </div>
-      <div class="upd-help">Token tạo tại
-        <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com → Fine-grained token</a>,
-        chọn repo <code>${REPO}</code>, quyền <b>Actions: Read and write</b>.
+      <div class="upd-help">🔍 <b>Check hash không cần token.</b> Có bản mới thì cron tự update trong ~2 tiếng —
+        token chỉ dùng khi muốn ép cập nhật NGAY qua nút.
+        Token tạo tại <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com → Fine-grained token</a>,
+        chọn repo <code>${REPO}</code>, quyền <b>Actions: Read and write</b>, hạn chế hạn mức tùy ý.
         Token chỉ lưu trong máy mày (localStorage) — không gửi đi đâu khác ngoài GitHub API.</div>
     </div>
   </div>`;
@@ -161,11 +162,11 @@ async function runFlow() {
       setPhase('same', `✓ Dữ liệu đã <b>mới nhất</b> — hash trùng <code>${remote.slice(0, 12)}…</code><br>Không gửi bất kỳ request nào lên GitHub.`);
       return;
     }
-    setPhase('diff', `⚠ Game có bản mới!<br>cũ <code>${meta.catalogHash.slice(0, 8)}…</code> → mới <code>${remote.slice(0, 8)}…</code>`);
+    setPhase('diff', `⚠ Game có bản mới!<br>cũ <code>${meta.catalogHash.slice(0, 8)}…</code> → mới <code>${remote.slice(0, 8)}…</code><br><br>🕐 <b>Cron sẽ tự update trong tối đa ~2 tiếng</b> (mỗi 2h chạy 1 lần, không cần làm gì).<br>Muốn cập nhật NGAY: dán GitHub token vào ô dưới rồi bấm lại — hoặc chạy <code>npm run update</code> trên máy.`);
 
-    // B2: cần PAT
+    // B2: PAT là TUỲ CHỌN — không có thì để cron lo
     if (!localStorage.getItem('cutd_pat')) {
-      setPhase('need-token', '🔑 Dán GitHub token (Actions RW) vào ô dưới rồi bấm lại.');
+      setPhase('need-token', `⚠ Game có bản mới (<code>${remote.slice(0, 8)}…</code>).<br><br>🕐 Cron tự update trong ~2 tiếng tới — không cần làm gì cả.<br><br>Muốn cập nhật ngay thì dán GitHub token (Actions RW) vào ô dưới rồi bấm lại.`);
       return;
     }
 
