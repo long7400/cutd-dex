@@ -10,7 +10,7 @@ import { readJSON, writeJSON } from './lib/fsx.mjs';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const BRIDGE = 'game-bridge.js';
 const WEB = 'web-input.js';
-const KEY_MAPS = { 'overlay.js': ['CAM_KEYS', ['KeyW', 'KeyA', 'KeyS', 'KeyD']], [WEB]: ['WEB_KEYS', ['Escape', 'Home']] };
+const KEY_MAPS = { 'overlay.js': ['CAM_KEYS', ['KeyW', 'KeyA', 'KeyS', 'KeyD']], [WEB]: ['WEB_KEYS', ['Escape', 'Home', 'KeyM']] };
 const POINTER_KEYS = new Set(['bubbles', 'cancelable', 'composed', 'clientX', 'clientY', 'button', 'buttons', 'pointerId', 'pointerType', 'isPrimary']);
 const AUTHORED_SELECTORS = new Set(['button.authored-node[data-node="Primary"]', 'button.authored-node[data-node^="Row"]', '.authored-node[data-node]']);
 const GAME_OBJECTS = new Set(['session', 'interaction', 'store', 'cc']);

@@ -1,4 +1,4 @@
-const WEB_KEYS = { escape: ['Escape', 'Escape'], home: ['Home', 'Home'] };
+const WEB_KEYS = { escape: ['Escape', 'Escape'], home: ['Home', 'Home'], move: ['KeyM', 'm'] };
 const PRIMARY = 'button.authored-node[data-node="Primary"]';
 const ROWS = 'button.authored-node[data-node^="Row"]';
 const NODES = '.authored-node[data-node]';

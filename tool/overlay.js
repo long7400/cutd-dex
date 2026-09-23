@@ -234,7 +234,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     data: 'Chưa tải xong dữ liệu của game — đợi 1–2 giây.',
     other: 'Đang xem căn cứ của người khác — về nhà mình để thao tác.',
     aim: 'Chạm chưa trúng con này (game đổi camera?) — không bấm gì thêm. Thử lại, hoặc chọn tay rồi nhấn F.',
-    stack: 'Con này đang đứng CHỒNG với con khác — chạm chỉ ra con trên cùng. Cách chọn đúng mọi con: nhấn F5 rồi dán tool NGAY lúc game đang tải (panel đổi thành "m. · móc"), game tự vào lại đúng trận này. Hoặc kéo con ra chỗ trống.',
+    stack: 'Không tách được chồng (ngoài giờ chuẩn bị / sân hết chỗ trống / pet hoang dã chồng nhau). Kéo tay con trên cùng ra, hoặc F5 rồi dán tool NGAY lúc đang tải (panel "m. · móc").',
     busy: 'Đang thao tác lệnh trước…',
   };
   const isWeb = () => clientKind() === 'web';
@@ -278,7 +278,47 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     await web.frames(2);
     const pt = webPoint(t.pos);
     if (!pt || !web.tap(pt.x, pt.y, pointerId)) return 'aim';
-    return (await web.until(() => web.selectedName() === expect, 600)) ? null : t.crowded ? 'stack' : 'aim';
+    if (await web.until(() => web.selectedName() === expect, 600)) return null;
+    if (!t.crowded) return 'aim';
+    return t.key[0] === 'u' ? unstackTo(t, expect, pointerId) : 'stack';
+  }
+
+  const near = (a, b, r) => Math.hypot(a.x - b.x, a.y - b.y) < r;
+  function freeSpot(p) {
+    const g = groundOf(baseRules, state.origin);
+    if (!g) return null;
+    const all = [...state.units.values(), ...state.wilds.values()].filter(o => o.pos);
+    for (const r of [110, 170, 230, 300]) {
+      for (let dir = 0; dir < 8; dir++) {
+        const q = { x: p.x + r * Math.cos((dir * Math.PI) / 4), y: p.y + r * Math.sin((dir * Math.PI) / 4) };
+        const inArena = q.x > g.arena.x + 48 && q.x < g.arena.x + g.arena.w - 48 && q.y > g.arena.y + 48 && q.y < g.arena.y + g.arena.h - 48;
+        if (inArena && !all.some(o => near(o.pos, q, 70))) return q;
+      }
+    }
+    return null;
+  }
+  async function unstackTo(t, expect, pointerId) {
+    for (let round = 0; round < 10; round++) {
+      const got = web.selectedName();
+      if (got === expect) return null;
+      const top = myUnits(state).filter(u => u.active && u.pos && near(u.pos, t.pos, STACK_R) && gameCat.get(u.stage)?.shown === got);
+      const dest = top.length ? freeSpot(t.pos) : null;
+      const pt = dest && webPoint(dest);
+      if (!pt) return 'stack';
+      web.pressKey('move');
+      await web.frames(1);
+      web.tap(pt.x, pt.y, pointerId);
+      const moved = await web.until(() => top.some(u => { const cur = state.units.get(u.id)?.pos; return cur && !near(cur, t.pos, STACK_R); }), 2500);
+      web.pressKey('escape');
+      if (!moved) return 'stack';
+      web.pressKey('home');
+      await web.frames(2);
+      const again = webPoint(t.pos);
+      if (!again) return 'aim';
+      web.tap(again.x, again.y, pointerId);
+      await web.until(() => web.selectedName() === expect, 600);
+    }
+    return web.selectedName() === expect ? null : 'stack';
   }
   async function webRun(job) {
     if (webBusy) { toast = FAIL.busy; dirty = true; render(true); return; }
@@ -353,8 +393,16 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         if (fail) return fail;
         if (!web.clickPrimary()) return 'rule';
         await web.frames(1);
-        const mine = webTarget(key);
-        if (mine?.crowded) { web.pressKey('escape'); return 'stack'; }
+        let mine = webTarget(key);
+        if (mine?.crowded) {
+          const unstack = await webSelect(key, pointerId);
+          if (unstack) return unstack;
+          mine = webTarget(key);
+          const again = await webSelect(`t${arg}`, pointerId);
+          if (again) return again;
+          if (!web.clickPrimary()) return 'rule';
+          await web.frames(1);
+        }
         const pt = mine && webPoint(mine.pos);
         if (!pt || !web.tap(pt.x, pt.y, pointerId)) { web.pressKey('escape'); return 'aim'; }
         return null;
@@ -486,7 +534,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       return pickable(row(u.stage,
         h('div', { class: 'hp', title: `${fmt(u.hp)} / ${fmt(u.maxHp)} HP` }, h('i', { style: `width:${Math.max(0, Math.min(100, pct))}%` })),
         [!u.active ? pill('Gục', 'bad') : null,
-          tapMode() && crowd(u) ? pill('Chồng', 'warn', 'Đang đứng chồng với con khác (mới bắt, chưa kéo ra sân) — bản web chỉ chọn được con trên cùng. Kéo ra chỗ trống để tool chọn được.') : null,
+          tapMode() && crowd(u) ? pill('Chồng', 'warn', 'Đang đứng chồng với con khác (mới bắt, chưa kéo ra sân). Bấm nút/dòng: tool tự dời con trên cùng ra ô trống (phím M của game) tới khi chọn được con này.') : null,
           trades.length ? act(`Trade S${trades[0].slot}`, 'trade', `u${u.id}`, trades[0].slot, { stage: u.stage, get: trades[0].get }, 'ok', `Đổi lấy ${nameOf(trades[0].get)}`) : null,
           evo.length ? evo.map(([to, cost]) => act(`↑${evo.length > 1 ? `${U(to)?.n ?? ''} ` : ''}${short(cost)}g`, 'evolve', `u${u.id}`, to, { stage: u.stage },
             cost <= state.gold ? 'ok' : 'bad', `Tiến hóa lên ${nameOf(to)}: ${fmt(cost)} vàng`)) : pill('Max', 'mute', 'Dạng cuối')],

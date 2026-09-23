@@ -403,8 +403,9 @@ function fakeWebGame(w, { honourHome = true } = {}) {
   };
   w.addEventListener('keydown', e => {
     game.keys.push(e.key);
+    if (e.key === 'm' && game.sel?.kind === 'unit') game.moveTargeting = true;
     if (e.key === 'Home' && honourHome) game.home = true;
-    if (e.key === 'Escape') { if (!shade.hidden) shade.hidden = true; else { game.sel = null; game.tradeTargeting = false; render(); } }
+    if (e.key === 'Escape') { if (!shade.hidden) shade.hidden = true; else { game.sel = null; game.tradeTargeting = false; game.moveTargeting = false; render(); } }
   });
   const pick = (x, y) => {
     let best = null, bestD = 25;
@@ -421,6 +422,12 @@ function fakeWebGame(w, { honourHome = true } = {}) {
     if (!down || e.button !== 0 || down.button !== 0) return;
     down = null;
     game.taps = (game.taps ?? 0) + 1;
+    if (game.moveTargeting && game.sel) {
+      const dest = (game.moveCandidates ?? []).find(q => { const pt = screenPoint(rules, game.origin, 0, 1280, 720, q); return pt && Math.hypot(pt.x - e.clientX, pt.y - e.clientY) < 2; });
+      game.moveTargeting = false;
+      if (dest) { game.sel.pos = dest; game.commands.push(['move', game.sel.key]); game.onMove?.(game.sel, dest); }
+      return;
+    }
     const hit = game.home ? pick(e.clientX, e.clientY) : null;
     if (game.tradeTargeting && hit?.kind === 'unit') { game.commands.push(['trade', hit.key, game.sel.slot]); game.tradeTargeting = false; return; }
     game.sel = hit; render();
@@ -537,13 +544,14 @@ test('bookmarklet: bản web — chạm lệch (tên trên dock không khớp) t
   assert.match(root.querySelector('.toast').textContent, /Chạm chưa trúng/);
 });
 
-test('bookmarklet: bản web — lính đứng chồng (mới bắt chưa kéo ra): gắn nhãn, báo rõ, không bấm nhầm con trên cùng', async t => {
+test('bookmarklet: bản web — lính đứng chồng: tool tự dời con trên cùng (phím M của game) rồi tiến hóa đúng con', async t => {
   const { w, log, code, FakeWS } = setupDom('https://m.cutd.site/?room=805A6070');
   t.after(() => w.close());
   w.document.getElementById('GameCanvas').remove();
   const { game } = fakeWebGame(w);
   const origin = { x: 2048, y: 2336 }, center = { x: origin.x + 608, y: origin.y + 1040 };
   game.origin = origin;
+  game.moveCandidates = [110, 170, 230, 300].flatMap(r => [...Array(8)].map((_, d) => ({ x: center.x + r * Math.cos((d * Math.PI) / 4), y: center.y + r * Math.sin((d * Math.PI) / 4) })));
   game.entities = [
     { key: 'u1', kind: 'unit', stage: scenario.c, pos: center },
     { key: 'u2', kind: 'unit', stage: scenario.a, pos: center },
@@ -552,6 +560,8 @@ test('bookmarklet: bản web — lính đứng chồng (mới bắt chưa kéo r
   const ws = new FakeWS();
   ws.addEventListener('message', e => e.data);
   const emit = m => ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
+  game.onMove = (ent, dest) => setTimeout(() => emit({ type: 'base_delta', tick: 120, base: { base_id: 7, lives: 30, gold: 50000, lumber: 0, alive: true, research: [], origin },
+    units_upserted: [{ id: Number(ent.key.slice(1)), stage_id: ent.stage, owner_id: 11, health: 5, max_health: 10, active: true, position: dest }] }), 150);
   emit(summary);
   await tick(0);
   emit(keyframe([
@@ -565,9 +575,11 @@ test('bookmarklet: bản web — lính đứng chồng (mới bắt chưa kéo r
   assert.equal([...root.querySelectorAll('.pill')].filter(p => p.textContent === 'Chồng').length, 2, 'cả 2 con bị gắn nhãn Chồng');
   const row = [...root.querySelectorAll('.row')].find(r => r.textContent.includes(overlay.u[scenario.a].n));
   trustedClick(w, [...row.querySelectorAll('button.act')].find(b => b.textContent.startsWith('↑')));
-  await tick(900);
-  assert.deepEqual(game.commands, [], 'game chọn con trên cùng (khác loại) → không tiến hóa nhầm');
-  assert.match(root.querySelector('.toast').textContent, /CHỒNG/);
+  await tick(2500);
+  assert.deepEqual(game.commands[0], ['move', 'u1'], 'dời con trên cùng bằng phím M của game');
+  assert.equal(game.commands[1]?.[0], 'evolve', root.querySelector('.toast')?.textContent);
+  assert.equal(game.commands[1][1], 'u2', 'tiến hóa đúng con bị đè');
+  assert.equal(game.commands.length, 2);
 });
 
 test('bookmarklet: bản web — dán từ sảnh → móc session/interaction lúc game tạo, gọi thẳng hàm game, gỡ bẫy sạch', async t => {
