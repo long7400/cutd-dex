@@ -234,7 +234,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     data: 'Chưa tải xong dữ liệu của game — đợi 1–2 giây.',
     other: 'Đang xem căn cứ của người khác — về nhà mình để thao tác.',
     aim: 'Chạm chưa trúng con này (game đổi camera?) — không bấm gì thêm. Thử lại, hoặc chọn tay rồi nhấn F.',
-    stack: 'Con này đang đứng CHỒNG với con khác (con mới bắt, chưa kéo ra sân) — game chỉ chọn được con trên cùng. Kéo nó ra chỗ trống rồi bấm lại.',
+    stack: 'Con này đang đứng CHỒNG với con khác — chạm chỉ ra con trên cùng. Cách chọn đúng mọi con: nhấn F5 rồi dán tool NGAY lúc game đang tải (panel đổi thành "m. · móc"), game tự vào lại đúng trận này. Hoặc kéo con ra chỗ trống.',
     busy: 'Đang thao tác lệnh trước…',
   };
   const isWeb = () => clientKind() === 'web';
@@ -621,7 +621,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       h('b', { text: 'CUTD Helper' }),
       h('span', { class: 'pill mute', text: kind === 'web' ? (webCaptured() ? 'm. · móc' : 'm. · chạm') : kind === 'cocos' ? 'Cocos' : 'đang tải', title: kind === 'web'
         ? (webCaptured() ? 'Bản web: đã móc được hàm của game (dán tool từ sảnh) → bấm dòng/nút gọi thẳng hàm game như bản Cocos.'
-          : 'Bản web: chưa móc được hàm game (tool dán giữa trận) → bấm dòng/nút = chạm hộ trên sàn. Muốn gọi thẳng: dán tool ở sảnh/phòng chờ TRƯỚC khi bấm Start.')
+          : 'Bản web: chưa móc được hàm game (tool dán lúc trận đã dựng xong) → bấm dòng/nút = chạm hộ trên sàn. Muốn gọi thẳng: nhấn F5 rồi dán tool NGAY lúc đang tải (game tự vào lại trận), hoặc dán ở sảnh trước khi Start.')
         : 'Bản Cocos (cutd.site): bấm dòng/nút → tool gọi thẳng hàm của game.' }),
       h('span', { class: 'grow' }),
       h('button', { class: 'x', text: layout === 'h' ? '▯' : '▭', title: layout === 'h' ? 'Chuyển sang dọc' : 'Chuyển sang ngang', onClick: () => setLayout(layout === 'h' ? 'v' : 'h') }),
