@@ -80,16 +80,23 @@ if (!FORCE && oldHash === response.catalog_hash) {
 }
 console.log(warn('⚠ Catalog thay đổi → bóc lại toàn bộ!'));
 
-// so sánh pet mới
+// so sánh pet mới / pet bị xoá
 const oldCat = existsSync(join(dir, 'catalog.json')) ? read('catalog.json').catalog : null;
+const nameOf = (c, id) => c.display_names.find(d => d.id === id)?.value ?? id;
 if (oldCat) {
   const oldIds = new Set(oldCat.species.filter(s => s.catchable).map(s => s.id));
-  const newPets = cat.species.filter(s => s.catchable && !oldIds.has(s.id));
-  console.log(`   Pet catchable mới: ${newPets.length ? ok(newPets.length) : '0'}`);
-  for (const s of newPets.slice(0, 30)) {
-    const n = cat.display_names.find(d => d.id === s.display_name_id);
-    console.log(`     + ${s.legendary ? '★ ' : ''}${n?.value ?? s.id}`);
+  const newIds = new Set(cat.species.filter(s => s.catchable).map(s => s.id));
+  const added = cat.species.filter(s => s.catchable && !oldIds.has(s.id));
+  const removed = oldCat.species.filter(s => s.catchable && !newIds.has(s.id));
+  if (added.length) {
+    console.log(`   ${ok('+ ' + added.length + ' pet mới')}:`);
+    for (const s of added) console.log(`     + ${s.legendary ? '★ ' : ''}${nameOf(cat, s.display_name_id)}`);
   }
+  if (removed.length) {
+    console.log(`   ${warn('- ' + removed.length + ' pet BỊ XÓA khỏi game')}:`);
+    for (const s of removed) console.log(`     - ${s.legendary ? '★ ' : ''}${nameOf(oldCat, s.display_name_id)}`);
+  }
+  if (!added.length && !removed.length) console.log('   danh sách pet không đổi (chỉ đổi số liệu)');
 }
 
 // ---------- 4. Tính ảnh cần + tải thiếu ----------
@@ -142,6 +149,25 @@ await Promise.all(Array.from({ length: 8 }, async () => {
 }));
 if (downloaded) console.log(`   ${ok('↓ ' + downloaded + ' ảnh mới')}`);
 if (failed.length) console.log(warn(`   Lỗi tải: ${failed.join(', ')}`));
+
+// ---------- XÓA ẢNH RÁC (pet bị game remove) ----------
+// keepList: ảnh UI tự tham chiếu (logo/favicon), không thuộc data
+const keepList = new Set(['pet_xiaohuolong']);
+// an toàn: nếu bóc mapping bị lỗi (quá ít unit) thì KHÔNG xoá gì cả
+if (Object.keys(unit2model).length < 100 || need.size < 100) {
+  console.log(warn(`   ⚠ Bóc mapping bất thường (${Object.keys(unit2model).length} unit, ${need.size} ảnh cần) — BỎ QUA bước xoá rác để an toàn.`));
+} else {
+  const garbage = readdirSync(imgDir)
+    .filter(f => f.endsWith('.png') && !keepList.has(f.replace('.png', '')) && !need.has(f.replace('.png', '')));
+  if (garbage.length) {
+    const { unlinkSync } = await import('node:fs');
+    for (const f of garbage) unlinkSync(join(imgDir, f));
+    console.log(`   ${warn('🗑 XÓA ' + garbage.length + ' ảnh rác (pet không còn trong game)')}:`);
+    console.log(`     ${garbage.join(', ')}`);
+  } else {
+    console.log('   không có ảnh rác');
+  }
+}
 
 // ---------- 5. Lưu + build data ----------
 write('catalog.json', response);
