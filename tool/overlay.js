@@ -374,6 +374,21 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const onClickAfterPan = e => { if (swallowClick) { swallow(e); swallowClick = false; } };
   const onBlur = () => endPan();
 
+  // ───────────── phím tắt: F = nút chính của game ─────────────
+  // Bản web (m.cutd.site) dựng UI bằng HTML: nút chính ở dock (Bắt / Tiến hóa / Trade tuỳ con đang chọn) là
+  // <button class="authored-node" data-node="Primary">. Nhấn F = bấm hộ đúng nút đó — game tự xử lý như khi
+  // bấm chuột (lệnh đi đúng đường của game). Chỉ phím thật, không lặp khi giữ phím, bỏ qua khi đang gõ chữ.
+  // Bản Cocos không có nút HTML → phím này tự bỏ qua (bản đó có sẵn phím C của game).
+  const onHotkey = e => {
+    if (!e.isTrusted || e.repeat || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey || e.code !== 'KeyF') return;
+    if (e.target?.closest?.('input,textarea,select,[contenteditable="true"]')) return;
+    const primary = [...document.querySelectorAll('button.authored-node[data-node="Primary"]')]
+      .find(b => !b.disabled && b.getClientRects().length > 0);
+    if (!primary) return;
+    e.preventDefault();
+    primary.click();
+  };
+
   // ───────────── các tab ─────────────
   function viewTrade() {
     const list = tradeOptions(state, db);
@@ -584,7 +599,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     // Bản m.cutd.site: không bấm hộ được → gợi ý mở đúng phòng này trên cutd.site (cùng server, cùng phòng).
     const room = new URLSearchParams(location.search).get('room');
     const webNote = clientKind() === 'web' ? h('div', { class: 'webnote' },
-      h('span', { text: 'Bản web: xem thông tin + camera được, nút Bắt/Tiến hóa/Trade chỉ chạy trên cutd.site.' }),
+      h('span', { text: 'Bản web: bấm con trên sàn rồi nhấn F = nút chính của game (Bắt / Tiến hóa / Trade). Nút trong panel chỉ chạy trên cutd.site.' }),
       room && /^[A-Za-z0-9]{4,16}$/.test(room)
         ? h('a', { class: 'chip on', href: `https://cutd.site/?room=${room}`, sameTab: true, text: 'Mở phòng này trên cutd.site' }) : null) : null;
     const body = bodyEl = h('div', { class: 'body' }, webNote, toast ? h('p', { class: 'toast', text: toast }) : null, content);
@@ -602,6 +617,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   window.addEventListener('mouseup', onMouseUp, true);
   window.addEventListener('click', onClickAfterPan, true);
   window.addEventListener('blur', onBlur);
+  window.addEventListener('keydown', onHotkey, true);
 
   function toggle() { panel.hidden = !panel.hidden; mini.hidden = !panel.hidden; dirty = true; render(true); }
   const mini = h('button', { class: 'mini', text: 'CUTD Helper', onClick: () => toggle() });
@@ -621,6 +637,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     window.removeEventListener('mouseup', onMouseUp, true);
     window.removeEventListener('click', onClickAfterPan, true);
     window.removeEventListener('blur', onBlur);
+    window.removeEventListener('keydown', onHotkey, true);
     endPan();
     host.remove();
     delete window[NS];

@@ -418,3 +418,48 @@ test('bookmarklet: bản m.cutd.site → khoá nút + link mở đúng phòng tr
   assert.ok(!link.target, 'mở trong tab hiện tại (tránh 2 kết nối cùng lúc)');
   assert.ok([...root.querySelectorAll('button.act')].every(b => b.disabled), 'bản web: nút thao tác phải khoá');
 });
+
+test('bookmarklet: phím F bấm nút chính của game (bản web) — chỉ phím thật, không khi đang gõ/giữ phím/nút tắt', async t => {
+  const { w, code } = setupDom('https://m.cutd.site/?room=805A6070');
+  t.after(() => w.close());
+  w.document.getElementById('GameCanvas').remove();
+  const doc = w.document;
+  let clicks = 0;
+  const primary = doc.createElement('button');
+  primary.className = 'authored-node';
+  primary.dataset.node = 'Primary';
+  primary.onclick = () => { clicks++; };
+  primary.getClientRects = () => [{ width: 10, height: 10 }]; // jsdom không tính layout
+  const other = doc.createElement('button');
+  other.className = 'authored-node';
+  other.dataset.node = 'Sell';
+  other.onclick = () => { throw new Error('không được bấm nút khác'); };
+  const chat = doc.createElement('input');
+  doc.body.append(primary, other, chat);
+  w.eval(code);
+
+  const key = (opts = {}, target = doc.body, trusted = true) => {
+    const ev = new w.KeyboardEvent('keydown', { code: 'KeyF', key: 'f', bubbles: true, cancelable: true, ...opts });
+    if (trusted) {
+      jsdomUtils.implForWrapper(ev).isTrusted = true;
+      jsdomUtils.implForWrapper(target)._dispatch(jsdomUtils.implForWrapper(ev));
+    } else target.dispatchEvent(ev);
+  };
+  key();
+  assert.equal(clicks, 1, 'F thật → bấm nút Primary của game');
+  key({}, doc.body, false);
+  assert.equal(clicks, 1, 'phím do script tạo → bỏ qua');
+  key({ repeat: true });
+  assert.equal(clicks, 1, 'giữ phím (lặp) → bỏ qua');
+  key({}, chat);
+  assert.equal(clicks, 1, 'đang gõ chat → bỏ qua');
+  key({ code: 'KeyS', key: 's' });
+  assert.equal(clicks, 1, 'phím khác → bỏ qua');
+  primary.disabled = true;
+  key();
+  assert.equal(clicks, 1, 'nút đang tắt → không bấm');
+  w.__cutdHelper.destroy();
+  primary.disabled = false;
+  key();
+  assert.equal(clicks, 1, 'tắt tool → hết phím tắt');
+});

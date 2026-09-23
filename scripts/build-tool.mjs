@@ -32,7 +32,7 @@ const src = (code, n) => code.slice(n.start, n.end);
 export function auditSource(files) {
   const errors = [];
   const err = (file, n, msg) => errors.push(`${file}:${n.loc?.start.line ?? '?'} ${msg}`);
-  const counts = { KeyboardEvent: 0, dispatchEvent: 0, fetch: 0 };
+  const counts = { KeyboardEvent: 0, dispatchEvent: 0, fetch: 0, click: 0 };
 
   for (const [file, code] of files) {
     const ast = parse(code, { ecmaVersion: 'latest', sourceType: 'module', locations: true });
@@ -65,6 +65,8 @@ export function auditSource(files) {
         const objName = n.object.type === 'MemberExpression' ? propName(n.object) : null;
         if (objName && ALLOWED[objName] && isBridge && !ALLOWED[objName].has(name)) err(file, n, `${objName}.${name} không nằm trong danh sách cho phép`);
         if (name === 'dispatchEvent') counts.dispatchEvent++;
+        if (name === 'click' && !(n.object.type === 'Identifier' && n.object.name === 'primary')) err(file, n, '.click() chỉ được dùng cho nút chính của game (primary)');
+        if (name === 'click') counts.click++;
       },
       VariableDeclarator(n) {
         const init = n.init;
@@ -99,6 +101,12 @@ export function auditSource(files) {
   if (counts.KeyboardEvent !== 1) errors.push(`KeyboardEvent phải được tạo ở đúng 1 chỗ (đang có ${counts.KeyboardEvent})`);
   if (counts.dispatchEvent !== 1) errors.push(`dispatchEvent chỉ được gọi ở đúng 1 chỗ (camKey) (đang có ${counts.dispatchEvent})`);
   if (counts.fetch !== 1) errors.push(`fetch chỉ được gọi ở đúng 1 chỗ (getJSON) (đang có ${counts.fetch})`);
+  if (counts.click > 1) errors.push(`.click() chỉ được dùng ở đúng 1 chỗ (phím F) (đang có ${counts.click})`);
+  for (const [file, code] of files) {
+    // Phím tắt chỉ được bấm đúng nút chính của game.
+    const sel = [...code.matchAll(/querySelectorAll\('([^']*)'\)/g)].map(m => m[1]);
+    if (sel.some(s => s.includes('authored-node') && s !== 'button.authored-node[data-node="Primary"]')) errors.push(`${file}: chỉ được bấm nút Primary của game`);
+  }
   return errors;
 }
 
