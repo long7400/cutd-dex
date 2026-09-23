@@ -38,7 +38,7 @@ document.addEventListener('click', e => {
 function parse() {
   const [path, query = ''] = (location.hash.slice(1) || '/pets').split('?');
   const [, name = 'pets', ...params] = path.split('/');
-  return { name: Object.hasOwn(ROUTES, name) ? name : 'pets', params: params.map(decodeURIComponent), query: new URLSearchParams(query) };
+  return { name: Object.hasOwn(ROUTES, name) ? name : 'pets', params: params.map(p => { try { return decodeURIComponent(p); } catch { return ''; } }), query: new URLSearchParams(query) };
 }
 
 function topbar(active) {

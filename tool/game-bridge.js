@@ -3,7 +3,7 @@ let cached = null;
 
 const isGame = c => c && typeof c.interaction?.selectEntity === 'function'
   && typeof c.store?.entities?.get === 'function' && typeof c.store.entities.values === 'function'
-  && c.session && typeof c.session === 'object';
+  && typeof c.session === 'object' && c.session !== null;
 
 const TRAPS = {
   nextSequence: o => ['catchWild', 'evolveCreature', 'tradePet', 'dispatch'].every(k => typeof o[k] === 'function'),
@@ -45,13 +45,12 @@ export function disarmWebCapture() {
   for (const key of [...armed.keys()]) disarm(key);
 }
 
-export const webCaptured = () => !!(caught.nextSequence && caught._selectedEntityId);
-export const webTouched = () => !!(caught.nextSequence || caught._selectedEntityId);
+export const webCaptured = () => caught.nextSequence !== null && caught._selectedEntityId !== null;
+export const webTouched = () => caught.nextSequence !== null || caught._selectedEntityId !== null;
 
 function webGame() {
-  const s = caught.nextSequence, i = caught._selectedEntityId;
-  if (!s || !i) return null;
-  const g = { store: s.store, session: s, interaction: i };
+  if (!webCaptured()) return null;
+  const g = { store: caught.nextSequence.store, session: caught.nextSequence, interaction: caught._selectedEntityId };
   return isGame(g) ? g : null;
 }
 
@@ -87,6 +86,8 @@ export function selectEntity(g, id) {
   g.interaction.selectEntity(g.store, id);
 }
 
+const mine = (g, ent) => typeof g.session.canCommand !== 'function' || g.session.canCommand(ent) === true;
+
 export function catchWild(g, ent) {
   if (typeof g.session.catchWild !== 'function') return 'fn';
   g.session.catchWild(ent);
@@ -95,18 +96,21 @@ export function catchWild(g, ent) {
 
 export function evolveCreature(g, ent, nextStageId) {
   if (typeof g.session.evolveCreature !== 'function') return 'fn';
+  if (!mine(g, ent)) return 'other';
   g.session.evolveCreature(ent, nextStageId);
   return null;
 }
 
 export function tradePet(g, ent, offerSlot) {
   if (typeof g.session.tradePet !== 'function') return 'fn';
+  if (!mine(g, ent)) return 'other';
   g.session.tradePet(ent, offerSlot);
   return null;
 }
 
 export function moveCreature(g, ent, pos) {
   if (typeof g.session.moveCreature !== 'function') return { fail: 'fn' };
+  if (!mine(g, ent)) return { fail: 'other' };
   const seq = g.session.moveCreature(ent, { x: pos.x, y: pos.y });
   return Number.isInteger(seq) ? { seq } : { fail: 'rule' };
 }

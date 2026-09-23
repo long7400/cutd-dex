@@ -61,7 +61,7 @@ function comps(lines, modes) {
   const core = top(common.filter(l => l.atk === atkRank[0]), 3);
   const second = top(common.filter(l => l.atk === atkRank[1]), 1);
   const cc = top(common.filter(l => l.roles.some(([r]) => r === 'cc')), 1);
-  const byEl = {};
+  const byEl = Object.create(null);
   for (const l of common) (byEl[l.el] ??= []).push(l);
   const [monoEl, monoLines] = Object.entries(byEl).map(([el, list]) => [el, top(list, 4)])
     .sort((a, b) => b[1].reduce((s, l) => s + l.pve.score, 0) - a[1].reduce((s, l) => s + l.pve.score, 0))[0] ?? [];
@@ -83,14 +83,14 @@ export default {
   title: () => 'Chiến thuật',
   render({ params }) {
     const S = db.strategy;
-    const mode = MODES[params[0]] ?? MODES.solo;
+    const mode = (Object.hasOwn(MODES, params[0] ?? '') ? MODES[params[0]] : null) ?? MODES.solo;
     const lines = S.lines;
-    const atkEl = {};
-    for (const l of lines) (atkEl[l.atk] ??= {})[l.el] = (atkEl[l.atk][l.el] ?? 0) + 1;
+    const atkEl = Object.create(null);
+    for (const l of lines) (atkEl[l.atk] ??= Object.create(null))[l.el] = (atkEl[l.atk][l.el] ?? 0) + 1;
     const elOfAtk = a => Object.entries(atkEl[a] ?? {}).sort((x, y) => y[1] - x[1])[0]?.[0];
     const atkTypes = Object.keys(S.modes[0]?.atk ?? {}).sort((a, b) => (S.modes[0].atk[b] ?? 0) - (S.modes[0].atk[a] ?? 0));
     const traps = lines.flatMap(l => l.traps.map(([from, to, kind]) => ({ l, from, to, kind }))).sort((a, b) => (a.kind === 'trap' ? 0 : 1) - (b.kind === 'trap' ? 0 : 1));
-    const byRole = {};
+    const byRole = Object.create(null);
     for (const l of lines) for (const [r, id, c] of l.roles) if (KEY_ROLES.includes(r)) (byRole[r] ??= []).push({ l, id, c });
     const unsure = lines.filter(l => l.unsure.length);
     const cell = v => html`<td class="n ${v >= 1.15 ? 'up' : v <= 0.95 ? 'down' : ''}">×${v.toFixed(2)}</td>`;

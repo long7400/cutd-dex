@@ -14,9 +14,20 @@ const CAM_FILE = 'overlay.js';
 const CAM_CODES = ['KeyW', 'KeyA', 'KeyS', 'KeyD'];
 const PRIMARY_SELECTOR = 'button.authored-node[data-node="Primary"]';
 const GAME_OBJECTS = new Set(['session', 'interaction', 'store', 'cc']);
-const ALLOWED = { session: new Set(['catchWild', 'evolveCreature', 'tradePet', 'moveCreature']), interaction: new Set(['selectEntity']) };
+const SESSION_FNS = new Set(['catchWild', 'evolveCreature', 'tradePet', 'moveCreature']);
+const INTERACTION_FNS = new Set(['selectEntity']);
+const SESSION_READ = new Set([...SESSION_FNS, 'store', 'canCommand']);
+const ALLOWED = { session: SESSION_READ, nextSequence: SESSION_READ, interaction: INTERACTION_FNS, _selectedEntityId: INTERACTION_FNS };
+const H_TAGS = new Set(['a', 'b', 'button', 'div', 'i', 'img', 'p', 'small', 'span', 'style', 'table', 'td', 'th', 'tr']);
+const H_PROPS = new Set(['class', 'text', 'style', 'onClick', 'href', 'src', 'title', 'tabindex', 'disabled', 'alt', 'width', 'height']);
+const STRING_BUILDERS = new Set(['join', 'concat', 'fromCharCode', 'fromCodePoint', 'replace', 'replaceAll', 'slice', 'substring', 'substr', 'toString', 'repeat', 'padStart', 'padEnd', 'atob', 'decodeURIComponent', 'reverse', 'trim', 'toLowerCase', 'toUpperCase', 'normalize', 'raw', 'at']);
+const builtKey = k => (k.type === 'BinaryExpression' && k.operator === '+') || k.type === 'TemplateLiteral' || k.type === 'AssignmentExpression' || k.type === 'SequenceExpression'
+  || (k.type === 'CallExpression' && ((k.callee.type === 'MemberExpression' && STRING_BUILDERS.has(k.callee.property?.name)) || ['String', 'atob', 'decodeURIComponent', 'unescape'].includes(k.callee.name)))
+  || (k.type === 'ConditionalExpression' && (builtKey(k.consequent) || builtKey(k.alternate))) || (k.type === 'LogicalExpression' && (builtKey(k.left) || builtKey(k.right)));
 const BANNED_IDENTIFIERS = new Set(['eval', 'Function', 'Reflect', 'XMLHttpRequest', 'importScripts', 'Worker', 'SharedWorker',
-  'localStorage', 'sessionStorage', 'indexedDB', 'MouseEvent', 'PointerEvent', 'CustomEvent', 'Event', 'TouchEvent', 'Proxy']);
+  'localStorage', 'sessionStorage', 'indexedDB', 'MouseEvent', 'PointerEvent', 'CustomEvent', 'Event', 'TouchEvent', 'Proxy',
+  'Image', 'Audio', 'EventSource', 'RTCPeerConnection', 'BroadcastChannel', 'ServiceWorker', 'open', 'opener', 'getPrototypeOf', 'setPrototypeOf',
+  '__defineGetter__', '__defineSetter__', 'execCommand', 'requestSubmit']);
 const BANNED_PROPERTIES = new Set(['innerHTML', 'outerHTML', 'insertAdjacentHTML', 'write', 'writeln', 'cookie', 'sendBeacon',
   'send', 'dispatch', 'postMessage', 'srcdoc', 'constructor', '__proto__', 'prototype', 'call', 'apply', 'bind', 'setAttributeNS']);
 
@@ -44,8 +55,21 @@ export function auditSource(files) {
         }
         if (n.name === 'fetch') counts.fetch++;
       },
-      MemberExpression(n) {
+      MemberExpression(n, _s, anc) {
         const name = propName(n);
+        const parent = anc[anc.length - 2];
+        if (!n.computed && BANNED_IDENTIFIERS.has(name)) err(file, n, `cấm dùng .${name}`);
+        if (!n.computed && name === 'fetch') counts.fetch++;
+        if (!n.computed && name === 'WebSocket' && !(file === CAM_FILE && src(code, n) === 'win.WebSocket' && parent?.type === 'VariableDeclarator' && parent.id.name === 'WS')) err(file, n, '.WebSocket chỉ được đọc vào const WS (để instanceof)');
+        if (n.computed && builtKey(n.property)) err(file, n, 'truy cập […] bằng khoá ghép/tính động');
+        if (!n.computed && ['assign', 'replace', 'reload'].includes(name) && /(^|\.)location$/.test(src(code, n.object))) err(file, n, `cấm location.${name}`);
+        if (isBridge && !n.computed && ['session', 'interaction', 'nextSequence', '_selectedEntityId'].includes(name)) {
+          const ok = (parent?.type === 'MemberExpression' && parent.object === n) || (parent?.type === 'UnaryExpression' && parent.operator === 'typeof')
+            || (parent?.type === 'BinaryExpression' && ['===', '!=='].includes(parent.operator))
+            || (parent?.type === 'AssignmentExpression' && parent.left === n && parent.right.type === 'Literal' && parent.right.value === null)
+            || (parent?.type === 'Property' && parent.value === n && ALLOWED[parent.key.name] === ALLOWED[name]);
+          if (!ok) err(file, n, `.${name} của game chỉ được dùng trực tiếp (x.${name}.hàm), không truyền/gán đi chỗ khác`);
+        }
         if (n.computed && n.property.type !== 'Literal') {
           const objName = n.object.type === 'MemberExpression' ? propName(n.object) : n.object.name;
           if (GAME_OBJECTS.has(objName)) err(file, n, `truy cập ${objName}[…] bằng ngoặc vuông`);
@@ -94,7 +118,32 @@ export function auditSource(files) {
       Literal(n) {
         if (typeof n.value === 'string' && n.value.includes('authored-node') && (!isWeb || n.value !== PRIMARY_SELECTOR)) err(file, n, `bộ chọn nút game không được phép: ${n.value}`);
       },
+      ObjectPattern(n) {
+        for (const p of n.properties) if (p.type === 'Property' && GAME_OBJECTS.has(p.key?.name ?? p.key?.value)) err(file, n, `cấm destructuring ${p.key.name ?? p.key.value} của game`);
+      },
+      AssignmentExpression(n) {
+        const left = src(code, n.left);
+        if (/(^|\.)location(\.href)?$/.test(left)) err(file, n, 'cấm đổi location');
+        if (n.left.type === 'MemberExpression' && ['src', 'href', 'action', 'formAction', 'srcdoc', 'data'].includes(propName(n.left)) && !(file === CAM_FILE && left === 'frame.src' && src(code, n.right) === 'location.href')) {
+          if (!(file === CAM_FILE && ['el.src', 'el.href'].includes(left))) err(file, n, `cấm gán .${propName(n.left)} (chỉ qua h())`);
+        }
+      },
+      ImportExpression(n) { err(file, n, 'cấm import() động'); },
       CallExpression(n) {
+        if ((n.callee.name === 'setTimeout' || n.callee.name === 'setInterval') && !['ArrowFunctionExpression', 'FunctionExpression', 'Identifier'].includes(n.arguments[0]?.type)) err(file, n, `${n.callee.name} chỉ nhận hàm`);
+        if (n.callee.type === 'MemberExpression' && n.callee.computed && n.callee.property.type !== 'Literal' && n.callee.object.type !== 'ObjectExpression' && !(isBridge && src(code, n.callee) === 'TRAPS[key]')) err(file, n, 'cấm gọi hàm qua x[khoá]()');
+        if (n.callee.type === 'MemberExpression' && propName(n.callee) === 'createElement') {
+          const a = n.arguments[0];
+          const ok = (a?.type === 'Literal' && a.value === 'iframe' && file === CAM_FILE) || (a?.type === 'Identifier' && a.name === 'tag' && file === CAM_FILE);
+          if (!ok) err(file, n, 'createElement chỉ trong h() hoặc iframe Móc');
+        }
+        if (n.callee.type === 'MemberExpression' && ['setAttribute', 'setAttributeNS'].includes(propName(n.callee)) && !(file === CAM_FILE && src(code, n.arguments[0]) === 'k')) err(file, n, 'setAttribute chỉ trong h()');
+        if (n.callee.type === 'Identifier' && n.callee.name === 'h') {
+          const [tag, props] = n.arguments;
+          if (tag?.type !== 'Literal' || !H_TAGS.has(tag.value)) err(file, n, `h(): thẻ không cho phép ${tag ? src(code, tag) : ''}`);
+          if (props && props.type !== 'ObjectExpression' && !(props.type === 'Literal' && props.value === null)) err(file, n, 'h(): props phải là object viết thẳng');
+          for (const p of props?.properties ?? []) if (p.type !== 'Property' || p.computed || !H_PROPS.has(p.key.name ?? p.key.value)) err(file, n, `h(): thuộc tính không cho phép ${p.key ? (p.key.name ?? p.key.value) : '...'}`);
+        }
         if (n.callee.name === 'getJSON') {
           const a = n.arguments[0];
           const ok = (a?.type === 'Literal' && a.value === '/catalog')
@@ -130,16 +179,19 @@ export async function buildTool() {
 
   const url = dataUrl();
   const out = await build({
-    entryPoints: [join(toolDir, 'overlay.js')], bundle: true, write: false,
+    entryPoints: [join(toolDir, 'overlay.js')], bundle: true, write: false, metafile: true, absWorkingDir: ROOT,
     format: 'iife', minify: true, target: 'es2020', legalComments: 'none', charset: 'utf8',
     define: { __CUTD_DATA_URL__: JSON.stringify(url) },
   });
+  const inputs = Object.keys(out.metafile.inputs);
+  const stray = inputs.filter(p => !/^tool\/[\w-]+\.js$/.test(p) || !files.some(([f]) => `tool/${f}` === p));
+  if (stray.length) throw new Error(`Bookmarklet kéo file ngoài tool/*.js đã kiểm: ${stray.join(', ')}`);
   let code = out.outputFiles[0].text.trim();
   const version = `${pkg.version}-${createHash('sha256').update(code).digest('hex').slice(0, 7)}`;
   code = code.replace(/__CUTD_VERSION__/g, version);
   const banned = [/\beval\s*\(/, /new Function\s*\(/, /\.innerHTML\b/, /\.outerHTML\b/, /insertAdjacentHTML/, /document\.write/,
     /\.send\s*\(/, /sendBeacon/, /createElement\(\s*["'`]script/i, /importScripts/, /\bimport\s*\(/, /localStorage/, /document\.cookie/,
-    /XMLHttpRequest/, /\.dispatch\s*\(/];
+    /XMLHttpRequest/, /\.dispatch\s*\(/, /\bnew Image\b/, /\.open\s*\(/, /setTimeout\(\s*["'`]/, /getPrototypeOf/, /sellCreature|dismissWild|sendChat/];
   const hit = banned.filter(re => re.test(code));
   if (hit.length) throw new Error(`Bookmarklet chứa API bị cấm: ${hit.join(', ')}`);
   if (!code.includes(JSON.stringify(url))) throw new Error('Địa chỉ dữ liệu chưa được khoá vào code');

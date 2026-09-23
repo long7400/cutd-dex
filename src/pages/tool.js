@@ -79,14 +79,14 @@ export default {
         <ul class="steps">
           <li>Toàn bộ code nằm sẵn trong bookmark (${num(Math.round(tool.bytes / 102.4) / 10)}KB). Không nạp script từ bất kỳ đâu nên không ai tráo được code.</li>
           <li>Chỉ tải 1 file <b>dữ liệu</b> <code>overlay.json</code> từ wiki. File này chỉ được đọc như dữ liệu và hiển thị dạng chữ, không bao giờ bị chạy như code.</li>
-          <li><b>Chỉ hành động khi mày bấm:</b> nút Bắt / Tiến hóa / Trade gọi đúng hàm của game (như bấm nút trong game) — 1 cú bấm = 1 lệnh, khoá 0,6s chống bấm đúp, không có vòng lặp hay tự mua. Click do script khác tạo ra bị bỏ qua.</li>
+          <li><b>Chỉ hành động khi mày bấm:</b> nút Bắt / Tiến hóa / Trade gọi đúng hàm của game (như bấm nút trong game) — 1 cú bấm = 1 lệnh, khoá 0,6s chống bấm đúp, không tự mua. Riêng <b>Xếp đội</b> gửi lần lượt 1 lệnh di chuyển / con, chờ game xác nhận từng lệnh, hết lượt là dừng. Click do script khác tạo ra bị bỏ qua.</li>
           <li>Bấm vào 1 dòng = chọn con đó trong game (chỉ đổi lựa chọn trên máy, không gửi gì).</li>
           <li>Camera chuột chỉ giả lập đúng 4 phím W/A/S/D, luôn nhả phím khi dừng tay, thả chuột, mất focus hoặc tắt tool. Cú Option+kéo bị chặn trọn vẹn nên game không kẹt trạng thái.</li>
           <li>Tên, giá, nhánh tiến hóa trên nút lấy từ <b>catalog của chính game</b> — file dữ liệu wiki có bị sửa cũng không đổi được nút làm gì. Đang xem nhà người khác thì nút tự khoá.</li>
           <li>Không đọc/ghi cookie hay localStorage.</li>
-          <li>Build phân tích cú pháp (AST) và tự fail nếu code có <code>eval</code>, <code>innerHTML</code>, <code>socket.send</code>, <code>sendBeacon</code>, cookie/storage, nạp script ngoài, truy cập ngoặc vuông/gán biến để lách, hoặc gọi hàm game nào khác ngoài 4 hàm trên (bán, thả, di chuyển, chat… đều bị chặn). Mọi lệnh gọi vào game nằm trong 1 file duy nhất <code>tool/game-bridge.js</code>.</li>
+          <li>Build phân tích cú pháp (AST) và tự fail nếu code có <code>eval</code>, <code>innerHTML</code>, <code>socket.send</code>, <code>sendBeacon</code>, cookie/storage, nạp script ngoài, truy cập ngoặc vuông/gán biến để lách, hoặc gọi hàm game nào khác ngoài Bắt / Tiến hóa / Trade / Di chuyển / Chọn (bán, thả, chat… đều bị chặn). Mọi lệnh gọi vào game nằm trong 1 file duy nhất <code>tool/game-bridge.js</code>.</li>
           <li>Phiên bản <code>${tool.version}</code> · dữ liệu chỉ lấy từ <code>${tool.dataUrl}</code> (khoá cứng trong code) và <code>/catalog</code> của chính game.</li>
-          <li>SHA-256 của đúng đoạn code mày nhận: <code class="hash">${tool.sha256}</code> — đối chiếu với mã băm ghi trong commit trên GitHub.</li>
+          <li>SHA-256 của đúng đoạn code mày nhận: <code class="hash">${tool.sha256}</code> — tự kiểm: clone repo, chạy <code>npm ci &amp;&amp; node scripts/build-tool.mjs</code> sẽ in ra đúng 16 ký tự đầu của mã băm này.</li>
           <li>Mã nguồn: <a class="rootlink" href="${SOURCE}" target="_blank" rel="noopener noreferrer">tool/overlay.js</a></li>
         </ul>
         <details class="codebox"><summary>Xem toàn bộ code (dán được thẳng vào Console)</summary><pre>${consoleCode()}</pre></details>

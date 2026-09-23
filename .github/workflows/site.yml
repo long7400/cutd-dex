@@ -39,22 +39,24 @@ jobs:
         env:
           FORCE: ${{ inputs.force && '--force' || '' }}
         run: |
+          find .git -maxdepth 2 \( -name config -o -path '.git/hooks*' -o -name info \) -exec ls -la {} + | sha256sum > "$RUNNER_TEMP/git.sum"
           STOP="$(openssl rand -hex 16)"
           echo "::stop-commands::${STOP}"
-          node scripts/sync.mjs $FORCE
+          node scripts/sync.mjs ${FORCE:+"$FORCE"}
           echo "::${STOP}::"
       - name: Commit nếu có thay đổi
         env:
           HASH: ${{ steps.sync.outputs.hash }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          git add -A data public
-          if git diff --cached --quiet; then echo "Không có gì mới."; exit 0; fi
+          G="git -c core.hooksPath=/dev/null -c core.fsmonitor=false -c credential.helper="
+          find .git -maxdepth 2 \( -name config -o -path '.git/hooks*' -o -name info \) -exec ls -la {} + | sha256sum | cmp -s - "$RUNNER_TEMP/git.sum" || { echo "::error::.git bị đổi trong lúc sync — dừng"; exit 1; }
+          test -z "$($G status --porcelain -- . ':!data' ':!public')" || { echo "::error::sync ghi ra ngoài data/ public/ — dừng"; exit 1; }
+          $G add -A data public
+          if $G diff --cached --quiet; then echo "Không có gì mới."; exit 0; fi
           case "$HASH" in *[!0-9a-f]*|'') HASH=unknown ;; esac
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "chore(data): game update $(date -u '+%F %H:%M') — ${HASH}"
-          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main
+          $G -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit --no-verify -m "chore(data): game update $(date -u '+%F %H:%M') — ${HASH}"
+          $G push --no-verify "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main
 
   canary:
     if: github.event_name != 'push'

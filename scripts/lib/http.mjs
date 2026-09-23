@@ -22,7 +22,14 @@ export async function request(url, { validator, timeout = 30_000, retries = 3, m
       if (validator?.etag) headers['if-none-match'] = validator.etag;
       if (validator?.lastModified) headers['if-modified-since'] = validator.lastModified;
       stats.requests++;
-      const res = await fetch(url, { headers, signal: AbortSignal.timeout(timeout) });
+      let res, at = url;
+      for (let hop = 0; ; hop++) {
+        res = await fetch(at, { headers, redirect: 'manual', signal: AbortSignal.timeout(timeout) });
+        if (res.status < 300 || res.status > 399 || res.status === 304) break;
+        const next = new URL(res.headers.get('location') ?? '', at);
+        if (hop >= 3 || next.origin !== new URL(url).origin) throw new HttpError(`${url} → chuyển hướng lạ ${next.origin}`, res.status);
+        at = next.href;
+      }
       if (res.status === 304) {
         stats.notModified++;
         return { notModified: true, validator };

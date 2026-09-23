@@ -116,6 +116,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const seen = new WeakSet();
 
   const acks = new Map();
+  let dead = false;
   const diag = { start: performance.now(), hello: null, firstMsg: null, keyframe: null, firstWild: null, firstUnit: null, longTaskMs: 0, longTasks: 0 };
   const now = () => performance.now();
 
@@ -153,8 +154,9 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const onClose = () => { socket?.removeEventListener('message', onMessage); socket = null; patch(); invalidate(); };
 
   function attach(ws) {
-    if (socket) return;
+    if (socket || dead) return;
     socket = ws;
+    acks.clear();
     ws.addEventListener('message', onMessage);
     ws.addEventListener('close', onClose);
     unpatch();
@@ -192,6 +194,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   }
 
   function h(tag, props, ...kids) {
+    if (!/^(a|b|button|div|i|img|p|small|span|style|table|td|th|tr)$/.test(tag)) throw new Error('thẻ không cho phép');
     const el = document.createElement(tag);
     for (const [k, v] of Object.entries(props ?? {})) {
       if (v == null || v === false) continue;
@@ -201,7 +204,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       else if (k === 'onClick') el.addEventListener('click', v);
       else if (k === 'href') { if (/^https?:\/\//.test(v)) { el.href = v; el.target = '_blank'; el.rel = 'noopener noreferrer'; } }
       else if (k === 'src') { if (String(v).startsWith(DATA_URL)) el.src = v; }
-      else el.setAttribute(k, String(v));
+      else if (/^(title|tabindex|disabled|alt|width|height)$/.test(k)) el.setAttribute(k, String(v));
     }
     for (const c of kids.flat(Infinity)) if (c != null && c !== false) el.append(c instanceof Node ? c : String(c));
     return el;
@@ -362,7 +365,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const run = arranging = { done: 0, n: plan.length, stop: false };
     dirty = true; render(true);
     for (const m of plan) {
-      if (run.stop || state.summary?.phase !== 'planning' || findGame() !== g) break;
+      if (run.stop || dead || state.summary?.phase !== 'planning' || findGame() !== g) break;
       const found = findEntity(g, m.key);
       if (!found || found.ent.contentId !== m.stage) { run.n--; continue; }
       const pos = found.ent.pos;
@@ -453,7 +456,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 
   const onHotkey = e => {
     if (!e.isTrusted || e.repeat || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey || e.code !== 'KeyF') return;
-    if (e.target?.closest?.('input,textarea,select,[contenteditable="true"]')) return;
+    if (e.target?.isContentEditable || e.target?.closest?.('input,textarea,select,[contenteditable]')) return;
     if (!web.primaryReady()) return;
     e.preventDefault();
     web.clickPrimary();
@@ -486,7 +489,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     boss: ['BOSS', 'Sát thương theo % máu / giá trị — diệt boss'], aoe: ['AOE', 'Sát thương lan'],
   };
   const SUPPORT = new Set(['buff', 'cc', 'heal', 'taunt']);
-  const kitOf = stage => U(stage)?.kt ?? [];
+  const kitOf = stage => (Array.isArray(U(stage)?.kt) ? U(stage).kt : []).filter(k => typeof k === 'string' && Object.hasOwn(KIT, k));
   const kitChips = stage => {
     const kit = kitOf(stage);
     if (!kit.length) return null;
@@ -744,6 +747,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 
   let frame = null;
   function switchRealm(win) {
+    if (dead) return;
+    acks.clear();
     unpatch();
     socket?.removeEventListener('message', onMessage);
     socket?.removeEventListener('close', onClose);
@@ -765,6 +770,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   function openFrame() {
     if (frame || !isWeb() || realm.win !== window || findGame()) return;
     frame = document.createElement('iframe');
+    frame.id = 'cutd-frame';
     frame.src = location.href;
     frame.allow = 'fullscreen; autoplay';
     frame.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;border:0;z-index:2147483645;background:#08161a';
@@ -772,7 +778,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     toast = '';
     let tries = 0;
     const arm = () => {
-      if (!frame) return;
+      if (!frame || dead) return;
       let win = null;
       try {
         win = frame.contentWindow;
@@ -791,7 +797,10 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   root.append(mini);
 
   function destroy() {
-    unpatch();
+    dead = true;
+    if (arranging) arranging.stop = true;
+    const quiet = fn => { try { fn(); } catch { } };
+    quiet(unpatch);
     socket?.removeEventListener('message', onMessage);
     socket?.removeEventListener('close', onClose);
     clearTimeout(pending);
@@ -799,21 +808,29 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     observers.forEach(o => o.disconnect());
     window.removeEventListener('pointermove', onMove);
     window.removeEventListener('pointerup', onUp);
-    unlisten(window);
-    if (realm.win !== window) unlisten(realm.win);
-    disarmWebCapture();
-    endPan();
+    quiet(() => unlisten(window));
+    if (realm.win !== window) quiet(() => unlisten(realm.win));
+    quiet(disarmWebCapture);
+    quiet(endPan);
+    if (frame && realm.win === window) frame.remove();
+    frame = null;
     host.remove();
     delete window[NS];
   }
 
   window[NS] = { toggle, destroy, version: VERSION };
+  const oldFrame = isWeb() ? document.getElementById('cutd-frame') : null;
+  if (oldFrame) { oldFrame.remove(); openFrame(); }
   if (isWeb()) armWebCapture();
   patch();
   render(true);
 
-  const getJSON = (url, maxBytes) => fetch(url, { credentials: 'omit', cache: 'no-cache' })
-    .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); })
+  const getJSON = (url, maxBytes) => fetch(url, { credentials: 'omit', cache: 'no-cache', signal: AbortSignal.timeout(20000) })
+    .then(r => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      if (Number(r.headers?.get('content-length')) > maxBytes) throw new Error('dữ liệu quá lớn');
+      return r.text();
+    })
     .then(t => { if (t.length > maxBytes) throw new Error('dữ liệu quá lớn'); return JSON.parse(t); });
 
   let live = null, liveHash = null;
@@ -827,7 +844,14 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   getJSON(`${DATA_URL}overlay.json`, 4 * 1024 * 1024)
     .then(d => {
       if (!d || typeof d.u !== 'object' || Array.isArray(d.u)) throw new Error('dữ liệu sai định dạng');
-      db = d;
+      const arr = (v, max = 64) => (Array.isArray(v) ? v.slice(0, max) : undefined);
+      const u = Object.create(null);
+      for (const [id, x] of Object.entries(d.u)) {
+        if (!SAFE_ID.test(id) || !x || typeof x !== 'object' || Array.isArray(x)) continue;
+        u[id] = { ...x, r: arr(x.r), s: arr(x.s), kt: arr(x.kt), pk: arr(x.pk, 3), ul: arr(x.ul), pg: arr(x.pg),
+          e: arr(x.e, 8)?.filter(v => Array.isArray(v) && typeof v[0] === 'string' && Number.isFinite(v[1])) };
+      }
+      db = { ...d, u };
       mergeGameCatalog();
       dirty = true; render(true);
     })

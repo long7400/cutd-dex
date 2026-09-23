@@ -50,7 +50,8 @@ export function unknownShapes(catalog) {
       for (const c of e.conditions ?? []) note('condition', c.kind, a.id);
     }
   }
-  return Object.entries(seen).flatMap(([kind, m]) => [...m].map(([value, id]) => `${kind} "${value}" (vd ${id})`));
+  const md = v => String(v).slice(0, 60).replace(/[^\w .:-]/g, '?');
+  return Object.entries(seen).flatMap(([kind, m]) => [...m].map(([value, id]) => `${kind} "${md(value)}" (vd ${md(id)})`));
 }
 
 export function missingSignatures(kind, code) {

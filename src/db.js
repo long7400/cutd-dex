@@ -25,7 +25,8 @@ function index(d) {
 }
 
 export const unitUrl = id => `#/unit/${id.replace(/^unit_/, '')}`;
-export const unitFromParam = p => db.units[`unit_${p}`] ?? db.units[p];
+const own = (o, k) => (typeof k === 'string' && Object.hasOwn(o, k) ? o[k] : undefined);
+export const unitFromParam = p => own(db.units, `unit_${p}`) ?? own(db.units, p);
 export const portrait = model => `portraits/${model ?? 'pet_xiaohuolong'}.webp`;
 export const label = k => db.labels[k] ?? k;
 

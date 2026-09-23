@@ -1,6 +1,6 @@
 import { literalsMatching, enclosingObject } from './literal.mjs';
 
-const SAFE_NAME = /^[A-Za-z0-9_-]{1,80}$/;
+import { SAFE_NAME } from './validate.mjs';
 
 export function extractClient(js) {
   const largest = arr => arr.reduce((a, b) => (sizeOf(b) > sizeOf(a) ? b : a), null);

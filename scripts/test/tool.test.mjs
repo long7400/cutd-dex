@@ -304,7 +304,7 @@ test('bookmarklet: nút Bắt/Tiến hóa/Trade gọi đúng hàm game, chỉ kh
   assert.equal(calls.at(-1)[0], 'selectEntity');
 
   assert.ok(!calls.some(c => ['sellCreature', 'dispatch'].includes(c[0])));
-  assert.deepEqual([...touched].filter(k => !['catchWild', 'evolveCreature', 'tradePet'].includes(k)), []);
+  assert.deepEqual([...touched].filter(k => !['catchWild', 'evolveCreature', 'tradePet', 'canCommand'].includes(k)), []);
   assert.equal(log.sent, 0, 'không tự gửi gì qua socket');
 });
 
@@ -435,6 +435,8 @@ test('bookmarklet: bản m.cutd.site dán giữa trận — nút khoá vài giâ
   assert.equal(frames[0].src, 'https://m.cutd.site/?room=805A6070');
   assert.equal(log.sent, 0);
   w.__cutdHelper.destroy();
+  await tick(50);
+  assert.equal(w.document.querySelectorAll('iframe').length, 1, 'tắt tool không mở thêm khung');
 });
 
 test('bookmarklet: bản web — dán từ sảnh → móc session/interaction lúc game tạo, gọi thẳng hàm game, gỡ bẫy sạch', async t => {
@@ -580,7 +582,13 @@ test('bookmarklet: bản web — nút Móc (dán giữa trận): chỉ nhận c�
   await tick(50);
   assert.ok(!hook(), 'đang móc → ẩn nút');
   assert.match(root.querySelector('.top').textContent, /đang móc/);
+  w.eval(code.replace(/1\.0\.0-[0-9a-f]{7}/g, '9.9.9-test'));
+  assert.equal(w.document.querySelectorAll('iframe').length, 1, 'dán lại → thay khung cũ, không chồng thêm');
+  const inner = w.document.querySelector('iframe').contentWindow;
   w.__cutdHelper.destroy();
+  assert.ok(w.document.querySelectorAll('iframe').length <= 1, 'tắt tool: khung game đang chạy được giữ lại, không thêm khung');
+  for (const win of [w, inner]) for (const key of ['nextSequence', '_selectedEntityId']) assert.equal(Object.getOwnPropertyDescriptor(win.Object.prototype, key), undefined, 'gỡ sạch bẫy');
+  assert.ok(!w.__cutdHelper);
 });
 
 test('bookmarklet: phím F bấm nút chính của game (bản web) — chỉ phím thật, không khi đang gõ/giữ phím/nút tắt', async t => {
