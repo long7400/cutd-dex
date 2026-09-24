@@ -115,6 +115,11 @@ export function moveCreature(g, ent, pos) {
   return Number.isInteger(seq) ? { seq } : { fail: 'rule' };
 }
 
+export function posOf(ent) {
+  const p = ent?.toPos ?? ent?.pos;
+  return Number.isFinite(p?.x) && Number.isFinite(p?.y) ? { x: p.x, y: p.y } : null;
+}
+
 export function groundOf(g) {
   const gr = g?.store?.ground;
   const a = gr?.arena;

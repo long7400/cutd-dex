@@ -520,16 +520,19 @@ test('bookmarklet: Xếp đội — mỗi lần bấm dời đúng 1 con lệch 
     window.__moves = [];
     window.Session = class { constructor(store) { this.nextSequence = 1; this.store = store; }
       dispatch(c) { const s = this.nextSequence; this.nextSequence += 1; window.__moves.push(c); return s; }
-      moveCreature(e, to) { e.pos = { x: to.x, y: to.y }; return this.dispatch(['move', e.id, to.x, to.y]); }
+      moveCreature(e, to) { e.fromPos = e.toPos; e.toPos = { x: to.x, y: to.y }; return this.dispatch(['move', e.id, to.x, to.y]); }
       catchWild() {} evolveCreature() {} tradePet() {} }
     window.Interaction = class { constructor() { this._selectedEntityId = null; } selectEntity() {} tapGround() {} clearSelection() {} }
-    const arena = { originX: 0, originY: 384, width: 1216, height: 1312 };
+    const origin = { x: 1376, y: 0 };
+    const at = (x, y) => ({ x: origin.x + x, y: origin.y + y });
+    const unit = (n, stage, x, y) => [\`u\${n}\`, { id: \`u\${n}\`, kind: 'creature', wireId: n, contentId: stage, fromPos: at(x, y), toPos: at(x, y), fromTick: 90, toTick: 100 }];
+    const arena = { originX: origin.x + 192, originY: origin.y + 96, width: 832, height: 1120 };
     const entities = new Map([
-      ['u1', { id: 'u1', kind: 'creature', wireId: 1, contentId: ${JSON.stringify(ranged)}, pos: { x: 400, y: 920 } }],
-      ['u2', { id: 'u2', kind: 'creature', wireId: 2, contentId: ${JSON.stringify(tank)}, pos: { x: 608, y: 1040 } }],
-      ['u3', { id: 'u3', kind: 'creature', wireId: 3, contentId: ${JSON.stringify(melee)}, pos: { x: 608, y: 920 } }],
+      unit(1, ${JSON.stringify(ranged)}, 300, 900),
+      unit(2, ${JSON.stringify(tank)}, 700, 500),
+      unit(3, ${JSON.stringify(melee)}, 488, 656),
     ]);
-    window.__session = new Session({ entities, ground: { arena, path: [{ x: 608, y: 192 }, { x: 608, y: 1552 }] } });
+    window.__session = new Session({ entities, ground: { arena, path: [at(96, 656), at(1120, 656)] } });
     window.__interaction = new Interaction();
   `);
   const ws = new FakeWS();
@@ -552,7 +555,7 @@ test('bookmarklet: Xếp đội — mỗi lần bấm dời đúng 1 con lệch 
   trustedClick(w, btn());
   await tick(50);
   assert.equal(w.__moves.length, 1, '1 cú bấm = 1 lệnh');
-  assert.deepEqual([...w.__moves[0]], ['move', 'u2', 608, 800], 'tank lên hàng đầu giữa đường quái');
+  assert.deepEqual([...w.__moves[0]], ['move', 'u1', 1376 + 748, 656], 'con hồi máu / hào quang đang đứng đầu đường quái → dời ra sau trước tiên');
   assert.ok(btn().disabled && /Đang dời/.test(btn().textContent), 'chờ game xác nhận');
   trustedClick(w, btn());
   await tick(500);
@@ -565,7 +568,7 @@ test('bookmarklet: Xếp đội — mỗi lần bấm dời đúng 1 con lệch 
   trustedClick(w, btn());
   await tick(50);
   assert.equal(w.__moves.length, 2);
-  assert.deepEqual([...w.__moves[1]], ['move', 'u1', 608, 1180], 'hồi máu / hào quang ra sau cùng; con cận chiến không bị dời');
+  assert.deepEqual([...w.__moves[1]], ['move', 'u2', 1376 + 368, 656], 'tank lên hàng đầu, giữa đường quái; con cận chiến không bị dời');
   emit({ type: 'command_ack', sequence: 2, accepted: false, reason: 'orders_closed', tick: 102 });
   await tick(200);
   assert.match(root.querySelector('.toast').textContent, /orders closed/);

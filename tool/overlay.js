@@ -3,7 +3,7 @@ import {
   bestAttacks, nextWaveForBase, buildGameCatalog, formationRow, acceptRows, createMemory, observe, onSent, onAck, planMoves,
 } from './logic.js';
 import * as web from './web-input.js';
-import { findGame, findEntity, selectEntity, catchWild, evolveCreature, tradePet, moveCreature, groundOf, probe, clientKind, armWebCapture, disarmWebCapture, webCaptured, webTouched, forgetWebCapture } from './game-bridge.js';
+import { findGame, findEntity, selectEntity, catchWild, evolveCreature, tradePet, moveCreature, groundOf, posOf, probe, clientKind, armWebCapture, disarmWebCapture, webCaptured, webTouched, forgetWebCapture } from './game-bridge.js';
 import { realm, gameDoc } from './realm.js';
 import { analyzeCatalog, overlayFields, powerTier } from './analyze.js';
 
@@ -449,7 +449,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   let lastWatch = 0;
   const snapUnits = g => myUnits(state).map(u => {
     const d = U(u.stage), key = `u${u.id}`, row = formationRow(d);
-    return { key, stage: u.stage, level: d?.l ?? 1, row, accept: acceptRows(d), score: row === 0 ? (d?.hp ?? 0) : (d?.ed ?? d?.dps ?? 0), active: u.active, pos: g ? findEntity(g, key)?.ent?.pos ?? null : null };
+    return { key, stage: u.stage, level: d?.l ?? 1, row, accept: acceptRows(d), score: row === 0 ? (d?.hp ?? 0) : (d?.ed ?? d?.dps ?? 0), active: u.active, pos: g ? posOf(findEntity(g, key)?.ent) : null };
   });
   const arrangePlan = g => { const ground = groundOf(g); return ground ? planMoves(mem, snapUnits(g), ground) : null; };
   function watchRoster(force = false) {
@@ -505,12 +505,13 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   function teamBar(mine, plan, blocked) {
     const next = plan?.moves[0];
     const held = plan ? [...plan.status.values()].filter(v => v === 'new').length : 0;
+    const lost = plan ? [...plan.status.values()].filter(v => v === 'unknown').length : 0;
     const nextStage = next ? mine.find(u => `u${u.id}` === next.key)?.stage : null;
     return h('div', { class: 'bar-row' },
       h('button', {
         class: `chip sm ${next ? 'on' : ''}`, tabindex: '-1', disabled: arranging || !!blocked || !mine.some(u => u.active) || (plan && !next),
-        text: arranging ? 'Đang dời…' : next ? `Xếp đội ↕${plan.moves.length}` : plan ? '✓ Đúng hàng' : 'Xếp đội',
-        title: blocked ? FAIL[blocked] : next ? `Bấm để dời ${nameOf(nextStage)} sang hàng ${ROWS[next.row][0]}. Mỗi lần bấm dời 1 con (ô có dấu ↕); con đã đứng đúng hàng không bị đụng tới.`
+        text: arranging ? 'Đang dời…' : next ? `Xếp đội ↕${plan.moves.length}` : lost ? 'Xếp đội ?' : plan ? '✓ Đúng hàng' : 'Xếp đội',
+        title: blocked ? FAIL[blocked] : !next && lost ? `Chưa đọc được vị trí ${lost} con trong game — đợi 1–2 giây rồi xem lại.` : next ? `Bấm để dời ${nameOf(nextStage)} sang hàng ${ROWS[next.row][0]}. Mỗi lần bấm dời 1 con (ô có dấu ↕); con đã đứng đúng hàng không bị đụng tới.`
           : 'Hàng từ phía quái vào: TANK → CẬN → XA → HỖ TRỢ sau cùng.',
         onClick: arrange,
       }),
