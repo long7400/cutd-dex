@@ -29,6 +29,8 @@ const CSS = `
 .chip{all:unset;cursor:pointer;padding:2px 9px;border-radius:99px;border:1px solid #33496b;color:#8fb7e8;font-weight:600;font-size:11.5px}
 .chip.on{background:#ffde8f;color:#0b1526;border-color:transparent}
 .chip.sm{padding:1px 8px;font-size:11px}.chip:disabled{opacity:.35;cursor:default}
+.star{all:unset;cursor:pointer;width:16px;text-align:center;color:#4a6fa5;font-size:14px;line-height:1}.star:hover{color:#ffde8f}.star.on{color:#ffde8f}
+.kit .k-debuff{background:#2a2148;color:#cbb3ff}.kit .k-selfharm{background:#3d2226;color:#ff9c9c}
 .muted{margin-left:auto;color:#6f8fb8;font-size:11.5px}
 .row{display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:8px;padding:5px 10px}
 .row:hover,.trade:hover{background:#17263f}
@@ -327,7 +329,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   }
   const pickable = (el, key) => {
     el.classList.add('pick');
-    el.addEventListener('click', e => { if (!e.target.closest('a,.act')) selectInGame(typeof key === 'function' ? key() : key, e); });
+    el.addEventListener('click', e => { if (!e.target.closest('a,.act,.star')) selectInGame(typeof key === 'function' ? key() : key, e); });
     return el;
   };
 
@@ -540,10 +542,21 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     ['S+', 'S', 'A', 'B', 'C'].map(t => h('span', null, h('span', { class: 'strip' }, h('i', { class: TIER_CLASS[t] })), t)));
   const KIT = {
     atk: ['ATK', 'Gây sát thương là chính'], tank: ['TANK', 'Máu / giáp dày, chịu đòn'], buff: ['BUFF', 'Hào quang tăng sát thương / tốc đánh cả đội'],
+    debuff: ['DEBUFF', 'Làm yếu quái: chậm, giảm tốc đánh, phá giáp'], selfharm: ['⚠ TỰ HẠI', 'Chí mạng / choáng dạng self dội vào chính con pet (issue #1)'],
     cc: ['CC', 'Làm chậm / giảm tốc đánh quái'], heal: ['HEAL', 'Hồi máu'], evade: ['NÉ', 'Né đòn'], taunt: ['TAUNT', 'Kéo quái đánh mình'],
     boss: ['BOSS', 'Sát thương theo % máu / giá trị — diệt boss'], aoe: ['AOE', 'Sát thương lan'],
   };
-  const SUPPORT = new Set(['buff', 'cc', 'heal', 'taunt']);
+  const ROLE_NAME = { atk: 'ATK', tank: 'TANK', buff: 'BUFF', debuff: 'DEBUFF' };
+  const wish = new Set(), wishSeen = new Set();
+  const famOf = stage => { const f = U(stage)?.f; return typeof f === 'string' && SAFE_ID.test(f) ? f : stage; };
+  const wished = stage => wish.has(famOf(stage));
+  const byWish = (a, b) => Number(wished(b.stage)) - Number(wished(a.stage));
+  const starBtn = stage => {
+    const on = wished(stage);
+    return h('button', { class: `star ${on ? 'on' : ''}`, text: on ? '★' : '☆', tabindex: '-1',
+      title: on ? 'Bỏ khỏi wishlist' : 'Thêm vào wishlist: dòng này luôn nằm đầu tab Wild (ưu tiên mua) và tab Đội (ưu tiên nâng); ra ở bãi là báo',
+      onClick: e => { e.stopPropagation(); if (on) wish.delete(famOf(stage)); else wish.add(famOf(stage)); dirty = true; render(true); } });
+  };
   const kitOf = stage => (Array.isArray(U(stage)?.kt) ? U(stage).kt : []).filter(k => typeof k === 'string' && Object.hasOwn(KIT, k));
   const kitChips = stage => {
     const kit = kitOf(stage);
@@ -565,11 +578,12 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const tierPill = (stage, small = false) => {
     const u = U(stage);
     if (!u?.st) return null;
-    const lines = [`Hạng hiện tại ${u.st} — ${nameOf(stage)} so với các con cùng tầm cấp · ${fmt(Math.round(u.ed ?? u.dps ?? 0))} DPS thật`];
+    const lines = [`Hạng hiện tại ${u.st} — ${nameOf(stage)} so với các con ${ROLE_NAME[u.ro] ?? ''} cùng tầm cấp · ${fmt(Math.round(u.ed ?? u.dps ?? 0))} DPS thật`];
+    if (u.sd) lines.push(`⚠ Tự hại (issue #1): tự mất ${fmt(Math.round(u.sd))} máu/giây — chết sau ~${Math.round((u.hp ?? 0) / u.sd)} giây nếu không được hồi`);
     if (u.pk && Number.isFinite(u.pw)) {
       const [peakId, cost, eff] = u.pk;
       lines.push(peakId === stage ? 'Đây đã là dạng mạnh nhất của dòng'
-        : `Đỉnh dòng: ${nameOf(peakId)} · hạng ${powerTier(u.pw)} · ${fmt(Math.round(eff))} DPS thật · cần ${fmt(cost)} vàng tiến hóa`);
+        : `Đỉnh dòng: ${nameOf(peakId)} · hạng ${ROLE_NAME[u.ro] ?? ''} ${powerTier(u.pw)} · ${fmt(Math.round(eff))} DPS thật · cần ${fmt(cost)} vàng tiến hóa`);
     }
     for (const [r, to, c] of u.ul ?? []) lines.push(`Lên ${nameOf(to)} (${fmt(c)} vàng) mở ${db.rn?.[r] ?? r}`);
     return h('span', { class: `tier ${TIER_CLASS[u.st]}${small ? ' sm' : ''}`, text: u.st, title: lines.join('\n') });
@@ -577,7 +591,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 
 
   let wildRole = 'all';
-  const ROLE_FILTER = { all: ['Tất cả', () => true], atk: ['ATK', k => k[0] === 'atk'], tank: ['TANK', k => k[0] === 'tank'], sup: ['Hỗ trợ', k => k.some(x => SUPPORT.has(x))] };
+  const ROLE_FILTER = { all: ['Tất cả', () => true], atk: ['ATK', k => k[0] === 'atk'], tank: ['TANK', k => k[0] === 'tank'], buff: ['BUFF', k => k[0] === 'buff'], debuff: ['DEBUFF', k => k[0] === 'debuff'] };
   function viewWild() {
     const groups = new Map();
     for (const w of state.wilds.values()) {
@@ -594,17 +608,18 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       cheap: (a, b) => (a.u.b ?? 0) - (b.u.b ?? 0),
       catch: (a, b) => (b.u.c ?? 0) - (a.u.c ?? 0),
     };
-    wilds.sort(sorters[wildSort]);
+    const order = sorters[wildSort];
+    wilds.sort((a, b) => byWish(a, b) || order(a, b));
     const sortBtn = (k, t) => h('button', { class: `chip sm ${wildSort === k ? 'on' : ''}`, text: t, onClick: () => { wildSort = k; dirty = true; render(true); } });
     return [
       h('div', { class: 'bar-row' }, sortBtn('value', 'Đáng bắt'), sortBtn('cheap', 'Rẻ'), sortBtn('catch', 'Dễ bắt'),
         h('span', { class: 'muted', text: `${state.wilds.size} con` })),
       h('div', { class: 'bar-row' }, Object.entries(ROLE_FILTER).map(([k, [text]]) => h('button', { class: `chip sm ${wildRole === k ? 'on' : ''}`, text,
-        title: k === 'sup' ? 'BUFF / CC / HEAL / TAUNT' : null, onClick: () => { wildRole = k; dirty = true; render(true); } }))),
+        onClick: () => { wildRole = k; dirty = true; render(true); } }))),
       wilds.length ? legend() : null,
       wilds.length ? wilds.map(({ stage, idList, count, u, peak, trades }) => pickable(row(stage,
         h('div', { class: 'line2' }, strip(stage), kitChips(stage), (u.c ?? 1) < 0.5 ? h('span', { class: 'rare', text: `${Math.round((u.c ?? 0) * 100)}%`, title: 'Tỉ lệ bắt thấp' }) : null),
-        [tierPill(stage), count > 1 ? pill(`×${count}`, 'mute') : null,
+        [starBtn(stage), tierPill(stage), count > 1 ? pill(`×${count}`, 'mute') : null,
           trades.length ? pill('Trade', 'warn', trades.map(t => `S${t.slot}: cần ${nameOf(t.give)} → nhận ${nameOf(t.get)}`).join('\n')) : null,
           act(`Bắt ${short(u.b ?? 0)}g`, 'catch', `w${idList[0]}`, null, { stage }, (u.b ?? 0) <= state.gold ? 'ok' : 'bad', `Bắt 1 con ${nameOf(stage)}`)],
         { tip: `Bắt ${Math.round((u.c ?? 0) * 100)}% · đỉnh ${short(peak)} DPS thật\n${statsTip(stage)}\nBấm để chọn trong game${count > 1 ? ' (bấm tiếp để đổi con)' : ''}` }), cycle(`w:${stage}`, idList.map(id => `w${id}`))))
@@ -617,20 +632,20 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     all: ['Tất cả', () => true],
     atk: ['ATK', u => kitOf(u.stage)[0] === 'atk'],
     tank: ['TANK', u => kitOf(u.stage)[0] === 'tank'],
-    heal: ['HEAL', u => kitOf(u.stage).some(k => k === 'heal' || k === 'buff')],
-    trade: ['Trade', (u, wanted) => wanted.has(u.stage)],
+    buff: ['BUFF', u => kitOf(u.stage)[0] === 'buff'],
+    debuff: ['DEBUFF', u => kitOf(u.stage)[0] === 'debuff'],
   };
   function viewTeam() {
     const mine = myUnits(state);
     if (!mine.length) return empty('Chưa có lính (hoặc đang chờ dữ liệu).');
     const wanted = new Map();
     for (const o of state.offers.values()) wanted.set(o.give, [...(wanted.get(o.give) ?? []), o]);
-    const shown = mine.filter(u => TEAM_FILTER[teamFilter][1](u, wanted)).sort((a, b) => a.id - b.id);
+    const shown = mine.filter(u => TEAM_FILTER[teamFilter][1](u, wanted)).sort((a, b) => byWish(a, b) || a.id - b.id);
     return [arrangeBar(),
       h('div', { class: 'bar-row' }, Object.entries(TEAM_FILTER).map(([k, [text, test]]) => {
         const n = k === 'all' ? mine.length : mine.filter(u => test(u, wanted)).length;
         return h('button', { class: `chip sm ${teamFilter === k ? 'on' : ''}`, tabindex: '-1', disabled: k !== 'all' && !n, text: k === 'all' ? text : `${text} ${n}`,
-          title: k === 'heal' ? 'Hồi máu / hào quang buff đội' : k === 'trade' ? 'Con đang có offer trade cần' : null, onClick: () => { teamFilter = k; dirty = true; render(true); } });
+          title: k === 'all' ? null : KIT[k]?.[1], onClick: () => { teamFilter = k; dirty = true; render(true); } });
       })),
       shown.length ? null : empty('Không có con nào thuộc nhóm này.'),
       ...shown.map(u => {
@@ -638,7 +653,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       const trades = wanted.get(u.stage) ?? [];
       return pickable(row(u.stage,
         h('div', { class: 'line2' }, hpBar(u), strip(u.stage), kitChips(u.stage)),
-        [tierPill(u.stage),
+        [starBtn(u.stage), tierPill(u.stage),
           trades.length ? act(`⇄S${trades[0].slot}`, 'trade', `u${u.id}`, trades[0].slot, { stage: u.stage, get: trades[0].get }, 'ok', `Trade slot ${trades[0].slot}: đổi lấy ${nameOf(trades[0].get)}`) : null,
           evo.length ? evo.map(([to, cost]) => {
             const trap = U(u.stage)?.tp?.[to];
@@ -776,6 +791,11 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     dirty = false;
     const scroll = bodyEl?.scrollTop ?? 0;
     sig.length = 0;
+    for (const w of state.wilds.values()) {
+      if (wishSeen.has(w.id) || !wished(w.stage)) continue;
+      wishSeen.add(w.id);
+      toast = `★ ${nameOf(w.stage)} (wishlist) vừa ra ở bãi — tab Wild để bắt.`;
+    }
     const status = !db ? 'Đang tải dữ liệu wiki…'
       : !socket && !state.messages ? 'Đang chờ dữ liệu trận… (vào phòng chơi)'
       : !state.haveKeyframe ? 'Đã kết nối — chờ ảnh chụp đầy đủ của căn cứ…' : null;
@@ -966,7 +986,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     n: S(x.n), m: ID(x.m), hp: N(x.hp), dps: N(x.dps), a: ID(x.a), at: ID(x.at), ar: N(x.ar), rg: N(x.rg), b: N(x.b), lk: N(x.lk),
     f: ID(x.f), ed: N(x.ed), l: N(x.l), el: ID(x.el), c: N(x.c), k: N(x.k), p: ID(x.p), pw: N(x.pw), st: TIER(x.st), L: N(x.L),
     e: list(x.e, v => tuple(v, [ID, N]), 8), pk: tuple(x.pk, [ID, N, N]), ul: list(x.ul, v => tuple(v, [ID, ID, N])),
-    pg: list(x.pg, ID), kt: list(x.kt, ID), r: list(x.r, ID), s: list(x.s, v => S(v, 60)), tp: dict(x.tp, v => (v === 1 || v === 2 ? v : undefined), 16),
+    pg: list(x.pg, ID), kt: list(x.kt, ID), r: list(x.r, ID), ro: ['atk', 'tank', 'buff', 'debuff'].includes(x.ro) ? x.ro : undefined, sd: N(x.sd), s: list(x.s, v => S(v, 60)), tp: dict(x.tp, v => (v === 1 || v === 2 ? v : undefined), 16),
   });
   getJSON(`${DATA_URL}overlay.json`, 4 * 1024 * 1024)
     .then(d => {

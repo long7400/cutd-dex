@@ -23,8 +23,25 @@ test('skillValue: kỹ năng bị khoá / có điều kiện lạ không cộng 
   const r = skillValue(species([cond]), ctx([cond], [{ id: 'm', attack_speed_multiplier: 2, duration_ticks: 6000 }]));
   assert.equal(r.eff, 100);
   assert.deepEqual(r.uncertain, ['w']);
-  const slow = { id: 's', status: 'executable', trigger: { kind: 'on_hit' }, effects: [{ kind: 'apply_modifier', modifier_id: 'sl' }] };
-  assert.deepEqual(skillValue(species([slow]), ctx([slow], [{ id: 'sl', move_speed_multiplier: 0.7 }])).roles, ['cc']);
+  const slow = { id: 's', status: 'executable', trigger: { kind: 'on_hit' }, targeting: { kind: 'unit', filter: 'enemy_creep' }, effects: [{ kind: 'apply_modifier', modifier_id: 'sl' }] };
+  const sv = skillValue(species([slow]), ctx([slow], [{ id: 'sl', move_speed_multiplier: 0.7, duration_ticks: 64 }]));
+  assert.deepEqual(sv.roles, ['cc']);
+  assert.ok(sv.debuff > 0, 'làm chậm quái thật → có điểm DEBUFF');
+});
+
+test('issue #1: chí mạng / choáng dạng self dội vào chính con pet — không cộng DPS, tính tự hại', () => {
+  const selfCrit = { id: 'sc', status: 'executable', trigger: { kind: 'on_hit' }, targeting: { kind: 'self', filter: 'ally' }, conditions: [{ kind: 'chance', chance: 0.5 }], effects: [{ kind: 'damage', magnitude: { basis: 'attack_damage', multiplier: 2 } }] };
+  const r = skillValue(species([selfCrit]), ctx([selfCrit]));
+  assert.equal(r.eff, 100, 'không cộng vào DPS');
+  assert.equal(r.selfDps, 100, '50% × 1 đòn/giây × 2 × 100 sát thương dội vào chính nó');
+  assert.ok(r.roles.includes('selfharm'));
+  const selfSlow = { id: 'ss', status: 'executable', trigger: { kind: 'on_hit' }, targeting: { kind: 'self', filter: 'ally' }, effects: [{ kind: 'apply_modifier', modifier_id: 'st' }] };
+  const r2 = skillValue(species([selfSlow]), ctx([selfSlow], [{ id: 'st', attack_speed_multiplier: 0.5, duration_ticks: 64 }]));
+  assert.ok(!r2.roles.includes('cc'), 'debuff self không phải khống chế');
+  assert.ok(r2.eff < 100 && r2.roles.includes('selfharm'), 'tự làm chậm → DPS tụt');
+  const drain = { id: 'd', status: 'executable', trigger: { kind: 'on_hit' }, targeting: { kind: 'self', filter: 'ally' }, effects: [{ kind: 'heal', magnitude: { basis: 'attack_damage', multiplier: 1 } }] };
+  const r3 = skillValue(species([selfCrit, drain]), ctx([selfCrit, drain]));
+  assert.equal(r3.selfDps, 0, 'hút máu bù lại phần tự hại');
 });
 
 const db = build({ raw: readJSON(PATHS.catalog), client: readJSON(PATHS.client) });
@@ -32,10 +49,12 @@ const U = db.units;
 const find = (name, level) => Object.values(U).find(u => u.name === name && u.level === level);
 
 test('dữ liệu thật: DPS thật cộng kỹ năng', () => {
-  assert.equal(find('Hitmonlee', 60).eff, find('Hitmonlee', 60).dps * 2, 'chí mạng 50% ×2');
+  assert.equal(find('Hitmonlee', 60).eff, find('Hitmonlee', 60).dps, 'chí mạng self (issue #1) không cộng DPS');
+  assert.ok(find('Hitmonlee', 60).hp / find('Hitmonlee', 60).selfDps < 10, 'Hitmonlee tự chết trong vài giây');
   assert.equal(find('Hitmonchan', 60).eff, find('Hitmonchan', 60).dps, 'Hitmonchan không có kỹ năng cộng DPS');
   assert.ok(find('Primeape', 60).eff > find('Primeape', 60).dps * 2, 'nổi điên +125% tốc đánh gần như luôn bật');
-  assert.ok(find('Raichu', 100).eff > find('Raichu', 100).dps);
+  assert.equal(find('Raichu', 100).eff, find('Raichu', 100).dps, 'chí mạng của Raichu là dạng self → không cộng');
+  assert.ok(find('Raichu', 100).selfDps > 0);
 });
 
 test('dữ liệu thật: bẫy tiến hóa (tụt mãi) vs tụt tạm', () => {
@@ -52,22 +71,27 @@ test('dữ liệu thật: vai trò + kỹ năng mở sau khi lên cấp', () => 
   assert.ok(machop.unlocks.some(([r, to]) => r === 'aura' && U[to].name === 'Machoke'), 'Machop → Machoke mở hào quang');
   assert.ok(find('Onix', 1).roles.includes('taunt'));
   assert.ok(find('Kyogre', 1).roles.includes('sustain'));
-  assert.ok(find('Arbok', 26).roles.includes('cc'));
+  assert.ok(!find('Arbok', 26).roles.includes('cc'), 'Slow Poison dạng self không làm chậm quái (issue #1)');
   assert.ok(find('Darkrai', 1).roles.includes('boss') && find('Darkrai', 1).pctHit > 0);
 });
 
 import { analyzeCatalog, powerTier } from '../../tool/analyze.js';
 
-test('sức mạnh cá nhân: hạng theo dạng đỉnh của dòng — Lv1 đã thấy hạng Lv100, không phụ thuộc trận', () => {
+test('hạng theo vai trò: mỗi dòng chỉ so với dòng cùng vai trò, đỉnh tính theo chỉ số vai trò', () => {
   const a = analyzeCatalog(readJSON(PATHS.catalog).catalog);
-  const tierOf = (name, level) => powerTier(a.get(find(name, level).id).power);
-  assert.equal(tierOf('Eevee', 1), 'S+', 'Eevee Lv1 yếu nhưng Lv100 rất mạnh');
+  const at = (name, level) => a.get(find(name, level).id);
+  const tierOf = (name, level) => powerTier(at(name, level).power);
+  assert.equal(at('Machop', 1).role, 'buff', 'Machoke mở hào quang cả đội → BUFF');
+  assert.equal(at('Bramblin', 1).role, 'tank');
+  assert.equal(at('Abra', 1).role, 'atk');
+  assert.equal(tierOf('Abra', 1), 'S+');
   assert.equal(tierOf('Treecko', 1), 'S+');
-  assert.equal(tierOf('Charmander', 1), 'C');
-  assert.equal(a.get(find('Eevee', 1).id).peak[0], find('Eevee', 100).id);
-  assert.equal(a.get(find('Magnemite', 1).id).peak[0], find('Magneton', 30).id, 'đỉnh dừng trước bẫy');
-  assert.equal(tierOf('Blastoise', 100), 'C', 'đã qua bẫy → tính từ dạng hiện tại');
-  assert.ok(['C', 'B'].includes(tierOf('Kyogre', 1)), 'huyền thoại không tiến hóa, DPS thấp');
+  assert.equal(at('Abra', 1).kit[0], 'atk');
+  assert.ok(['C', 'B'].includes(tierOf('Hitmonlee', 60)), 'tự chết vài giây → tụt hạng ATK');
+  assert.ok(at('Eevee', 1).kit.includes('selfharm'));
+  assert.equal(at('Magnemite', 1).role, 'tank');
+  assert.ok(['C', 'B'].includes(tierOf('Kyogre', 1)), 'huyền thoại không tiến hóa, chỉ số thấp');
+  for (const role of ['atk', 'tank', 'buff']) assert.ok([...a.values()].some(u => u.role === role && u.power >= 0.9), `${role} có nhóm đầu S+`);
 });
 
 test('hạng từng dạng theo tầm cấp: thấy được dòng yếu giữa đường nhưng mạnh cuối (vd Staryu)', () => {

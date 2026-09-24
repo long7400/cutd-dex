@@ -4,6 +4,7 @@ import { db, ix } from '../db.js';
 import { img, elBadge, elColor, tierChip, pageHead, footer } from '../ui.js';
 
 const filters = { q: '', el: 'all', kind: 'all', sort: 'name' };
+const ROLE_LABEL = { atk: 'ATK', tank: 'TANK', buff: 'BUFF', debuff: 'DEBUFF' };
 
 let index = null, collator = null, groups = null;
 function prepare() {
@@ -27,7 +28,7 @@ function prepare() {
 }
 
 const byName = (a, b) => collator.compare(a.name, b.name);
-const power = p => ix.lineById.get(p.id)?.solo.score ?? 0;
+const power = p => ix.lineById.get(p.id)?.rank.score ?? 0;
 const SORTS = {
   name: ['Tên A→Z', byName],
   tier: ['Hạng cao nhất', (a, b) => power(b) - power(a) || byName(a, b)],
@@ -62,10 +63,10 @@ function card(p) {
   const shown = p.stages.slice(0, 6);
   return html`<a class="pet-card ${p.legendary ? 'leg' : ''}" href="#/pet/${p.slug}" style="--c:${elColor(p.el)}">
     <div class="pc-head">
-      <div class="pc-art">${img(p.model, p.name, '', 80)}${line ? tierChip(line.solo.tier, 'Hạng sức mạnh của cả dòng') : ''}</div>
+      <div class="pc-art">${img(p.model, p.name, '', 80)}${line ? tierChip(line.rank.tier, `Hạng ${ROLE_LABEL[line.role]} (so với các dòng cùng vai trò)`) : ''}</div>
       <div class="pc-id">
         <div class="pname">${p.name}</div>
-        <div class="pc-tags">${elBadge(p.el)}<span class="mono">Bắt ${pct(p.catch, 0)}</span>${p.legendary ? html`<span class="mono gold">★ Huyền thoại</span>` : ''}</div>
+        <div class="pc-tags">${line ? html`<span class="role r-${line.role}">${ROLE_LABEL[line.role]}</span>` : ''}${elBadge(p.el)}<span class="mono">Bắt ${pct(p.catch, 0)}</span>${p.legendary ? html`<span class="mono gold">★ Huyền thoại</span>` : ''}</div>
       </div>
     </div>
     <div class="mini-chain">${shown.map((id, i) => html`${i ? html`<span class="arr">›</span>` : ''}${img(db.units[id].model, db.units[id].name, '', 28)}`)}${p.stages.length > 6 ? html`<span class="more">+${p.stages.length - 6}</span>` : ''}</div>

@@ -396,3 +396,7 @@ ul.notes li { margin: 5px 0; }
   .alt .h-btn { grid-column: 1; grid-row: auto; justify-self: start; margin-top: 8px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.role { font: 800 10.5px/1 var(--mono); padding: 3px 6px; border-radius: 4px; letter-spacing: .03em; }
+.role.r-atk { background: #3d2226; color: #ff9c9c; } .role.r-tank { background: #1b2d4a; color: #9fe3ff; }
+.role.r-buff { background: #3a2f10; color: var(--gold); } .role.r-debuff { background: #2a2148; color: var(--purple); }
+.trade-only { margin: 28px 0 4px; color: var(--sub); }

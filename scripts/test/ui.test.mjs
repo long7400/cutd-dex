@@ -105,7 +105,11 @@ test('nav gộp mục: 6 mục chính, tab con đúng mục, trang pet có hạn
   assert.equal($('.navlink.on').textContent.trim(), 'Cơ chế');
   assert.deepEqual($$('.sublink').map(a => a.getAttribute('href')), ['#/rules', '#/research', '#/changelog']);
   await go('#/pet/charmander');
-  assert.equal($$('.vt .tier').length, 3, 'hạng Sức mạnh / PvE / PvP');
+  assert.equal($$('.vt .tier').length, 1, 'một hạng, trong đúng vai trò của dòng');
+  assert.match($('.vt').textContent, /ATK|TANK|BUFF|DEBUFF/);
+  await go('#/strategy/tank');
+  assert.equal($('.strat-switch, .phead .chip.on')?.textContent.trim().split(/\s/)[0], 'TANK');
+  await go('#/pet/charmander');
   assert.ok(!$('.subnav'), 'trang chi tiết không có tab con');
   await go('#/tool');
   assert.match($('.install .bm').getAttribute('href'), /^javascript:/);

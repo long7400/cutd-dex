@@ -27,7 +27,7 @@ export function evoLines(db) {
       if (i) cost += (db.units[path[i - 1]].evo ?? []).find(e => e.to === id)?.cost ?? 0;
       return { id, name: u.name, level: u.level, model: u.model, tier: u.stageTier ?? 'C', dps: Math.round(u.eff ?? u.dps ?? 0), hp: u.hp, cost };
     });
-    return { line: name, el: first.el, atk: first.atk, tier: line.solo?.tier ?? '', stages };
+    return { line: name, el: first.el, atk: first.atk, tier: line.rank?.tier ?? '', stages };
   }).filter(Boolean);
 }
 

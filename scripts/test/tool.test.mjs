@@ -592,6 +592,14 @@ test('bookmarklet: Xếp đội — mỗi lần bấm dời đúng 1 con lệch 
   assert.match(root.querySelector('.toast').textContent, /orders closed/);
   assert.ok(btn().disabled && /đúng hàng/.test(btn().textContent), 'hết con lệch → nút tắt');
   assert.equal(log.sent, 0, 'tool không tự gửi socket');
+  const names = () => [...root.querySelectorAll('.row')].map(r => r.querySelector('.nm a, .nm span')?.textContent);
+  const last = names().at(-1);
+  assert.ok(names().length >= 2 && names()[0] !== last);
+  [...root.querySelectorAll('.row')].at(-1).querySelector('.star').click();
+  assert.equal(names()[0], last, '★ wishlist đưa dòng đó lên đầu tab Đội');
+  assert.ok(root.querySelector('.row .star.on'));
+  root.querySelector('.row .star.on').click();
+  assert.equal(names().at(-1), last, 'bỏ ★ → về chỗ cũ');
   emit({ ...summary, phase: 'wave' });
   await tick(1200);
   assert.ok(btn().disabled && /chuẩn bị/.test(btn().title), 'trong đợt → khoá');

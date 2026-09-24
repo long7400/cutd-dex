@@ -185,7 +185,10 @@ export function createDescriber(catalog, i18n = {}) {
       ].filter(Boolean).join(' · '),
       targeting: targeting(a.targeting),
       cd: a.cooldown_ticks ? a.cooldown_ticks / TICKS_PER_SECOND : undefined,
-      effects: live.map(e => ({ k: e.kind, t: effect(e) })),
+      effects: live.map(e => {
+        const self = !e.target && (e.targeting ?? a.targeting)?.kind === 'self' && ['damage', 'apply_modifier', 'health_loss'].includes(e.kind) && ['on_hit', 'on_attack'].includes(a.trigger?.kind);
+        return { k: e.kind, t: self ? `${effect(e)} — dội vào chính con pet (issue #1)` : effect(e), ...(self ? { self: true } : {}) };
+      }),
       available: true,
     };
   }

@@ -20,7 +20,7 @@ export default {
           return html`<a class="bar-row ${u.legendary ? 'leg' : ''}" href="${linkFor(e.unit)}">
             ${img(u.model, u.name, '', 44)}
             <div class="bar-main">
-              <div class="bar-name">${u.name}${u.legendary ? html` <span class="gold">★</span>` : ''} ${line ? tierChip(line.solo.tier, 'Hạng sức mạnh của cả dòng', 'sm') : ''}</div>
+              <div class="bar-name">${u.name}${u.legendary ? html` <span class="gold">★</span>` : ''} ${line ? tierChip(line.rank.tier, `Hạng trong vai trò ${line.role.toUpperCase()}`, 'sm') : ''}</div>
               <div class="bar-outer"><div class="bar-inner" style="width:${Math.max(chance * 100, 2).toFixed(1)}%"></div></div>
             </div>
             <b class="pct">${pct(chance)}</b>

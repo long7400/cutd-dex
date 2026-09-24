@@ -158,8 +158,9 @@ const ROW_AT = [-240, -120, 0, 140];
 export function formationRow(u) {
   if (!u) return 1;
   const far = (u.rg ?? 0) > 300;
-  if ((u.ar ?? 0) >= 15 || (u.r ?? []).includes('tank') || (!far && (u.kt ? u.kt[0] === 'tank' : (u.hp ?? 0) / Math.max(1, u.ed ?? u.dps ?? 0) >= 18))) return 0;
-  if ((u.r ?? []).some(r => r === 'aura' || r === 'sustain')) return 3;
+  const main = u.ro ?? u.kt?.[0];
+  if (main === 'buff' || (u.r ?? []).some(r => r === 'aura' || r === 'sustain') || (u.kt ?? []).includes('heal')) return 3;
+  if (main === 'tank' || (!main && ((u.ar ?? 0) >= 15 || (u.hp ?? 0) / Math.max(1, u.ed ?? u.dps ?? 0) >= 18))) return 0;
   return far ? 2 : 1;
 }
 

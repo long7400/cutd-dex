@@ -16,14 +16,14 @@ const bookmarklet = () => `javascript:${encodeURIComponent(tool.code)}`;
 
 function waves() {
   const set = db.waveSets.find(w => w.id === 'mode_survival') ?? db.waveSets[0];
-  const good = db.strategy.lines.filter(l => ['S+', 'S'].includes(l.solo.tier)).sort((a, b) => b.solo.score - a.solo.score);
+  const good = db.strategy.lines.filter(l => l.role === 'atk' && !(l.harm && l.harm[1] < 20) && ['S+', 'S'].includes(l.rank.tier)).sort((a, b) => b.rank.score - a.rank.score);
   const table = db.damage.table;
   return (set?.waves ?? []).slice(11, 15).map(w => {
     const g = w.groups[0], u = db.units[g?.unit];
     if (!u) return null;
     const strong = Object.keys(table).filter(a => table[a][u.armorType] >= 2);
     const weak = Object.keys(table).filter(a => table[a][u.armorType] <= 0.5);
-    const pets = good.filter(l => strong.includes(l.atk)).slice(0, 3).map(l => ({ ...db.units[l.emax.id], tier: l.solo.tier }));
+    const pets = good.filter(l => strong.includes(l.atk)).slice(0, 3).map(l => ({ ...db.units[l.emax.id], tier: l.rank.tier }));
     const avoid = good.filter(l => weak.includes(l.atk)).slice(0, 1).map(l => db.units[l.emax.id].name);
     return { n: w.n, u, count: g.count, lives: w.lives, strong, weak, pets, avoid };
   }).filter(Boolean);

@@ -3,7 +3,7 @@ import { db, ix, unitUrl, linkFor, label } from '../db.js';
 import { img, elBadge, elColor, catchBadge, legBadge, tierChip, statGrid, skillList, researchIcons, unitChip, empty, footer } from '../ui.js';
 
 const sid = id => id.replace(/^unit_/, '');
-const MODES = [['solo', 'Sức mạnh'], ['pve', 'PvE'], ['pvp', 'PvP']];
+const ROLE_LABEL = { atk: 'ATK · gây sát thương', tank: 'TANK · chặn đầu', buff: 'BUFF · tăng sức cả đội', debuff: 'DEBUFF · làm yếu quái' };
 const lv = id => (db.units[id]?.level != null ? `Lv${db.units[id].level}` : '');
 
 export function stageCard(u, { cost = null, highlight = false } = {}) {
@@ -16,7 +16,7 @@ export function stageCard(u, { cost = null, highlight = false } = {}) {
     <div class="grow">
       <div class="stitle">
         <b>${u.name}</b>
-        ${tierChip(u.stageTier, 'Hạng so với các con cùng tầm cấp')}
+        ${tierChip(u.stageTier, 'Hạng so với các con cùng vai trò, cùng tầm cấp')}${u.selfDps ? html`<span class="badge warn" title="Chí mạng / choáng dạng self dội vào chính con pet (issue #1)">⚠ tự mất ${num(Math.round(u.selfDps))} máu/s</span>` : ''}
         ${cost != null ? html`<span class="badge gold" title="Giá tiến hóa lên dạng này">⬆ ${num(cost)} vàng</span>` : ''}
         ${sell ? html`<span class="badge" title="Bán nhận ${pct(db.game.rules.sellGold, 0)} giá trị">Bán ${num(sell)}</span>` : ''}
         <a class="permalink mono" href="${unitUrl(u.id)}" title="Trang riêng của dạng này">#${sid(u.id)}</a>
@@ -42,11 +42,13 @@ function tree(id, cost, seen, focus) {
 function verdict(line) {
   if (!line) return '';
   const trap = line.traps.find(([, , k]) => k === 'trap');
+  const roles = line.roles.filter(([r]) => r !== 'selfharm');
   return html`<div class="verdict">
-    <div class="vt-tiers">${MODES.map(([k, n]) => html`<a class="vt" href="#/strategy/${k}" title="Xem bảng hạng ${n}">${tierChip(line[k].tier)}<span class="mono">${n}</span></a>`)}</div>
-    ${line.roles.length || trap ? html`<div class="vt-roles">
-      ${line.roles.map(([r, id, c]) => html`<span class="rchip r-${r}" title="${c ? `Mở ở ${db.units[id]?.name} ${lv(id)} (${num(c)} vàng)` : 'Có sẵn từ đầu'}">${db.roleNames?.[r] ?? r}${c ? html` <small>${lv(id)}</small>` : ''}</span>`)}
-      ${trap ? html`<span class="rchip trap" title="Lên ${db.units[trap[1]]?.name} DPS tụt và các cấp sau không gỡ lại">⚠ Dừng ở ${db.units[trap[0]]?.name} ${lv(trap[0])}</span>` : ''}
+    <div class="vt-tiers"><a class="vt" href="#/strategy/${line.role}" title="Xem bảng hạng ${ROLE_LABEL[line.role]}">${tierChip(line.rank.tier)}<span class="mono">${ROLE_LABEL[line.role]}</span></a></div>
+    ${roles.length || trap || line.harm ? html`<div class="vt-roles">
+      ${line.harm ? html`<span class="rchip trap" title="Chí mạng / choáng dạng self dội vào chính con pet (issue #1)">⚠ Tự hại: ${db.units[line.harm[0]]?.name} ${lv(line.harm[0])} chết sau ~${line.harm[1]}s nếu không hồi</span>` : ''}
+      ${roles.map(([r, id, c]) => html`<span class="rchip r-${r}" title="${c ? `Mở ở ${db.units[id]?.name} ${lv(id)} (${num(c)} vàng)` : 'Có sẵn từ đầu'}">${db.roleNames?.[r] ?? r}${c ? html` <small>${lv(id)}</small>` : ''}</span>`)}
+      ${trap ? html`<span class="rchip trap" title="Lên ${db.units[trap[1]]?.name} bị tụt và các cấp sau không gỡ lại">⚠ Dừng ở ${db.units[trap[0]]?.name} ${lv(trap[0])}</span>` : ''}
     </div>` : ''}
   </div>`;
 }

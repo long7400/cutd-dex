@@ -157,6 +157,7 @@ export function build({ raw, client, changelog = [] }) {
       splash: s.attack_splash ?? null,
       auras: an.auras, eff: an.eff, pctHit: an.pct || null, roles: an.roles, unsure: an.unsure,
       peak: an.peak, power: an.power, unlocks: an.unlocks, stageTier: an.stageTier, path: an.path, kit: an.kit,
+      role: an.role, rv: an.rv, selfDps: an.selfDps || null,
       bounce: s.attack_bounce ?? null,
       armor: s.armor ?? 0,
       armorType: s.armor_type ?? 'normal',
@@ -289,6 +290,7 @@ export function buildOverlay(db) {
       e: x.evo?.length ? x.evo.filter(e => Number.isFinite(e.cost) && e.cost >= 0).map(e => [e.to, e.cost]) : undefined,
       ...overlayFields({
         eff: x.eff, roles: x.roles ?? [], peak: x.peak ?? null, power: x.power ?? 0, unlocks: x.unlocks ?? [], stageTier: x.stageTier, path: x.path ?? [], kit: x.kit ?? [],
+        role: x.role, selfDps: x.selfDps ?? 0,
         traps: Object.fromEntries((x.evo ?? []).filter(e => e.trap).map(e => [e.to, e.trap])),
       }),
     };
