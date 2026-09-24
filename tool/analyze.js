@@ -7,7 +7,8 @@ const LEVEL_BANDS = [2, 20, 40, 70, Infinity];
 const KIT_OF_ROLE = { aura: 'buff', cc: 'cc', shred: 'cc', sustain: 'heal', evade: 'evade', taunt: 'taunt', boss: 'boss', aoe: 'aoe', selfharm: 'selfharm' };
 const KIT_ORDER = ['atk', 'tank', 'buff', 'debuff', 'cc', 'heal', 'evade', 'taunt', 'boss', 'aoe', 'selfharm'];
 export const ROLE_KEYS = ['atk', 'tank', 'buff', 'debuff'];
-const BUFF_MIN = 0.05, DEBUFF_MIN = 0.05, SELF_WINDOW = 40, ARMOR_K = 0.06;
+const BUFF_MIN = 0.05, DEBUFF_MIN = 0.05, SELF_WINDOW = 40, ARMOR_K = 0.06, TEAM_DPS = 24000;
+export const ROLE_RULES = { BUFF_MIN, DEBUFF_MIN, SELF_WINDOW, ARMOR_K, TEAM_DPS, PRESSURE: 6000, HOLD_CAP: 60 };
 const p90 = list => [...list].sort((x, y) => x - y)[Math.floor(list.length * 0.9)] || 1;
 const bandOf = level => LEVEL_BANDS.findIndex(max => (level || 1) < max);
 
@@ -39,15 +40,17 @@ function allyHeals(s, abilityById) {
   return perSec;
 }
 
+const PRESSURE = 6000, HOLD_CAP = 60;
 function roleValues(u) {
   const survive = u.selfDps > 0 ? Math.max(0.1, Math.min(1, u.hp / u.selfDps / SELF_WINDOW)) : 1;
-  const buff = u.auras.reduce((v, [, dmg, spd, armor, taken]) => v + (dmg - 1) + (spd - 1) + 0.5 * ARMOR_K * armor + 0.5 * (1 - taken), 0) + u.heals / 1000;
-  const ehp = u.hp * (1 + ARMOR_K * (u.armor + u.armorPlus)) / Math.max(0.1, 1 - u.evade) / Math.max(0.2, u.dtm)
-    * (u.roles.includes('sustain') ? 1.25 : 1) * (u.roles.includes('taunt') ? 1.2 : 1);
-  return { atk: round(u.eff * survive, 1), tank: round(ehp * survive, 0), buff: round(buff, 3), debuff: round(u.debuff, 3) };
+  const buff = u.auras.reduce((v, [, dmg, spd, armor, taken]) => v + (dmg - 1) + (spd - 1) + 0.5 * ARMOR_K * armor + 0.5 * (1 - taken), 0) + u.teamBuff + u.heals / 20000;
+  const taken = PRESSURE / (1 + ARMOR_K * (u.armor + u.armorPlus)) * (1 - u.evade) * Math.max(0.2, u.dtm) * (u.roles.includes('taunt') ? 1 : 0.9);
+  const net = taken + u.selfDps - u.selfHeal - u.heals;
+  const hold = net <= 0 ? HOLD_CAP : Math.min(HOLD_CAP, u.hp / net);
+  return { atk: round((u.eff + u.aoeDot * 2) * survive, 1), tank: round(PRESSURE * hold, 0), buff: round(buff, 3), debuff: round(u.debuff, 3), ccv: round(u.ccv, 3) };
 }
 
-export function analyzeCatalog(catalog) {
+export function analyzeCatalog(catalog, { overrides = null } = {}) {
   const species = Array.isArray(catalog?.species) ? catalog.species : [];
   const abilityById = new Map((catalog.abilities ?? []).map(a => [a.id, a]));
   const modifierById = new Map((catalog.modifiers ?? []).map(m => [m.id, m]));
@@ -88,6 +91,7 @@ export function analyzeCatalog(catalog) {
     out.set(s.id, {
       eff: sv.eff, pct: sv.pct, roles: [...roles].sort(), unsure: sv.uncertain, auras, heals,
       selfDps: sv.selfDps, selfSlow: sv.selfSlow, evade: sv.evade, armorPlus: sv.armorPlus, dtm: sv.dtm, debuff: sv.debuff,
+      selfHeal: sv.selfHeal, aoeDot: sv.aoeDot, teamBuff: sv.teamBuff, ccv: sv.ccv,
       role: null, rv: null, lineRole: null,
       splash: !!(s.attack_splash || s.attack_bounce),
       evo: (s.evolutions ?? []).filter(e => typeof e?.stage_id === 'string' && Number.isFinite(e.cost) && e.cost >= 0).map(e => [e.stage_id, e.cost]),
@@ -168,12 +172,14 @@ export function analyzeCatalog(catalog) {
     if (!families.has(f)) families.set(f, new Set());
     families.get(f).add(id);
   }
+  const forced = new Map(Object.entries(overrides ?? {}).filter(([id, r]) => out.has(id) && ROLE_KEYS.includes(r)).map(([id, r]) => [find(id), r]));
   const lineRole = new Map();
   for (const [f, ids] of families) {
     const peakIds = new Set([...ids].map(id => out.get(id).peak?.[0]).filter(Boolean));
     const peakList = peakIds.size ? [...peakIds] : [...ids];
-    const tanky = peakList.some(id => { const p = out.get(id); return p.armor >= 15 || p.hp / Math.max(1, p.eff) >= 12; });
-    lineRole.set(f, topOf(ids, 'buff') >= BUFF_MIN ? 'buff' : topOf(ids, 'debuff') >= DEBUFF_MIN ? 'debuff' : tanky ? 'tank' : 'atk');
+    const tanky = peakList.some(id => { const p = out.get(id); return p.armor >= 15 || p.hp / Math.max(1, p.eff + p.aoeDot * 2) >= 12; });
+    const atkEq = topOf(ids, 'atk'), buff = topOf(ids, 'buff'), ccv = topOf(ids, 'ccv');
+    lineRole.set(f, forced.get(f) ?? (buff >= BUFF_MIN && buff * TEAM_DPS >= atkEq ? 'buff' : ccv >= DEBUFF_MIN && ccv * TEAM_DPS >= atkEq ? 'debuff' : tanky ? 'tank' : 'atk'));
   }
   for (const id of inPool) {
     const u = out.get(id);

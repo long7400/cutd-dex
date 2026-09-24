@@ -1,0 +1,3339 @@
+{
+ "version": 1,
+ "abilities": {
+  "ability_a009_unit_h00n": {
+   "hash": "3a42c971918303ba",
+   "name": "Relife and Drain Attack",
+   "tags": [
+    "summon"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00a_unit_h00q": {
+   "hash": "e8a7f3f070faa020",
+   "name": "Flame Strike",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00a_unit_h00r": {
+   "hash": "dc658ddb235909d8",
+   "name": "Flame Strike",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00a_unit_h00v": {
+   "hash": "58b7fdd189600b4d",
+   "name": "Flame Strike",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00c_unit_h00y": {
+   "hash": "b0870b66e28b17de",
+   "name": "Hardened Shell",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00d_unit_h00z": {
+   "hash": "b1d7336e0cdb5f39",
+   "name": "Hardened Shell",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00g_unit_h014": {
+   "hash": "79c43e2c0b57e708",
+   "name": "Poison Sting",
+   "tags": [
+    "inert_modifier",
+    "self_dot"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00g_unit_h019": {
+   "hash": "8ed8a135c2861080",
+   "name": "Poison Sting",
+   "tags": [
+    "inert_modifier",
+    "self_dot"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00h_unit_h016": {
+   "hash": "c63e1fd4eeea617a",
+   "name": "Paralyze Spore",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00h_unit_h017": {
+   "hash": "95369e86d7cb6f23",
+   "name": "Paralyze Spore",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00i_unit_h013": {
+   "hash": "e77090c1ab6f0858",
+   "name": "Multi Hydro Pump",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00j_unit_h018": {
+   "hash": "c0a028d14b4f3dd4",
+   "name": "Paralyze Spore",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00k_unit_h01b": {
+   "hash": "1b92512e9c1462c2",
+   "name": "Poison Sting",
+   "tags": [
+    "inert_modifier",
+    "self_dot"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00l_unit_h01c": {
+   "hash": "49c3e4329e2f238d",
+   "name": "Poison Sting",
+   "tags": [
+    "inert_modifier",
+    "self_dot"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00m_unit_h01d": {
+   "hash": "e418724e60cd838a",
+   "name": "Poison Sting",
+   "tags": [
+    "inert_modifier",
+    "self_dot"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00n_unit_h01e": {
+   "hash": "4c74044367656107",
+   "name": "Stun Punch",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00o_unit_h01f": {
+   "hash": "c3fbd8c3cdea49ae",
+   "name": "Stun Punch",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00o_unit_h01g": {
+   "hash": "500784b72562e1b6",
+   "name": "Stun Punch",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00o_unit_h01h": {
+   "hash": "f74fcfae778934c0",
+   "name": "Stun Punch",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00p_unit_h01i": {
+   "hash": "0e47d5ad90f264e1",
+   "name": "Critical Hit",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00p_unit_h01j": {
+   "hash": "e98ae74e156fef27",
+   "name": "Critical Hit",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00p_unit_h01k": {
+   "hash": "809791a589594862",
+   "name": "Critical Hit",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00p_unit_h0bk": {
+   "hash": "b046afc48a92e492",
+   "name": "Critical Hit",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00p_unit_h0bl": {
+   "hash": "0ccef2fd7d10ebf6",
+   "name": "Critical Hit",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00p_unit_h0bm": {
+   "hash": "39f01ea2fea5c6f5",
+   "name": "Critical Hit",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00p_unit_h0bp": {
+   "hash": "520a84cc7eabd9dd",
+   "name": "Critical Hit",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00p_unit_h0bq": {
+   "hash": "1fda74221fddf0f9",
+   "name": "Critical Hit",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00p_unit_h0br": {
+   "hash": "ea43715f6e1faabc",
+   "name": "Critical Hit",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00q_unit_h01l": {
+   "hash": "e92719f031169519",
+   "name": "Critical Hit",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00q_unit_h0in": {
+   "hash": "e0ab430a998d21d4",
+   "name": "Critical Hit",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00r_unit_h01n": {
+   "hash": "b129b5c58a95f7d7",
+   "name": "Ghost Essence",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00r_unit_h01o": {
+   "hash": "4fd5994d9c705775",
+   "name": "Ghost Essence",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00r_unit_h0bu": {
+   "hash": "224f7b5bc1644350",
+   "name": "Ghost Essence",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00r_unit_h0bv": {
+   "hash": "dcd68b62fa56f8f2",
+   "name": "Ghost Essence",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00r_unit_h0bw": {
+   "hash": "54729e292235a806",
+   "name": "Ghost Essence",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00r_unit_h0fn": {
+   "hash": "ff1068446c4feb3e",
+   "name": "Ghost Essence",
+   "tags": [
+    "summon"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00r_unit_h0fq": {
+   "hash": "6efa0bcce6b96238",
+   "name": "Ghost Essence",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00r_unit_h0fr": {
+   "hash": "eac8a0938277439a",
+   "name": "Ghost Essence",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00s_unit_h01p": {
+   "hash": "3c69b0462178e681",
+   "name": "Ghost Essence",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00s_unit_h0fm": {
+   "hash": "d737281103ad533c",
+   "name": "Ghost Essence",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00t_unit_h01q": {
+   "hash": "1cb85060203f89d9",
+   "name": "Ghost Essence",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00t_unit_h0fp": {
+   "hash": "d8bf1739b1c35cbb",
+   "name": "Ghost Essence",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00u_unit_h01r": {
+   "hash": "11d61a5b8598a696",
+   "name": "Ghost Essence",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00u_unit_h01s": {
+   "hash": "87f352db79e47201",
+   "name": "Ghost Essence",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00u_unit_h01t": {
+   "hash": "204cf83b933390a2",
+   "name": "Ghost Essence",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00u_unit_h01u": {
+   "hash": "85eca6dbb482616a",
+   "name": "Ghost Essence",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00v_unit_h01p": {
+   "hash": "a437ab1ad15797c6",
+   "name": "Nightmare",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00v_unit_h01q": {
+   "hash": "73d6fe7870503129",
+   "name": "Nightmare",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00v_unit_h01s": {
+   "hash": "2e5c697cbb060410",
+   "name": "Nightmare",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00v_unit_h01t": {
+   "hash": "1091b06454580c35",
+   "name": "Nightmare",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00v_unit_h01u": {
+   "hash": "7a4c7e925896a277",
+   "name": "Nightmare",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00w_unit_h025": {
+   "hash": "98c7cb336937ad8d",
+   "name": "Command Aura",
+   "tags": [
+    "inert_modifier",
+    "team_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00w_unit_h026": {
+   "hash": "091d25e609cbb173",
+   "name": "Command Aura",
+   "tags": [
+    "inert_modifier",
+    "team_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00w_unit_h027": {
+   "hash": "3fd0614677922e8b",
+   "name": "Command Aura",
+   "tags": [
+    "inert_modifier",
+    "team_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00w_unit_h028": {
+   "hash": "b68f2178bd972971",
+   "name": "Command Aura",
+   "tags": [
+    "inert_modifier",
+    "team_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00w_unit_h029": {
+   "hash": "2548cbb98ed790e4",
+   "name": "Command Aura",
+   "tags": [
+    "inert_modifier",
+    "team_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00y_unit_h02a": {
+   "hash": "1a4d1067fc1cc677",
+   "name": "Command Aura",
+   "tags": [
+    "inert_modifier",
+    "team_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00y_unit_h0io": {
+   "hash": "bb7a37a195004cbf",
+   "name": "Command Aura",
+   "tags": [
+    "inert_modifier",
+    "team_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00z_unit_h027": {
+   "hash": "5fa7ad250a7aaeda",
+   "name": "Endurance Aura",
+   "tags": [
+    "inert_modifier",
+    "team_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00z_unit_h028": {
+   "hash": "06849514d1d5a31a",
+   "name": "Endurance Aura",
+   "tags": [
+    "inert_modifier",
+    "team_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a00z_unit_h029": {
+   "hash": "8b224cb92c27f69b",
+   "name": "Endurance Aura",
+   "tags": [
+    "inert_modifier",
+    "team_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a010_unit_h02a": {
+   "hash": "7f8adf975b770726",
+   "name": "Endurance Aura",
+   "tags": [
+    "inert_modifier",
+    "team_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a010_unit_h0io": {
+   "hash": "43fe469980e1f7e9",
+   "name": "Endurance Aura",
+   "tags": [
+    "inert_modifier",
+    "team_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a012_unit_h02g": {
+   "hash": "6947e37ce030942a",
+   "name": "Heal",
+   "tags": [
+    "ally_heal"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a013_unit_h02h": {
+   "hash": "7e5333d7ce687dc9",
+   "name": "Heal",
+   "tags": [
+    "ally_heal"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a014_unit_h02i": {
+   "hash": "12d95dd2ea0a6a34",
+   "name": "Heal",
+   "tags": [
+    "ally_heal"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a015_unit_h02j": {
+   "hash": "89e629369c07e755",
+   "name": "Heal",
+   "tags": [
+    "ally_heal"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a016_unit_h02l": {
+   "hash": "cfd8e896e3da6722",
+   "name": "Lightning Shock",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a017_unit_h02m": {
+   "hash": "29613a4069ea3703",
+   "name": "Lightning Shock",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a018_unit_h02n": {
+   "hash": "3e6240f82dafd01a",
+   "name": "Lightning Shock",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a019_unit_h02o": {
+   "hash": "e00e32547515dbd1",
+   "name": "Lightning Shock",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01d_unit_h03b": {
+   "hash": "04da46abf647f201",
+   "name": "Poison Skin",
+   "tags": [
+    "enemy_dot",
+    "inert_modifier"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01e_unit_h03c": {
+   "hash": "ae794347105af142",
+   "name": "Poison Skin",
+   "tags": [
+    "enemy_dot",
+    "inert_modifier"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01f_unit_h03d": {
+   "hash": "0e56fe1800f225e4",
+   "name": "Poison Skin",
+   "tags": [
+    "enemy_dot",
+    "inert_modifier"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01g_unit_h03g": {
+   "hash": "e94780f33764c61d",
+   "name": "Poison Spit",
+   "tags": [
+    "self_debuff",
+    "self_dot"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01h_unit_h03h": {
+   "hash": "3e58d9f399a9d806",
+   "name": "Poison Spit",
+   "tags": [
+    "self_debuff",
+    "self_dot"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01i_unit_h03i": {
+   "hash": "e8a311cfaeec4287",
+   "name": "Poison Spit",
+   "tags": [
+    "self_debuff",
+    "self_dot"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01j_unit_h08z": {
+   "hash": "1e8b865edbc18845",
+   "name": "Sonic Wave",
+   "tags": [
+    "enemy_buff",
+    "inert_modifier"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01k_unit_h03x": {
+   "hash": "4809acaaeabac16e",
+   "name": "Confusion",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01k_unit_h03y": {
+   "hash": "13782b7f02a5e4cd",
+   "name": "Confusion",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01k_unit_h03z": {
+   "hash": "64f71366cda9827b",
+   "name": "Confusion",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01k_unit_h0ig": {
+   "hash": "2e53cf712c4eae8d",
+   "name": "Confusion",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01p_unit_h090": {
+   "hash": "c6dfeba706ff9c5b",
+   "name": "Sonic Wave",
+   "tags": [
+    "enemy_buff",
+    "inert_modifier"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01p_unit_h091": {
+   "hash": "5f0b589632478ae8",
+   "name": "Sonic Wave",
+   "tags": [
+    "enemy_buff",
+    "inert_modifier"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01p_unit_h092": {
+   "hash": "8f5379278e5aa3eb",
+   "name": "Sonic Wave",
+   "tags": [
+    "enemy_buff",
+    "inert_modifier"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01s_unit_h0ix": {
+   "hash": "2e79834e32ab0095",
+   "name": "Scythe of Death",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01s_unit_h0iy": {
+   "hash": "37a2748994f51b88",
+   "name": "Scythe of Death",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01s_unit_h0iz": {
+   "hash": "7c7c329a94f705fd",
+   "name": "Scythe of Death",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01s_unit_h0j0": {
+   "hash": "483daf6b89f44643",
+   "name": "Scythe of Death",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01t_unit_h09a": {
+   "hash": "7e2852e61098c382",
+   "name": "Aggressive Blood",
+   "tags": [
+    "inert_modifier",
+    "self_buff",
+    "self_dot"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01u_unit_h09b": {
+   "hash": "47e31a0ab9a85bd0",
+   "name": "Aggressive Blood",
+   "tags": [
+    "inert_modifier",
+    "self_buff",
+    "self_dot"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01v_unit_h09c": {
+   "hash": "0db8d0f27ea00ed2",
+   "name": "Aggressive Blood",
+   "tags": [
+    "inert_modifier",
+    "self_buff",
+    "self_dot"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01w_unit_h09m": {
+   "hash": "ade1ff2f6b75e93a",
+   "name": "Explosion",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01x_unit_h09n": {
+   "hash": "8ee5787f4b293027",
+   "name": "Explosion",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01y_unit_h09o": {
+   "hash": "f86b3c21db5822b0",
+   "name": "Explosion",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a01z_unit_h09x": {
+   "hash": "57c01fd4199b1453",
+   "name": "Electric Impulse",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a020_unit_h09y": {
+   "hash": "a0770c4186161503",
+   "name": "Electric Impulse",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a020_unit_h09z": {
+   "hash": "a0770c4186161503",
+   "name": "Electric Impulse",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a021_unit_h0ad": {
+   "hash": "532b4792f8d31024",
+   "name": "Lightning Frenzy",
+   "tags": [
+    "ally_buff",
+    "inert_modifier"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a022_unit_h0ae": {
+   "hash": "a1cf65d72a802a31",
+   "name": "Lightning Frenzy",
+   "tags": [
+    "ally_buff",
+    "inert_modifier"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a023_unit_h0af": {
+   "hash": "09eac36653eae2b2",
+   "name": "Lightning Frenzy",
+   "tags": [
+    "ally_buff",
+    "inert_modifier"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a026_unit_h0ai": {
+   "hash": "c6f457698791fd62",
+   "name": "Explosion",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a027_unit_h0aj": {
+   "hash": "c7ba9512afa9251f",
+   "name": "Explosion",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a028_unit_h0ak": {
+   "hash": "de175354e3d84989",
+   "name": "Explosion",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a029_unit_h0an": {
+   "hash": "aef6ed4f742a965f",
+   "name": "Electric Link",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a029_unit_h0ao": {
+   "hash": "aef6ed4f742a965f",
+   "name": "Electric Link",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a029_unit_h0ap": {
+   "hash": "aef6ed4f742a965f",
+   "name": "Electric Link",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a02a_unit_h0b7": {
+   "hash": "4bce52487b0b70c6",
+   "name": "Crabhammer",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a02a_unit_h0b8": {
+   "hash": "ca169daca7a4b997",
+   "name": "Crabhammer",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a02a_unit_h0b9": {
+   "hash": "c5c40700876f65e6",
+   "name": "Crabhammer",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a02b_unit_h0bk": {
+   "hash": "b33a72387f250388",
+   "name": "Evasion",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a02b_unit_h0bl": {
+   "hash": "8311df58b31dc9fe",
+   "name": "Evasion",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a02b_unit_h0bm": {
+   "hash": "9cf2aca805350102",
+   "name": "Evasion",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a02d_unit_h0bu": {
+   "hash": "095de547051bc4ad",
+   "name": "Ghost Illusion",
+   "tags": [
+    "conditional",
+    "summon"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a02d_unit_h0bv": {
+   "hash": "095de547051bc4ad",
+   "name": "Ghost Illusion",
+   "tags": [
+    "conditional",
+    "summon"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a02d_unit_h0bw": {
+   "hash": "095de547051bc4ad",
+   "name": "Ghost Illusion",
+   "tags": [
+    "conditional",
+    "summon"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a02e_unit_h0c4": {
+   "hash": "dd7858844ae736ec",
+   "name": "Hard Attack",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a02e_unit_h0c5": {
+   "hash": "b75783cc9af4dc38",
+   "name": "Hard Attack",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a02e_unit_h0c6": {
+   "hash": "23f09068ef3f0a21",
+   "name": "Hard Attack",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a02p_unit_h02f": {
+   "hash": "d8a716f5fd71335e",
+   "name": "Double Edge",
+   "tags": [
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a02p_unit_h02g": {
+   "hash": "8c277763217ba8e2",
+   "name": "Double Edge",
+   "tags": [
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a02p_unit_h02h": {
+   "hash": "a479731fe0727c55",
+   "name": "Double Edge",
+   "tags": [
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a02p_unit_h02i": {
+   "hash": "fcfec0f8ee155d04",
+   "name": "Double Edge",
+   "tags": [
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a02p_unit_h02j": {
+   "hash": "d6253aee2fe8329d",
+   "name": "Double Edge",
+   "tags": [
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a02q_unit_h0cj": {
+   "hash": "037cc98428b9c1de",
+   "name": "Water Sprout",
+   "tags": [
+    "ally_heal"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a038_unit_h0d9": {
+   "hash": "218239b50d327e23",
+   "name": "Taunt",
+   "tags": [
+    "taunt"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a03s_unit_h0e5": {
+   "hash": "9a994b3b71723870",
+   "name": "Transform",
+   "tags": [
+    "execute",
+    "summon",
+    "taunt"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a03s_unit_h0e6": {
+   "hash": "9a994b3b71723870",
+   "name": "Transform",
+   "tags": [
+    "execute",
+    "summon",
+    "taunt"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a03s_unit_h0e7": {
+   "hash": "9a994b3b71723870",
+   "name": "Transform",
+   "tags": [
+    "execute",
+    "summon",
+    "taunt"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a03s_unit_h0e8": {
+   "hash": "9a994b3b71723870",
+   "name": "Transform",
+   "tags": [
+    "execute",
+    "summon",
+    "taunt"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a03s_unit_h0e9": {
+   "hash": "9a994b3b71723870",
+   "name": "Transform",
+   "tags": [
+    "execute",
+    "summon",
+    "taunt"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a03u_unit_h0ed": {
+   "hash": "2bb95ee0c8a759cf",
+   "name": "Call Family",
+   "tags": [
+    "summon"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a03v_unit_h0ee": {
+   "hash": "70bd6097f5fbb194",
+   "name": "Call Family",
+   "tags": [
+    "summon"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a03w_unit_h0ef": {
+   "hash": "70bd6097f5fbb194",
+   "name": "Call Family",
+   "tags": [
+    "summon"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a042_unit_h0eq": {
+   "hash": "65f8a5b8bd93d1d4",
+   "name": "Dragonology",
+   "tags": [
+    "self_buff",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a043_unit_h0em": {
+   "hash": "687820a7e5ce3e1e",
+   "name": "Dragonology",
+   "tags": [
+    "self_buff",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a044_unit_h0ep": {
+   "hash": "317c151b0582e07a",
+   "name": "Dragonology",
+   "tags": [
+    "self_buff",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a045_unit_h0er": {
+   "hash": "fdfb6ef06b160375",
+   "name": "Dragonology",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a046_unit_h0er": {
+   "hash": "fdfb6ef06b160375",
+   "name": "Earthquake",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a047_unit_h0ev": {
+   "hash": "e4ace31acaed4d41",
+   "name": "Void of Stones",
+   "tags": [
+    "enemy_damage",
+    "enemy_dot",
+    "inert_modifier"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a048_unit_h0ew": {
+   "hash": "c7d60d07fcfd73f7",
+   "name": "Void of Stones",
+   "tags": [
+    "enemy_damage",
+    "enemy_dot",
+    "inert_modifier"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a049_unit_h0es": {
+   "hash": "fa3ee04bf72a15c2",
+   "name": "Void of Stones",
+   "tags": [
+    "enemy_damage",
+    "enemy_dot",
+    "inert_modifier"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a04a_unit_h0ex": {
+   "hash": "7b051f09ae4179d4",
+   "name": "Void of Stones",
+   "tags": [
+    "enemy_damage",
+    "enemy_dot",
+    "inert_modifier"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a04b_unit_h0ex": {
+   "hash": "e0ffe19090e00931",
+   "name": "Hard Skin",
+   "tags": [
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a04c_unit_h0f3": {
+   "hash": "e0b3b8d4e2aeadaf",
+   "name": "Natre Armor",
+   "tags": [
+    "ally_heal"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a04d_unit_h0f7": {
+   "hash": "0c4d58852f8ea249",
+   "name": "Discharge",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a04d_unit_h0f8": {
+   "hash": "14489b49fe353738",
+   "name": "Discharge",
+   "tags": [
+    "enemy_buff",
+    "inert_modifier"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a04d_unit_h0f9": {
+   "hash": "ab285a2264a2d382",
+   "name": "Discharge",
+   "tags": [
+    "enemy_buff",
+    "inert_modifier"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a04h_unit_h0f7": {
+   "hash": "0c4d58852f8ea249",
+   "name": "Impulse",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a04i_unit_h0fc": {
+   "hash": "6596245d375fe61a",
+   "name": "Dragon Claw",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a04i_unit_h0fd": {
+   "hash": "f8ecb2aa0dc8fb9a",
+   "name": "Dragon Claw",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a04i_unit_h0fe": {
+   "hash": "c9fc13474c90c501",
+   "name": "Dragon Claw",
+   "tags": [
+    "inert_modifier",
+    "self_buff",
+    "self_dot"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a04j_unit_h0fe": {
+   "hash": "ffdbf8e07fd5fa4b",
+   "name": "Dragon Dance",
+   "tags": [
+    "inert_modifier",
+    "self_buff",
+    "self_dot"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a04l_unit_h0fm": {
+   "hash": "3bd6d195e518f9b5",
+   "name": "Nightmare",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a04l_unit_h0fp": {
+   "hash": "c176e28983f66a61",
+   "name": "Nightmare",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a04m_unit_h0fr": {
+   "hash": "9075231c4b77de7b",
+   "name": "Nightmare",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a04n_unit_h0fq": {
+   "hash": "c2a3f3e7a12d71cb",
+   "name": "Nightmare",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a04o_unit_h0fn": {
+   "hash": "ff1068446c4feb3e",
+   "name": "Nightmare",
+   "tags": [
+    "summon"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a04q_unit_h0fn": {
+   "hash": "ff1068446c4feb3e",
+   "name": "Ghost Illusion",
+   "tags": [
+    "summon"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a04v_unit_h0g4": {
+   "hash": "2b9656e9312e7197",
+   "name": "Remain of Shadow",
+   "tags": [
+    "enemy_damage",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a05g_unit_h0h7": {
+   "hash": "e2ac1143c172d0e9",
+   "name": "Cold Attack",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a05g_unit_h0hc": {
+   "hash": "e2ac1143c172d0e9",
+   "name": "Cold Attack",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a05g_unit_h0he": {
+   "hash": "e2ac1143c172d0e9",
+   "name": "Cold Attack",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a05h_unit_h0h4": {
+   "hash": "3e6f3d906aab200b",
+   "name": "Shock",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a05h_unit_h0hf": {
+   "hash": "360651bd474440d1",
+   "name": "Shock",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a05h_unit_h0hh": {
+   "hash": "c58ac1ce44a242e8",
+   "name": "Shock",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a05i_unit_h0h9": {
+   "hash": "f38ebc68b651f134",
+   "name": "Double Return",
+   "tags": [
+    "enemy_damage",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a05i_unit_h0ha": {
+   "hash": "f38ebc68b651f134",
+   "name": "Double Return",
+   "tags": [
+    "enemy_damage",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a05i_unit_h0hb": {
+   "hash": "f38ebc68b651f134",
+   "name": "Double Return",
+   "tags": [
+    "enemy_damage",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a05j_unit_h0hl": {
+   "hash": "4d481688a83a71ba",
+   "name": "Perfect Slash",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a05k_unit_h0ho": {
+   "hash": "6ec4b921f40e0311",
+   "name": "Synthesis",
+   "tags": [
+    "self_heal"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a05k_unit_h0hp": {
+   "hash": "6ec4b921f40e0311",
+   "name": "Synthesis",
+   "tags": [
+    "self_heal"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a05k_unit_h0hq": {
+   "hash": "6ec4b921f40e0311",
+   "name": "Synthesis",
+   "tags": [
+    "self_heal"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a05l_unit_h0hr": {
+   "hash": "7ad380539d10e059",
+   "name": "Shadow Attack",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a05m_unit_h0h6": {
+   "hash": "516eaf7d9afb86e4",
+   "name": "Fire Spin",
+   "tags": [
+    "enemy_dot",
+    "inert_modifier"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a05n_unit_h0hu": {
+   "hash": "8db338a9a2d8e9bc",
+   "name": "Shadow Attack",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a05o_unit_h0ht": {
+   "hash": "3a625f4ca925517e",
+   "name": "Shadow Attack",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a05p_unit_h0hj": {
+   "hash": "f6f5dcab13f81f69",
+   "name": "Fire Spin",
+   "tags": [
+    "enemy_dot",
+    "inert_modifier"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a05q_unit_h0hi": {
+   "hash": "9fb224c417af5f0b",
+   "name": "Fire Spin",
+   "tags": [
+    "enemy_dot",
+    "inert_modifier"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a065_unit_h0ej": {
+   "hash": "6200055004b480c0",
+   "name": "Bite",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a065_unit_h0ek": {
+   "hash": "959f41794c2baf72",
+   "name": "Bite",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a065_unit_h0el": {
+   "hash": "e941c29ccb7fa685",
+   "name": "Bite",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a067_unit_h0ic": {
+   "hash": "207f550516d3b525",
+   "name": "Hyper Fang",
+   "tags": [
+    "conditional",
+    "enemy_damage",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a068_unit_h0id": {
+   "hash": "d34e6b4c90877593",
+   "name": "Technician",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a069_unit_h036": {
+   "hash": "e6356ea2607d759c",
+   "name": "Keen Eyes",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a06a_unit_h0ig": {
+   "hash": "d373305b4b0a0390",
+   "name": "Rain Dance",
+   "tags": [
+    "conditional",
+    "inert_modifier",
+    "self_buff",
+    "self_dot"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a06b_unit_h0ih": {
+   "hash": "6d2e33c73a8e415f",
+   "name": "Electric Impulse",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a06c_unit_h0az": {
+   "hash": "30b3df07298146a1",
+   "name": "Swift Swim",
+   "tags": [
+    "conditional",
+    "inert_modifier",
+    "self_buff",
+    "self_dot"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a06c_unit_h0if": {
+   "hash": "36351b77a7d73266",
+   "name": "Swift Swim",
+   "tags": [
+    "conditional",
+    "inert_modifier",
+    "self_buff",
+    "self_dot"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a06g_unit_h0ii": {
+   "hash": "e1e12fa244dd8df0",
+   "name": "Entangling Roots",
+   "tags": [
+    "enemy_dot"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a06h_unit_h0ij": {
+   "hash": "a494150eb3e769b2",
+   "name": "Static",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a06i_unit_h0ik": {
+   "hash": "1ff9e76b05565de2",
+   "name": "Explosion",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a06m_unit_h0ir": {
+   "hash": "63e93cf9fe65d725",
+   "name": "Sonic Wave",
+   "tags": [
+    "enemy_buff",
+    "inert_modifier"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a06s_unit_h03s": {
+   "hash": "523abd5ba4786475",
+   "name": "Sand Veil",
+   "tags": [
+    "ally_buff",
+    "conditional"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a06t_unit_h0im": {
+   "hash": "6345c3afb083edf3",
+   "name": "Stun Punch",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a06u_unit_h0it": {
+   "hash": "3229d7af15c6845b",
+   "name": "Explosion",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a06y_unit_h0jo": {
+   "hash": "7bd70cb6cb94df91",
+   "name": "Magmar Armor",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a06y_unit_h0jq": {
+   "hash": "7bd70cb6cb94df91",
+   "name": "Magmar Armor",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a06y_unit_h0jr": {
+   "hash": "7bd70cb6cb94df91",
+   "name": "Magmar Armor",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a06y_unit_h0js": {
+   "hash": "7bd70cb6cb94df91",
+   "name": "Magmar Armor",
+   "tags": [
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a06z_unit_h0jk": {
+   "hash": "d4b82e5190169a19",
+   "name": "Guillotine",
+   "tags": [
+    "conditional",
+    "enemy_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a070_unit_h0jt": {
+   "hash": "954c489773ffaf28",
+   "name": "Steadfast",
+   "tags": [
+    "ally_buff",
+    "conditional"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a070_unit_h0ju": {
+   "hash": "fe3bcf5c50bbe810",
+   "name": "Steadfast",
+   "tags": [
+    "ally_buff",
+    "conditional"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a070_unit_h0jv": {
+   "hash": "4a8e3f5e0a96d67c",
+   "name": "Steadfast",
+   "tags": [
+    "ally_buff",
+    "conditional"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a070_unit_h0jz": {
+   "hash": "3200066a2949c003",
+   "name": "Steadfast",
+   "tags": [
+    "ally_buff",
+    "conditional"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a071_unit_h0jt": {
+   "hash": "d4697161ccd04099",
+   "name": "Steadfast",
+   "tags": [
+    "ally_buff",
+    "conditional"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a071_unit_h0ju": {
+   "hash": "70aee6b0d90ae013",
+   "name": "Steadfast",
+   "tags": [
+    "ally_buff",
+    "conditional"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a071_unit_h0jv": {
+   "hash": "af25b107aac1ae5a",
+   "name": "Steadfast",
+   "tags": [
+    "ally_buff",
+    "conditional"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a071_unit_h0jz": {
+   "hash": "01066a927bd21f68",
+   "name": "Steadfast",
+   "tags": [
+    "ally_buff",
+    "conditional"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a073_unit_h0iw": {
+   "hash": "26e1eddf684ae998",
+   "name": "Absorb",
+   "tags": [
+    "ally_heal"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a073_unit_h0j2": {
+   "hash": "6aee1b1c1b17a4d5",
+   "name": "Absorb",
+   "tags": [
+    "ally_heal"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a073_unit_h0j6": {
+   "hash": "72f5e2a38fc4da56",
+   "name": "Absorb",
+   "tags": [
+    "ally_heal"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a073_unit_h0j7": {
+   "hash": "911ab28174b2df27",
+   "name": "Absorb",
+   "tags": [
+    "ally_heal"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a074_unit_h0k1": {
+   "hash": "aba55dacbc6f3d61",
+   "name": "Roar",
+   "tags": [
+    "inert_modifier",
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a074_unit_h0k7": {
+   "hash": "98a0595ec2a1e9b2",
+   "name": "Roar",
+   "tags": [
+    "inert_modifier",
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a074_unit_h0k8": {
+   "hash": "8605d5099e002c6c",
+   "name": "Roar",
+   "tags": [
+    "inert_modifier",
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a074_unit_h0k9": {
+   "hash": "de440e5db27ac1b8",
+   "name": "Roar",
+   "tags": [
+    "inert_modifier",
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a074_unit_h0ka": {
+   "hash": "ac9f1d0cb4716614",
+   "name": "Roar",
+   "tags": [
+    "inert_modifier",
+    "self_buff"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a076_unit_h0ie": {
+   "hash": "319e7c677ef5c9c8",
+   "name": "Keen Eyes",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a078_unit_h031": {
+   "hash": "a3eceeadf58dcf85",
+   "name": "Technician",
+   "tags": [
+    "inert_modifier",
+    "self_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a079_unit_h0ir": {
+   "hash": "6367b8373a35f833",
+   "name": "Sonic Aura",
+   "tags": [
+    "enemy_buff",
+    "inert_modifier"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_a07v_unit_h0la": {
+   "hash": "ac3b00f5de8870d9",
+   "name": "Rapid spin",
+   "tags": [
+    "ally_damage"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_s000_unit_h00k": {
+   "hash": "561ca38587fe44c5",
+   "name": "Drain Attack",
+   "tags": [
+    "self_heal"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_s001_unit_h00l": {
+   "hash": "78c65c4edfd60562",
+   "name": "Drain Attack",
+   "tags": [
+    "self_heal"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_s001_unit_h00m": {
+   "hash": "78c65c4edfd60562",
+   "name": "Drain Attack",
+   "tags": [
+    "self_heal"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_s001_unit_h00n": {
+   "hash": "78c65c4edfd60562",
+   "name": "Drain Attack",
+   "tags": [
+    "self_heal"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_s002_unit_h0bh": {
+   "hash": "5c78d0a9d12a8327",
+   "name": "Dream Eater",
+   "tags": [
+    "self_heal"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_s002_unit_h0bi": {
+   "hash": "5c78d0a9d12a8327",
+   "name": "Dream Eater",
+   "tags": [
+    "self_heal"
+   ],
+   "reviewed": "2026-09-24"
+  },
+  "ability_s002_unit_h0bj": {
+   "hash": "5c78d0a9d12a8327",
+   "name": "Dream Eater",
+   "tags": [
+    "self_heal"
+   ],
+   "reviewed": "2026-09-24"
+  }
+ },
+ "lines": {
+  "bulbasaur": {
+   "hash": "547a94518a11d687",
+   "root": "unit_h00g",
+   "reviewed": "2026-09-24",
+   "role": "tank",
+   "tier": "A",
+   "also": [],
+   "agent": {
+    "primary": "tank",
+    "roles": {
+     "tank": 8.5,
+     "atk": 3
+    }
+   },
+   "note": "A pure sustain tank. All drain healing depends on landing melee hits. Lv100 trades 14000 max HP for +40% drain and one revive. There are no team auras or enemy debuffs."
+  },
+  "charmander": {
+   "hash": "e53d94937e44cdac",
+   "root": "unit_h00o",
+   "reviewed": "2026-09-24",
+   "role": "tank",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "tank",
+    "roles": {
+     "tank": 4,
+     "atk": 3
+    }
+   },
+   "note": "The old 'crit' bonus (db eff 2004 at Lv100) is really self-damage. Charizard Lv70 is the realistic peak: same DPS as Lv100 without the self-burn. A weak line in both roles. | Tự hại: Flame Strike (Crit, on_hit self, 33%, 1x attack) damages the pet itself. Charmeleon Lv16: 74 HP/s against 2000 HP, dead after 27 s. Charmeleon Lv30: 153 HP/s against 5000 HP, dead after 33 s. Charizard Lv100: 497 HP/s against 40000 HP, dead after 80 s. Charizard Lv36-70 do not have the ability and are clean."
+  },
+  "squirtle": {
+   "hash": "d771d8870d3f795f",
+   "root": "unit_h00w",
+   "reviewed": "2026-09-24",
+   "role": "tank",
+   "tier": "A",
+   "also": [],
+   "agent": {
+    "primary": "tank",
+    "roles": {
+     "tank": 7.5,
+     "atk": 3.5
+    }
+   },
+   "note": "Split peak: Lv70 is the best damage and tank mix, Lv100 is a pure armored wall with half the DPS. Long range makes it a back-line tank. No team or enemy effects."
+  },
+  "caterpie": {
+   "hash": "f28a2c4c8a4801ac",
+   "root": "unit_h014",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 2
+    }
+   },
+   "note": "Cheap (1490g to max) but weak. Paralyze Spore is NOT crowd control, it only freezes Butterfree itself. There are no enemy debuffs, so there is no DEBUFF role. | Tự hại: Caterpie Lv1 Poison Sting (Slow Poison, on_hit self) puts a 0.2/tick DoT on itself: 6.4 HP/s against 100 HP, dead after 16 s. Its slow parts are x1.0, so no real slow. Butterfree Lv15/50/100 Paralyze Spore (Bash, on_hit self) stuns itself: 30%/30%/40% chance for 20 ticks each. That costs 0-23% of attack uptime at Lv15/50 and 0-29% at Lv100. No self-damage (the Bash damage multiplier is 0).",
+   "override": "atk",
+   "overrideWhy": "agent 2026-09-24: ATK 2"
+  },
+  "weedle": {
+   "hash": "bdc99f7ce9fd7642",
+   "root": "unit_h019",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "B",
+   "also": [
+    "debuff:C"
+   ],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 4,
+     "debuff": 1.5
+    }
+   },
+   "note": "Mid stages look strong on paper (Lv50: 960 DPS for 790g) but die in about 25 s of combat. Skip straight to Lv75 or Lv100. | Tự hại: Poison Sting (Slow Poison, on_hit self) is a permanently refreshed DoT on itself. Weedle Lv1: 6.4 HP/s, dead after 16 s. Beedrill Lv15: 4/tick = 128 HP/s against 3000 HP, dead after 23 s. Beedrill Lv50: 10/tick = 320 HP/s against 8000 HP, dead after 25 s. Beedrill Lv75: 15/tick for only 2 ticks per hit, about 24 HP/s, negligible. Lv100 swaps it for an enemy-targeted DoT and is clean. The slow modifiers are x1.0."
+  },
+  "nacli": {
+   "hash": "d08d101b0bcee847",
+   "root": "unit_h01m",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "A",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 4.5
+    }
+   },
+   "note": "Always take the Hitmonchan branch. Hitmonlee (formerly S+) is a trap: it dies within 3-6 s at every stage. Stun Punch is not crowd control, so there is no DEBUFF role. | Tự hại: Hitmonchan Stun Punch (Bash, on_hit self) is a self-stun. Lv3: 30% for 40 ticks. Lv30-80: 40% for 40 ticks, about 44% stun uptime, attacks cut to 0.56-0.68x. Lv100: 100% for 10 ticks, attacks cut to 0.50-0.71x. No self-damage. Hitmonlee Critical Hit (on_hit self, 50%, 2x/3x attack) hits itself. Lv3: 160 HP/s against 500 HP, dead after 3.1 s. Lv30: 640/s against 4000, dead after 6.3 s. Lv60: 2400/s against 7500, dead af"
+  },
+  "gastly": {
+   "hash": "d5d19e931fa4caf8",
+   "root": "unit_h01n",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "A",
+   "also": [
+    "tank:A"
+   ],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 5,
+     "tank": 4.5
+    }
+   },
+   "note": "Gengar Lv36 at 770g is a great cheap stop: 1442 clean DPS with 75% evasion. Evasion here is a genuine self buff. Nightmare is self-stun, not enemy crowd control. | Tự hại: Nightmare (Bash, on_hit self), Haunter Lv16/30 and Gengar Lv50/70/100: 30% chance for a 40-tick self-stun, about 38-44% stun uptime. Attacks cut to 0.63-0.77x at cd 20 and 0.56-0.67x at Lv100. No self-damage. Gengar Lv36 does not have it."
+  },
+  "abra": {
+   "hash": "0c5ba226c4eb1389",
+   "root": "unit_h01v",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "S+",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 9.5
+    }
+   },
+   "note": "Pure stat carry and the cleanest top attacker in this batch. The Lv36 jump (x4 DPS for 500g) is excellent value. Keep it behind tanks, since it only has 5000-20000 HP."
+  },
+  "machop": {
+   "hash": "c3a2c9d357bb1c57",
+   "root": "unit_h023",
+   "reviewed": "2026-09-24",
+   "role": "buff",
+   "tier": "S+",
+   "also": [
+    "tank:A"
+   ],
+   "agent": {
+    "primary": "buff",
+    "roles": {
+     "buff": 9,
+     "atk": 5,
+     "tank": 4.5
+    }
+   },
+   "note": "The best non-legendary buffer. Get Machoke Lv16 early (180g for +15% team damage), and Machamp Lv36 (580g, x1.32) is the value sweet spot. The extra modifiers _01.._03 in the auras do nothing (x1.0)."
+  },
+  "rattata": {
+   "hash": "1a72e08eac0db467",
+   "root": "unit_h02b",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "B",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 7
+    }
+   },
+   "note": "The cheapest strong attacker here (1990g). Hyper Fang is a boss-shredder that can trade Raticate's life for half a boss's HP, and the pet is restored after the wave. Against normal creeps it is a plain 3.5k DPS melee. | Tự hại: Hyper Fang does health_loss on the attacker by design (explicit target=attacker, not the issue-1 shape): each proc costs Raticate 25% of the target's current HP. Against a 40000 HP creep it loses about 6.8k-13.6k of its 20000 HP. Against bosses of 90k-120k+ HP it usually dies after 1-2 procs (6-100% death rate), though it first deals about 48k-200k damage. Only procs ag"
+  },
+  "marill": {
+   "hash": "7cae82c1568f54e0",
+   "root": "unit_h02f",
+   "reviewed": "2026-09-24",
+   "role": "tank",
+   "tier": "C",
+   "also": [
+    "buff:C"
+   ],
+   "agent": {
+    "primary": "tank",
+    "roles": {
+     "tank": 6,
+     "buff": 4,
+     "atk": 4
+    }
+   },
+   "note": "Stage names are Marill L1 -> Chansey L20 -> Farigiraf L40/70/100 (Blissey in the WC3 source). The recoil and heal are tuned to cancel each other, so treat it as a durable front-liner and healer, not a damage dealer. It is uncertain whether the ally pick includes itself. | Tự hại: Double Edge (on_attack, target=attacker = the pet itself, 100% per attack) deals recoil of 20/200/800/1500/2500 per attack at L1/L20/L40/L70/L100 = 16/160/640/1200/2000 self-DPS. From full HP that is 25.0 s of continuous attacking at every stage from L20 (18.8 s at L1, which has no heal). Its own Heal exactly matches "
+  },
+  "pichu": {
+   "hash": "fb313ffd57cbb827",
+   "root": "unit_h02k",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 3.5
+    }
+   },
+   "note": "The old S/S+ tiers came from counting Bash as a bonus. Under Issue #1 it is a self-kill risk; it needs healer support or should stop at L60. Pichu L1 has no ability. | Tự hại: Lightning Shock (AHbh Bash, on_hit, targets self) hits the pet itself: L15 50% x 75 = 60/s (1500 HP lasts 25 s). L25 25% x 600 = 240/s (25 s). L60 20% x 1500 = 480/s (29.2 s). L100 12.5% x 7250 = 1450/s (13.8 s). Its stun modifiers do nothing (2 ticks, no flags or multipliers), so there is no self-stun and no enemy control."
+  },
+  "pidgey": {
+   "hash": "3d87d1ca89c22774",
+   "root": "unit_h02p",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "B",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 5
+    }
+   },
+   "note": "Safe back-line ranged damage. It has an 8-stage tree with many cheap steps, so it is good gold efficiency early and average late."
+  },
+  "meowth": {
+   "hash": "9b37c2aceb784be3",
+   "root": "unit_h02x",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "S+",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 8
+    }
+   },
+   "note": "Pure stat attacker with the highest attack speed in this batch. Its self-damage is small next to 30000 HP but stacks on top of creep damage, so keep it behind a tank or a healer. It lost the imaginary crit bonus from the old reading. | Tự hại: Technician (AOcr Critical Strike, on_hit, targets self) hits Persian itself for 0.25 x attack_damage per proc. L80: 10% x 8 aps x 103.75 = 83 self-DPS (18000 HP lasts 217 s). L100: 20% x 8 x 240.5 = 385 self-DPS (30000 HP lasts 78 s, about one full 75 s wave). The proc modifier does nothing (2 ticks, no flags)."
+  },
+  "spearow": {
+   "hash": "6f2c0f6dbd1942a6",
+   "root": "unit_h032",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "S",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 6.5
+    }
+   },
+   "note": "Clean stat attacker with good HP for an attacker. It is the most expensive line in this batch to max (3480g)."
+  },
+  "paras": {
+   "hash": "be0ec09d73679479",
+   "root": "unit_h039",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "C",
+   "also": [
+    "debuff:C"
+   ],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 2,
+     "debuff": 1,
+     "tank": 1.5
+    }
+   },
+   "note": "Weak in every role. It is cheap (1590g to max) but outclassed; only useful as early filler."
+  },
+  "ekans": {
+   "hash": "8724c6bedf283bfa",
+   "root": "unit_h03e",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 1
+    }
+   },
+   "note": "Issue #1 turns its only skill from crowd control into a permanent self-slow. It is the worst attacker in the batch; no DEBUFF role is given because nothing reaches enemies. | Tự hại: Poison Spit (Aspo Slow Poison, on_hit, targets self, 100%, 60 ticks, refreshed on every hit) lands on Arbok itself for effectively 100% uptime. L26: attack speed and move speed x0.7. L50: x0.6. L100: x0.5 (attack cooldown 30 -> 60 ticks). The poison DoT has magnitude 0. There is no crowd control on enemies.",
+   "override": "atk",
+   "overrideWhy": "agent 2026-09-24: ATK 1"
+  },
+  "vulpix": {
+   "hash": "d8eb75367f71e783",
+   "root": "unit_h03j",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "S",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 6.5
+    }
+   },
+   "note": "The strongest early curve in the batch (Vulpix L10 has 478 DPS for 270g). The late game is solid but not top."
+  },
+  "sandshrew": {
+   "hash": "3d747d0906060700",
+   "root": "unit_h03o",
+   "reviewed": "2026-09-24",
+   "role": "tank",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "tank",
+    "roles": {
+     "tank": 5,
+     "atk": 2
+    }
+   },
+   "note": "Best HP per gold in the batch (10000 HP for 485g at L25, 40000 HP for 1985g). Its damage is negligible."
+  },
+  "poliwag": {
+   "hash": "6be81b3303a35e2c",
+   "root": "unit_h03t",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "S",
+   "also": [
+    "tank:A"
+   ],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 7.5,
+     "tank": 5
+    }
+   },
+   "note": "The branch choice matters: Poliwrath for damage plus evasion, Greninja (slow 3333-dmg hits every 2.5 s) for raw HP. Poliwhirl L16 is cheap early power: 320 DPS for 185g."
+  },
+  "smoochum": {
+   "hash": "b5a2f31748843089",
+   "root": "unit_h043",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "S+",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 9
+    }
+   },
+   "note": "Stats-only line (no executable abilities). Glass cannon: 17500 HP at Lv100 (EHP ~15700, 24th pct), so not a tank. The Lv40 range jump 90 -> 500 is the key breakpoint. Display names: Smoochum -> Magmar -> Jynx."
+  },
+  "slowpoke": {
+   "hash": "ac56c8348962fece",
+   "root": "unit_h049",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "B",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 5,
+     "tank": 4
+    }
+   },
+   "note": "Stats-only mid-tier melee bruiser. Good value for gold but not outstanding in either role. Hero attack type is good against large-armor creeps (x2)."
+  },
+  "zubat": {
+   "hash": "8722a5e033e77d36",
+   "root": "unit_h08x",
+   "reviewed": "2026-09-24",
+   "role": "tank",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "tank",
+    "roles": {
+     "tank": 5.5,
+     "atk": 3
+    }
+   },
+   "note": "Sonic Wave's second modifier is the WC3 Faerie Fire buff (Bfae) and carries no stats, so the intent was probably -5 armor. The sign looks mis-ported. If it is fixed, Zubat becomes a real DEBUFF (-5 armor = +26.6% team damage on its target, 100% uptime) at DEBUFF score ~6. As shipped it is not listed under DEBUFF. The repo's skillvalue.js tags it 'tank' because armor_delta > 0, which is wrong because the armor lands on the enemy."
+  },
+  "psyduck": {
+   "hash": "c8c3116f32f2a295",
+   "root": "unit_h093",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "B",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 5.5,
+     "tank": 5
+    }
+   },
+   "note": "Stats-only. Its semi-ranged r250, very fast 8 aps attack is less wasteful against small creeps than big single hits. Solid all-rounder but top in neither role."
+  },
+  "mankey": {
+   "hash": "317b7111d56b23de",
+   "root": "unit_h098",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "S+",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 8
+    }
+   },
+   "note": "Once a proc lands, the buffed 4-tick attack cycle refreshes itself: P(no proc in 10 attacks) = 5.6%, so the buff is up most of the time. Weakness: fragile melee (EHP ~11800, 19th pct) needs a tank in front. Lv60 is the value stop; Lv100 costs 1300g for +10% DPS and double HP."
+  },
+  "growlithe": {
+   "hash": "6b148d004071775a",
+   "root": "unit_h09d",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "S",
+   "also": [
+    "tank:A"
+   ],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 7.5,
+     "tank": 6.5
+    }
+   },
+   "note": "Stats-only bruiser: the best combined HP and DPS in this batch, but the most expensive non-Magnemite line (3970g). Natural front-row melee carry."
+  },
+  "geodude": {
+   "hash": "3e3a42ffb3111132",
+   "root": "unit_h09i",
+   "reviewed": "2026-09-24",
+   "role": "tank",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "tank",
+    "roles": {
+     "tank": 6.5,
+     "atk": 4.5
+    }
+   },
+   "note": "The death explosion rewards a tank that actually gets killed. Slow move (180) and slow 0.53 aps attack cause overkill on weak creeps. Best early tank value per gold in the batch.",
+   "override": "tank",
+   "overrideWhy": "agent 2026-09-24: TANK 6.5, ATK 4.5"
+  },
+  "ponyta": {
+   "hash": "621386c75524dd47",
+   "root": "unit_h09p",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "B",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 4.5,
+     "tank": 3
+    }
+   },
+   "note": "Stats-only budget melee. Good cheap early DPS (Lv30 at 380g), outscaled late."
+  },
+  "magnemite": {
+   "hash": "2d71bf9326c2dc17",
+   "root": "unit_h09u",
+   "reviewed": "2026-09-24",
+   "role": "tank",
+   "tier": "B",
+   "also": [],
+   "agent": {
+    "primary": "tank",
+    "roles": {
+     "tank": 7,
+     "atk": 4
+    }
+   },
+   "note": "Evolving past Magneton Lv30 lowers DPS (8 aps -> 3.2 -> 1.6 aps), so the line splits: stop at Lv30 for cheap early DPS, or go to Lv100 for a 50000-HP ranged tank. Electric Impulse does not qualify as ATK or DEBUFF."
+  },
+  "fuecoco": {
+   "hash": "0ef4d972eaabfcc3",
+   "root": "unit_h0a0",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "S",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 7,
+     "tank": 6
+    }
+   },
+   "note": "Stats-only heavy hitter (WC3 source Slugma/Magcargo). Very slow move (120) and attack (cd 80 ticks) make it a front-row melee boss-killer rather than a creep-clearer."
+  },
+  "munchlax": {
+   "hash": "099971aeecc5f305",
+   "root": "unit_h0a5",
+   "reviewed": "2026-09-24",
+   "role": "tank",
+   "tier": "B",
+   "also": [],
+   "agent": {
+    "primary": "tank",
+    "roles": {
+     "tank": 8,
+     "atk": 4
+    }
+   },
+   "note": "Pure stat-stick with no abilities. Best HP per gold in the batch, so it is a cheap frontline wall; weak damage. Every stage keeps the same 20 HP per gold ratio, so it can be leveled up gradually."
+  },
+  "raboot": {
+   "hash": "eb2a6004b7c97eed",
+   "root": "unit_h0aa",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "A",
+   "also": [
+    "buff:C"
+   ],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 6,
+     "buff": 5,
+     "tank": 4.5
+    }
+   },
+   "note": "DPS dip: Electabuzz Lv30 (1725 DPS, cooldown 10) drops to Iron-Thorns Lv40 (1454 DPS, cooldown 20). The dip buys 4000 more HP and the Frenzy buff. The buff is random and bursty, not a steady aura. It works best in a team of high-DPS attackers."
+  },
+  "voltorb": {
+   "hash": "8ea07f0ae497bc24",
+   "root": "unit_h0ag",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "A",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 6
+    }
+   },
+   "note": "Glass cannon. The death blast is a small bonus of about 1 s of its own DPS, spread as AoE. Best value is Electrode Lv60 at 890 gold."
+  },
+  "cleffa": {
+   "hash": "d50414d861c26682",
+   "root": "unit_h0al",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "S+",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 8,
+     "tank": 4.5
+    }
+   },
+   "note": "Best attacker in this batch. The early stage is poor: Clefairy Lv15 at 380 gold is only 174 DPS. It needs Clefable Lv30 (980 gold) to take off. Waves spawn clumped (interval 0), so the splash triggers often."
+  },
+  "toxel": {
+   "hash": "03afe6a5770cf0a9",
+   "root": "unit_h0aq",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "S",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 7.5
+    }
+   },
+   "note": "Cheapest strong DPS line: Lv60 for 780 gold gives 2840 DPS. Lv80 is completely clean. Lv100 adds Static, which is at best useless and at worst a small self-stun, but the raw DPS jump (3960 to 5712 for 1000 gold) still makes Lv100 worth it. | Tự hại: Static (Lv100 only, 20% per hit, self targeting): both damage entries are 0 (base 0; the attack_damage basis has no multiplier), so no self-damage. It applies two 4-tick (0.125 s) modifiers to itself with empty flags. If these act as a self-stun, worst case is 16.7% attack downtime, DPS 5712 to 4760. It never stuns enemies. (Only if the multiplier "
+  },
+  "seel": {
+   "hash": "36eec03693b05fcd",
+   "root": "unit_h0av",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "B",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 4
+    }
+   },
+   "note": "Weak ranged attacker. It would reach 5600 DPS only if the server grants buff b00t (rain?), which the catalog cannot confirm. 26000 HP but ranged, so not a real tank."
+  },
+  "froakie": {
+   "hash": "e00dfdf191b10a46",
+   "root": "unit_h0b0",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "A",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 5.5
+    }
+   },
+   "note": "Plain, linear attacker. The last step (1300 gold, Lv80 to Lv100) doubles both DPS (1920 to 4000) and HP (12000 to 25000). No real ability."
+  },
+  "krabby": {
+   "hash": "f5d6c1eba16181f5",
+   "root": "unit_h0b5",
+   "reviewed": "2026-09-24",
+   "role": "tank",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "tank",
+    "roles": {
+     "tank": 3,
+     "atk": 2
+    }
+   },
+   "note": "Among the weakest lines: low DPS, low HP, and its signature skill is at best inert and at worst stuns itself. Only a cheap filler body. | Tự hại: Crabhammer (Lv30/60/100, 40% per hit, self targeting): damage entries are 0 (base 0; the attack_damage basis has no multiplier), so no self-damage. It applies a 40-tick (1.25 s) modifier to itself with no flags. If this acts as a self-stun: about 44% attack downtime, Lv100 DPS 1600 to 889. It never stuns enemies"
+  },
+  "cubone": {
+   "hash": "2902ab26d84244db",
+   "root": "unit_h0ba",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "S",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 7,
+     "tank": 5
+    }
+   },
+   "note": "Solid, steady melee bruiser with no gimmicks. Expensive (3780 gold total). Landorus Lv85 (2780) gives 80% of the Lv100 value."
+  },
+  "fennekin": {
+   "hash": "d768233bd19a8ee8",
+   "root": "unit_h0bf",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "A",
+   "also": [
+    "tank:S"
+   ],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 6.5,
+     "tank": 5
+    }
+   },
+   "note": "Branch choice matters. Always evolve Braixen into Delphox (lifesteal ranged attacker). Never take Shadow Mewtwo: its crit kills itself. Evaluate this line by the Delphox branch. | Tự hại: Delphox branch: none (Dream Eater is a real self-heal). Shadow Mewtwo branch (Lv30/60/100) is a trap. Critical Hit, 50% per hit, targets self: 2 x attack damage to ITSELF, 3718 per proc at Lv100. That is 2974 HP/s of self-damage, equal to its own DPS, so it dies in about 6.4 s of attacking from 19000 HP (6.6 s at Lv30, 6.5 s at Lv60). Its 50% self Evasion aura is real but cannot block this self-damage"
+  },
+  "torchic": {
+   "hash": "6b7dd81b93f3d948",
+   "root": "unit_h0bn",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 2.2
+    }
+   },
+   "note": "Enemies never get bonus crit damage. Evolving to Combusken is a trap for combat. Its only upside is trade slot 1: Combusken Lv100 -> Moltres Lv60 (2400 DPS, 60% chance to revive on death). Its hero attack does about x1.07 on average against the creep armor mix. | Tự hại: Critical Hit (Combusken Lv40/60/100; on_hit, targeting self, no effect.target) hurts the pet itself. 50% of hits deal 2 x ATK to the pet: 1198 / 1998 / 3998 per proc. That is 958 / 1598 / 3198 self-damage per second, equal to 100% of its own DPS, against HP 3000 / 5000 / 10000. The 3rd proc kills it, which is about 6 attacks o"
+  },
+  "alolan-vulpix": {
+   "hash": "19bf437e10ded93d",
+   "root": "unit_h0bs",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "B",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 7,
+     "tank": 6
+    }
+   },
+   "note": "This assumes copies keep full damage: the catalog summon has no damage multiplier and strips only a02d, so copies also keep the 50% evade. Copies are leak_free. Frontline evasion plus about 1.8x output makes this the strongest line in the batch."
+  },
+  "shellder": {
+   "hash": "ec9895975312e21d",
+   "root": "unit_h0bx",
+   "reviewed": "2026-09-24",
+   "role": "tank",
+   "tier": "B",
+   "also": [],
+   "agent": {
+    "primary": "tank",
+    "roles": {
+     "tank": 8,
+     "atk": 4.2
+    }
+   },
+   "note": "No abilities at any stage; it is a pure stat wall. Move speed is 150, the slowest in this batch."
+  },
+  "naclstack": {
+   "hash": "7eed19c4650217ee",
+   "root": "unit_h0c2",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 3
+    }
+   },
+   "note": "It is only useful as early burst (huge single hits against a boss) before it kills itself. It is not a tank despite 25k HP. Trade slot 4 swaps Blaziken Lv100 for Okidogi Lv100, which also has a self-damaging Bash. Its spells attack does about x1.11 against the creep armor mix. | Tự hại: Hard Attack (Blaziken Lv25/50/100; on_hit, targeting self) hurts the pet itself. 40% of hits deal 2.5 x ATK to the pet: 4886 / 12386 / 19886 per proc. That is 782 / 1982 / 3182 self-damage per second, equal to 100% of its own DPS, against HP 6000 / 15000 / 25000. The 2nd proc kills it, which is about 5 attacks "
+  },
+  "rayquaza": {
+   "hash": "e5cac843ae621f12",
+   "root": "unit_h0c9",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 1.7
+    }
+   },
+   "note": "A free early-game carry, about as strong as a Lv15-20 common pet, that falls off late. Its tiny 20-dmg hits are fully blocked 50% of the time by the flat 20 reduction on Wartortle Lv16 (wave 12)."
+  },
+  "raikou": {
+   "hash": "661f6d0afd8b72cf",
+   "root": "unit_h0ce",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 1.7
+    }
+   },
+   "note": "Pure stats and melee range (90). Good early and weak by mid-game."
+  },
+  "kyogre": {
+   "hash": "303102c347db9bc8",
+   "root": "unit_h0cj",
+   "reviewed": "2026-09-24",
+   "role": "buff",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "buff",
+    "roles": {
+     "buff": 2.5,
+     "atk": 1
+    }
+   },
+   "note": "3000 HP, divine armor type, 0 armor. The heal fires only while it is attacking at melee range (90), so it must stand at the front. The heal also covers itself. It is strongest in early waves, where creep DPS is about 16-30.",
+   "override": "buff",
+   "overrideWhy": "agent 2026-09-24: BUFF 2.5, ATK 1"
+  },
+  "entei": {
+   "hash": "36acad337ec5a967",
+   "root": "unit_h0cu",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 1.8
+    }
+   },
+   "note": "Its armor type is none, so it takes the most incoming damage (x1.12) and has the lowest HP (1600). It is fragile."
+  },
+  "mew": {
+   "hash": "5ff82842cf1f1efa",
+   "root": "unit_h0cz",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 1.6
+    }
+   },
+   "note": "Its range of 600 lets it fire from behind the front line, which partly makes up for the low DPS. Small armor type (takes x1.12)."
+  },
+  "archaludon": {
+   "hash": "35cc8b977c0dbb54",
+   "root": "unit_h0d4",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 1.8
+    }
+   },
+   "note": "Pure stats, melee range 90, medium armor type."
+  },
+  "onix": {
+   "hash": "26f813f2d9106f6d",
+   "root": "unit_h0d9",
+   "reviewed": "2026-09-24",
+   "role": "tank",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "tank",
+    "roles": {
+     "tank": 4
+    }
+   },
+   "note": "The WC3 source unit is 'Regirock level 1'. Strong aggro tool in the early and mid game, but it does not scale. It only makes sense as a way to protect carries in early waves."
+  },
+  "ditto": {
+   "hash": "db10c4966c787708",
+   "root": "unit_h0e5",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "A",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 6,
+     "tank": 5
+    }
+   },
+   "note": "A lottery and economy pet rather than a fighter. Field it only in waves whose creeps you want to copy. Evolving is worth it only if HP is inherited as an absolute value. | Tự hại: no damage and no debuff. Transform destroys the Ditto itself (a 'destroy' effect on the attacker) and swaps in the copied creep. The target is always the most_progress creep and cannot be chosen: fielded against a weak wave, it turns into weak trash, and copying Blaziken Lv100 (wave 29) brings that species' own self-crit. Unverified: whether inherit_health_from carries absolute HP (a Lv1 Ditto would then spawn a copy"
+  },
+  "arrokuda": {
+   "hash": "11db0adfa70cb321",
+   "root": "unit_h0ea",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "A",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 5.5,
+     "tank": 3
+    }
+   },
+   "note": "Summon uptime assumes 32 ticks/s and that the melee summons reach creeps. The line has no crit or bash. Medium DPS per gold: about 1150 DPS per 1k gold."
+  },
+  "magikarp": {
+   "hash": "36542b3e865525d2",
+   "root": "unit_h0eg",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "S",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 6.5
+    }
+   },
+   "note": "Real damage is good per gold, but it bleeds itself out in long waves. It needs heal or lifesteal support, or a spot where it only attacks briefly. | Tự hại: Bite (on_hit, self targeting, 35%) deals 0.5 × attack damage to Gyarados itself. Lv20: 500 per proc, 280/s against 13000 HP (dies in 46 s). Lv60: 1250 per proc, 700/s against 27000 HP (38.6 s). Lv100: 2000 per proc, 1120/s against 41000 HP (36.6 s of continuous attacking, sooner under creep fire; the wave time limit is 75 s). Its 2-tick modifier is empty and does nothing"
+  },
+  "larvitar": {
+   "hash": "f3e3e9bdc1714c3c",
+   "root": "unit_h0en",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "S+",
+   "also": [
+    "tank:A"
+   ],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 9.5
+    }
+   },
+   "note": "The WC3 source is the Garchomp line. It is the highest-DPS line in this batch once you reach Lv100. The Lv48–75 stages are usable but slowly kill themselves. | Tự hại: Dragonology (on_hit, self targeting) deals 1 × attack damage to the pet itself. Pupitar Lv40: 5%, 121/s against 10000 HP (82 s). Tyranitar Lv48: 10%, 388/s against 20000 HP (51.5 s). Tyranitar Lv75: 15%, 1068/s against 32500 HP (30.4 s). The proc also gives the pet 5/10/15% evasion for 2 ticks, about 1% average evasion, which is negligible. Lv100: none (the damage becomes a real enemy AoE; Dragonology and Earthquake share one ex"
+  },
+  "aerodactyl": {
+   "hash": "b4c5b5a57ff82e51",
+   "root": "unit_h0et",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "S+",
+   "also": [
+    "tank:S"
+   ],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 9,
+     "tank": 5
+    }
+   },
+   "note": "Clean, reliable carry at every stage. The Void of Stones damage spreads randomly across creeps in range."
+  },
+  "bramblin": {
+   "hash": "6812490358cfb9fc",
+   "root": "unit_h0ez",
+   "reviewed": "2026-09-24",
+   "role": "tank",
+   "tier": "S+",
+   "also": [
+    "atk:A"
+   ],
+   "agent": {
+    "primary": "tank",
+    "roles": {
+     "tank": 9,
+     "atk": 5
+    }
+   },
+   "note": "The WC3 source is the Armaldo line. The best front-liner in this batch. The EHP jump at Lv100 (armor 17 to 50) is huge."
+  },
+  "dratini": {
+   "hash": "7afca6b5cc767b0d",
+   "root": "unit_h0f4",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "B",
+   "also": [
+    "tank:A"
+   ],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 8,
+     "tank": 4.5
+    }
+   },
+   "note": "A boss and high-HP killer at Lv100. Stages 55–80 are a trap to build through (3000 gold of weak stages that buff enemies). Keep them away from the front line. | Tự hại: No self-damage. Team harm at Lv55 and Lv80: Discharge (on_attacked, 10%) puts modifiers on every enemy creep within 600 for 80 ticks (2.5 s). Lv55 gives creeps +20% attack damage and +4 armor; Lv80 gives +30% attack damage and +6 armor. With 3 creeps hitting it, uptime is about 70%, so nearby creeps hit harder and take about 18–26% less damage from your whole team. Lv100: none",
+   "override": "atk",
+   "overrideWhy": "agent 2026-09-24: ATK 8, TANK 4.5"
+  },
+  "treecko": {
+   "hash": "facc8116c8e5a438",
+   "root": "unit_h0fb",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "S+",
+   "also": [
+    "tank:A"
+   ],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 9.5
+    }
+   },
+   "note": "The WC3 source is the Salamence line. Plan the gold so it goes straight from Lv50 through Lv60 and Lv80 to Lv100: do not leave it fielded at Lv60/80. Magic type is only 0.5× against divine armor. | Tự hại: Dragon Claw at Lv60/Lv80 (on_hit, self targeting, 35%) deals 1 × attack damage to Sceptile itself. Lv60: 2400 per proc, 1680/s against 20000 HP. Lv80: 3840 per proc, 2688/s against 32000 HP. Both die in about 11.9 s of continuous attacking. The modifier is empty. Lv100: none (its speed buff has an explicit target of attacker, so it is a real self buff)"
+  },
+  "mudkip": {
+   "hash": "9fb418aab1a93b73",
+   "root": "unit_h0fg",
+   "reviewed": "2026-09-24",
+   "role": "tank",
+   "tier": "S+",
+   "also": [],
+   "agent": {
+    "primary": "tank",
+    "roles": {
+     "tank": 8,
+     "atk": 5.5
+    }
+   },
+   "note": "The line has no abilities at all, only stats. The biggest raw HP in the batch, and its splash is good against wave packs."
+  },
+  "gimmighoul": {
+   "hash": "4fbe533c04519572",
+   "root": "unit_h0fo",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "A",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 6,
+     "tank": 4
+    }
+   },
+   "note": "Lv80 to Lv100 (1500g) gives +13% base DPS, +7500 HP and possible illusion damage, and removes both the self-damage and the 50% evasion. Evasion does not block Nightmare self-damage. The illusions (27500 HP, die when attacked) may also pull creep attacks as decoys (unverified). | Tự hại: Nightmare: on_hit, 20% chance, targeting self, no effect.target, so the damage hits the pet itself. Lv20/37: magnitude base 0, so harmless. Lv60: 625 per proc = 400 HP/s (3.2% max HP/s), dies to itself after about 31s of nonstop attacking. Lv80: 1000 per proc = 640 HP/s (3.2%/s), about 31s. Both Nightmare modif"
+  },
+  "suicune": {
+   "hash": "3cde53aa87d0ee98",
+   "root": "unit_h0fw",
+   "reviewed": "2026-09-24",
+   "role": "tank",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "tank",
+    "roles": {
+     "tank": 1.5,
+     "atk": 1
+    }
+   },
+   "note": "Pure stats and no abilities. Its Lv1 stats are about those of a regular Lv20 pet, so it only helps as a free early-game body. It uses the single legendary slot, which Darkrai uses far better.",
+   "override": "tank",
+   "overrideWhy": "agent 2026-09-24: TANK 1.5, ATK 1"
+  },
+  "groudon": {
+   "hash": "232bee8f57ab32c0",
+   "root": "unit_h0g0",
+   "reviewed": "2026-09-24",
+   "role": "tank",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "tank",
+    "roles": {
+     "tank": 1.5,
+     "atk": 1
+    }
+   },
+   "note": "No abilities. It is the only one of these legendaries with base armor (6). Useful only early, and it takes the one legendary slot.",
+   "override": "tank",
+   "overrideWhy": "agent 2026-09-24: TANK 1.5, ATK 1"
+  },
+  "darkrai": {
+   "hash": "f1a2fd31791d801a",
+   "root": "unit_h0g4",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 7
+    }
+   },
+   "note": "The best boss killer in this batch because its damage grows with the creep's HP. In one life it takes down about 1.5–2 duel-wave creeps. Pair it with ally heals. It is the best use of the single legendary slot among these lines. | Tự hại: Remain of Shadow explicitly hits the attacker for 2.5% of its own max HP (50 dmg) on every attack. Raw that is 160 HP/s (8% HP/s). With armor −7 (WC3 negative-armor rule, about x1.35) it is about 216 HP/s (10.8%/s). It kills itself after about 30–40 attacks, which is 9–12.5s of nonstop attacking. On top of that it has 2000 HP and armor −7, so it is very fragi"
+  },
+  "cresselia": {
+   "hash": "64aad2d8c7506d42",
+   "root": "unit_h0g9",
+   "reviewed": "2026-09-24",
+   "role": "tank",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "tank",
+    "roles": {
+     "tank": 2,
+     "atk": 1
+    }
+   },
+   "note": "No abilities. The tankiest legendary body in this batch, but still about 10% of a mid final-stage tank. Early game only.",
+   "override": "tank",
+   "overrideWhy": "agent 2026-09-24: TANK 2, ATK 1"
+  },
+  "garganacl": {
+   "hash": "2380464c25337aa5",
+   "root": "unit_h0gg",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 1,
+     "tank": 1
+    }
+   },
+   "note": "No abilities, only stats. Early game only, and it takes the one legendary slot."
+  },
+  "latias": {
+   "hash": "839edb793ba8ae3a",
+   "root": "unit_h0gn",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 1.5,
+     "tank": 1
+    }
+   },
+   "note": "No abilities. A fast-attacking early-game body, about 14% of the median roster final-stage DPS."
+  },
+  "latios": {
+   "hash": "ea13b9987b10c1ac",
+   "root": "unit_h0gs",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 1.5,
+     "tank": 1
+    }
+   },
+   "note": "No abilities. Effectively the same as Latias. Early game only."
+  },
+  "thwackey": {
+   "hash": "bd7ee27452a9bc3d",
+   "root": "unit_h0h3",
+   "reviewed": "2026-09-24",
+   "role": "tank",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "tank",
+    "roles": {
+     "tank": 7,
+     "atk": 4
+    }
+   },
+   "note": "Cheap and reliable front-line sustain. The heal only runs while it is attacking, which a melee front-liner does all the time. It cannot survive duel-wave focus fire (8640-DPS creeps).",
+   "override": "tank",
+   "overrideWhy": "agent 2026-09-24: TANK 7, ATK 4"
+  },
+  "eevee": {
+   "hash": "0f4a6c13f9d14206",
+   "root": "unit_h0h8",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 5
+    }
+   },
+   "note": "A glass cannon. Very strong in early and mid game (Lv35 for 730g clears waves 15–25 with only about 8% HP of self-damage per kill), but it gets worse and worse late, and it kills itself in duel waves. Not a tank: the self-damage makes it the opposite of one. | Tự hại: Double Return explicitly deals 10% of the TARGET's max HP to Eevee on every attack (1.6 attacks/s). Lv100: vs wave 40 Arcanine (25k HP), 2500 per attack = 4000 HP/s (13.3% HP/s, dead in 12 attacks). vs wave 34 Venusaur (40k), 6400 HP/s (21%/s). vs duel 60k–80k creeps, 9600–12800 HP/s, dead in 4–5 attacks. vs Arceus (400k), 40000 "
+  },
+  "vaporeon": {
+   "hash": "0cba56ba24223a73",
+   "root": "unit_h0hd",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "B",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 4
+    }
+   },
+   "note": "Plain stat attacker with median DPS and no working skill. Cold Attack does not slow, so it has no DEBUFF role."
+  },
+  "jolteon": {
+   "hash": "d22f9ba4d76776bb",
+   "root": "unit_h0hg",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "A",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 5
+    }
+   },
+   "note": "High raw DPS for the gold, but the worst self-damage in this batch. It can't last a full 75s wave of non-stop attacking. | Tự hại: Shock (on_hit, 50%, self-targeted, no effect.target) deals 0.4 x attack damage to itself per proc: Lv35 157/s (2.1% HP/s, 47.8s to suicide), Lv70 777/s (4.4% HP/s, 22.5s), Lv100 1042/s (3.5% HP/s, 28.8s). Its 2-tick modifier is neutral (no stun flag)."
+  },
+  "flareon": {
+   "hash": "7da80b2591d88be8",
+   "root": "unit_h0hk",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "A",
+   "also": [
+    "debuff:S+"
+   ],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 6.5,
+     "debuff": 6
+    }
+   },
+   "note": "AoE clear specialist. The huge 800 radius hits most creeps on the path near it. Weak single-target DPS."
+  },
+  "kabutops": {
+   "hash": "4eb3489b1e60e54b",
+   "root": "unit_h0hn",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "A",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 5.5
+    }
+   },
+   "note": "The Lv100 upgrade is +71% DPS in exchange for the self-damage. Keep it at Lv70 when it can't be healed or rotated out. | Tự hại: Lv100 only. Perfect Slash (on_hit, 30%, self-targeted, no effect.target) deals 0.5 x 3000 = 1500 damage to itself per proc = 720 self-DPS, 2.4% HP/s, suicide in about 41.7s of continuous attacks (wave limit 75s). Its 2-tick modifier is neutral, so no self-stun. Lv1-70 have no self-harm."
+  },
+  "alolan-persian": {
+   "hash": "8ce13d13e0777055",
+   "root": "unit_h0hs",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "B",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 5
+    }
+   },
+   "note": "Small-radius splash proc. Good when creeps bunch up, weak single-target."
+  },
+  "chien-pao": {
+   "hash": "c0a2030af935ecb3",
+   "root": "unit_h0j1",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "A",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 6,
+     "tank": 4
+    }
+   },
+   "note": "Balanced, safe single-target melee. Middling DPS for 3490g."
+  },
+  "wo-chien": {
+   "hash": "65734774843ab3aa",
+   "root": "unit_h0j8",
+   "reviewed": "2026-09-24",
+   "role": "tank",
+   "tier": "B",
+   "also": [],
+   "agent": {
+    "primary": "tank",
+    "roles": {
+     "tank": 9,
+     "atk": 3.5
+    }
+   },
+   "note": "Dedicated frontline wall. The HP jump from Lv50 (20k at 1040g) is excellent value."
+  },
+  "corphish": {
+   "hash": "97651d066beb4570",
+   "root": "unit_h0ji",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "S",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 9
+    }
+   },
+   "note": "Best boss/late-wave killer in this batch: Guillotine scales with creep value, so it gets stronger in duel/survival waves (book 5000-10000). Against low-value creeps it is a plain 6000 DPS melee."
+  },
+  "rhyhorn": {
+   "hash": "d0f6cb1d4ad552d9",
+   "root": "unit_h0jp",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "S",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 8
+    }
+   },
+   "note": "Pure stat attacker, no working skill. Very good gold efficiency from Lv33."
+  },
+  "riolu": {
+   "hash": "c47b61ec7bc27918",
+   "root": "unit_h0jx",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "S",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 7,
+     "tank": 4
+    }
+   },
+   "note": "a070/a071 are duplicate Steadfast copies with a shared execution id, so they count once. If both copies stacked, attack speed would reach x1.44. The buff needs Riolu to be hurt, so it works best in front."
+  },
+  "torracat": {
+   "hash": "ba0bc2b9fe58abd4",
+   "root": "unit_h0k2",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "C",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 5
+    }
+   },
+   "note": "Pure stats plus bounce; no skills. Tank stats are weak: 17500 HP, 0 armor, hero armor type, about 16.7k EHP vs the creep mix (about 30th percentile), so it gets no TANK role. No buff or debuff. Cheap to max (3490 gold). It is at its best against grouped creeps, where the 4-target full-damage bounce multiplies its DPS; against lone bosses it is mediocre."
+  },
+  "igglybuff": {
+   "hash": "58c18385d6d88880",
+   "root": "unit_h0k3",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "S+",
+   "also": [],
+   "agent": {
+    "primary": "tank",
+    "roles": {
+     "tank": 7,
+     "atk": 7
+    }
+   },
+   "note": "A melee bruiser: high HP plus a proc-based 50% damage reduction that works while it keeps attacking, which it does as a front blocker. It also does top-12% DPS while tanking. Roar adds no bonus damage. No team buff and no enemy debuff."
+  },
+  "staryu": {
+   "hash": "dece328a68c9830a",
+   "root": "unit_h0l5",
+   "reviewed": "2026-09-24",
+   "role": "atk",
+   "tier": "S+",
+   "also": [],
+   "agent": {
+    "primary": "atk",
+    "roles": {
+     "atk": 9.5
+    }
+   },
+   "note": "The top-end carry, but the most expensive of the three (5025 gold) and back-loaded: almost all of its value arrives at Lv95-100. Tank stats are only average: 28000 HP, 0 armor, divine armor type (pierce hits it 2x), about 27.3k EHP, around the median, so it gets no TANK role. No buff or debuff roles."
+  }
+ },
+ "catalogHash": "6292a9c019e33ce3"
+}

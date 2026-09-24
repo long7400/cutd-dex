@@ -957,9 +957,10 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       .then(t => JSON.parse(t));
   };
 
-  let live = null, liveHash = null;
+  let live = null, liveHash = null, rawCat = null;
   function mergeGameCatalog() {
     if (!db || !gameCatReady) return;
+    if (rawCat && !live) { try { live = analyzeCatalog(rawCat, { overrides: db.ov }); } catch { live = null; } rawCat = null; }
     for (const [id, a] of live ?? []) db.u[id] = { ...(db.u[id] ?? {}), ...a.stats, ...overlayFields(a) };
     for (const [id, g] of gameCat) db.u[id] = { ...(db.u[id] ?? {}), n: g.n, l: g.l, b: g.b, c: g.c, e: g.e };
     dirty = true; render(true);
@@ -1003,6 +1004,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         lb: dict(d.lb, v => S(v, 40), 64),
         rn: dict(d.rn, v => S(v, 40), 64),
         dmg: dict(d.dmg, row => dict(row, v => (N(v) !== undefined ? Math.max(0, Math.min(10, v)) : undefined), 16), 16),
+        ov: dict(d.ov, v => (['atk', 'tank', 'buff', 'debuff'].includes(v) ? v : undefined), 400),
         u,
       };
       mergeGameCatalog();
@@ -1014,7 +1016,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       gameCat = buildGameCatalog(raw);
       suspect = new Set((raw.catalog?.abilities ?? []).filter(a => a?.trigger?.kind === 'on_hit' && a.targeting?.kind === 'self'
         && (a.effects ?? []).some(e => e?.kind === 'damage' && !e.target && !e.targeting)).map(a => a.id).filter(id => typeof id === 'string'));
-      try { live = analyzeCatalog(raw.catalog); } catch { live = null; }
+      rawCat = raw.catalog;
       liveHash = typeof raw.catalog_hash === 'string' && /^[0-9a-f]{12,64}$/.test(raw.catalog_hash) ? raw.catalog_hash : null;
       gameCatReady = true; mergeGameCatalog();
     })

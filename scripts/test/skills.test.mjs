@@ -103,3 +103,28 @@ test('hạng từng dạng theo tầm cấp: thấy được dòng yếu giữa 
   assert.ok(a.get(find('Staryu', 1).id).path.length >= 5, 'có đường tiến hóa tới đỉnh');
   assert.equal(st('Kyogre', 1), 'S+', 'huyền thoại vẫn được chấm (không làm mốc so sánh)');
 });
+
+import { snapshot, reconcile, validOverrides } from '../lib/registry.mjs';
+
+test('sổ định danh kỹ năng: kỹ năng đổi → đánh dấu xem lại, ghi đè của dòng đó hết hiệu lực; không đổi → giữ nguyên', () => {
+  const raw = readJSON(PATHS.catalog);
+  const registry = readJSON(PATHS.registry);
+  assert.ok(registry && Object.keys(registry.lines).length >= 80, 'có sổ định danh trong repo');
+  const snap = snapshot(raw.catalog, db.pets);
+  const same = reconcile(registry, snap);
+  assert.deepEqual([same.report.newAbilities.length, same.report.changedAbilities.length, same.report.changedLines.length], [0, 0, 0], 'sổ khớp catalog hiện tại');
+  assert.equal(validOverrides(registry, snap).dratini, 'atk');
+  const changed = structuredClone(raw.catalog);
+  const drat = db.pets.find(p => p.slug === 'dratini');
+  const stage = changed.species.find(s => s.id === drat.stages.at(-1));
+  stage.attack_damage += 1;
+  const snap2 = snapshot(changed, db.pets);
+  const r = reconcile(registry, snap2);
+  assert.ok(r.report.changedLines.includes('dratini'));
+  assert.ok(r.report.droppedOverrides.some(x => x.startsWith('dratini')));
+  assert.equal(validOverrides(registry, snap2).dratini, undefined, 'đổi chỉ số → không áp ghi đè cũ');
+  assert.equal(r.registry.lines.dratini.reviewed, false);
+  const ab = changed.abilities.find(a => a.id === Object.keys(registry.abilities)[0]);
+  ab.effects = [...(ab.effects ?? []), { kind: 'damage', magnitude: { base: 1 } }];
+  assert.ok(reconcile(registry, snapshot(changed, db.pets)).report.changedAbilities.includes(ab.id));
+});

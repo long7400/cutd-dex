@@ -65,6 +65,25 @@ export function buildStrategy({ units, pets, waveSets, damage }) {
       role, rank: { score: first.power ?? 0, tier: powerTier(first.power ?? 0) }, harm,
     };
   });
+  const ROLE_MIN = { buff: 0.05, debuff: 0.05 };
+  const lineMax = new Map(lines.map(l => [l.id, Object.fromEntries(['atk', 'tank', 'buff', 'debuff'].map(r => [r, Math.max(0, ...[...reach(units, l.id).keys()].map(id => units[id].rv?.[r] ?? 0))]))]));
+  const median = list => [...list].sort((a, b) => a - b)[Math.floor(list.length / 2)] ?? Infinity;
+  const floor = {
+    atk: median(lines.filter(l => l.role === 'atk').map(l => lineMax.get(l.id).atk)),
+    tank: median(lines.filter(l => l.role === 'tank').map(l => lineMax.get(l.id).tank)),
+    ...ROLE_MIN,
+  };
+  const qualifies = (l, r) => l.role === r || lineMax.get(l.id)[r] >= floor[r];
+  const ref = Object.fromEntries(['atk', 'tank', 'buff', 'debuff'].map(r => {
+    const vals = lines.filter(l => qualifies(l, r)).map(l => lineMax.get(l.id)[r]).sort((a, b) => a - b);
+    return [r, vals[Math.floor(vals.length * 0.9)] || 1];
+  }));
+  for (const l of lines) {
+    l.also = ['atk', 'tank', 'buff', 'debuff'].filter(r => r !== l.role && qualifies(l, r)).map(r => {
+      const score = Math.min(1, lineMax.get(l.id)[r] / ref[r]);
+      return [r, Math.round(score * 100) / 100, powerTier(score), lineMax.get(l.id)[r]];
+    });
+  }
   const tradeOnly = Object.values(units).filter(u => u.tags?.includes('trade') && !u.pet && u.role && u.role !== 'atk')
     .map(u => ({ id: u.id, role: u.role, tier: u.stageTier, rv: u.rv?.[u.role] ?? 0 })).sort((a, b) => b.rv - a.rv);
   return { modes, lines: lines.sort((a, b) => b.rank.score - a.rank.score), tradeOnly, budget: [500, 1500] };

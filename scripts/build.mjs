@@ -5,6 +5,7 @@ import { createResolver } from './lib/game.mjs';
 import { createDescriber, TICKS_PER_SECOND } from './lib/describe.mjs';
 import { ROLE_NAMES } from '../tool/skillvalue.js';
 import { analyzeCatalog, overlayFields } from '../tool/analyze.js';
+import { snapshot, reconcile, validOverrides } from './lib/registry.mjs';
 import { buildStrategy } from './lib/strategy.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -14,6 +15,7 @@ export const PATHS = {
   changelog: join(ROOT, 'data/changelog.json'),
   db: join(ROOT, 'src/data/db.json'),
   overlay: join(ROOT, 'public/overlay.json'),
+  registry: join(ROOT, 'data/skill-registry.json'),
 };
 
 const ELEMENT_ORDER = ['normal', 'fire', 'water', 'grass', 'lightning', 'psychic', 'fighter'];
@@ -29,7 +31,7 @@ const slugify = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 const round = (n, d = 2) => Math.round(n * 10 ** d) / 10 ** d;
 const shortId = id => id.replace(/^unit_/, '');
 
-export function build({ raw, client, changelog = [] }) {
+export function build({ raw, client, changelog = [], registry = null }) {
   const catalog = raw.catalog;
   const R = createResolver(catalog, client);
   const D = createDescriber(catalog, client.i18n);
@@ -120,7 +122,11 @@ export function build({ raw, client, changelog = [] }) {
 
   for (const a of catalog.abilities) for (const e of a.effects ?? []) if (e.kind === 'summon' && e.species_id) tag(e.species_id, 'summon');
 
-  const analysis = analyzeCatalog(catalog);
+  const snap = snapshot(catalog, pets);
+  const overridesBySlug = validOverrides(registry, snap);
+  const overrides = Object.fromEntries(Object.entries(overridesBySlug).map(([slug, role]) => [snap.lines[slug].root, role]));
+  const pending = registry ? reconcile(registry, snap).report : null;
+  const analysis = analyzeCatalog(catalog, { overrides });
   const abilities = {};
   const units = {};
   for (const s of catalog.species) {
@@ -274,6 +280,10 @@ export function build({ raw, client, changelog = [] }) {
     },
     elements, labels, pets, units, abilities, trade, pools, waveSets, roster, research, game, damage,
     roleNames: ROLE_NAMES, strategy: buildStrategy({ units, pets, waveSets, damage }),
+    registry: {
+      overrides: overridesBySlug, overrideRoots: overrides,
+      pending: pending ? { newAbilities: pending.newAbilities.length, changedAbilities: pending.changedAbilities.length, changedLines: pending.changedLines.length } : null,
+    },
     changelog: changelog.slice(0, 60),
   };
 }
@@ -298,7 +308,7 @@ export function buildOverlay(db) {
   return {
     v: db.meta.catalogHash.slice(0, 12), sell: db.game.rules.sellGold,
     el: Object.fromEntries(Object.entries(db.elements).map(([k, e]) => [k, { n: e.name, c: e.mid }])),
-    lb: db.labels, u, dmg: db.damage.table, rn: ROLE_NAMES,
+    lb: db.labels, u, dmg: db.damage.table, rn: ROLE_NAMES, ov: db.registry?.overrideRoots ?? {},
   };
 }
 
@@ -310,7 +320,9 @@ async function main() {
     process.exit(1);
   }
   const t0 = performance.now();
-  const db = build({ raw, client, changelog: readJSON(PATHS.changelog, []) });
+  const db = build({ raw, client, changelog: readJSON(PATHS.changelog, []), registry: readJSON(PATHS.registry, null) });
+  const pend = db.registry.pending;
+  if (pend && pend.newAbilities + pend.changedAbilities + pend.changedLines) console.warn(`⚠ Sổ định danh kỹ năng: ${pend.newAbilities} kỹ năng mới, ${pend.changedAbilities} kỹ năng đổi, ${pend.changedLines} dòng pet đổi → chạy \`npm run roles\` rồi xem lại.`);
   writeJSON(PATHS.db, db);
   writeJSON(PATHS.overlay, buildOverlay(db));
   const m = db.meta.counts;

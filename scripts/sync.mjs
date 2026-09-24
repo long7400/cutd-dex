@@ -153,7 +153,7 @@ if (catalogChanged && oldRaw) {
     log(`   ${it.kind === 'unit+' ? '+' : '−'} ${it.name}`);
   }
 }
-const db = build({ raw, client, changelog });
+const db = build({ raw, client, changelog, registry: readJSON(PATHS.registry, null) });
 const overlay = buildOverlay(db);
 if (catalogChanged || FORCE || !existsSync(PATHS.catalog)) writeJSON(PATHS.catalog, raw, { pretty: true });
 if (clientChanged || FORCE || !existsSync(PATHS.client)) writeJSON(PATHS.client, client, { pretty: true });

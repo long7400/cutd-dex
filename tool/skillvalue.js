@@ -16,7 +16,9 @@ export function skillValue(species, { abilityById, modifierById }) {
   const base = species.attack_damage ?? 0;
   const roles = new Set();
   const uncertain = [];
-  let mult = 0, flat = 0, pct = 0, speed = 0, selfDmg = 0, selfHeal = 0, selfSlow = 0, evade = 0, armorPlus = 0, dtm = 1, debuff = 0;
+  let ccv = 0, mult = 0, flat = 0, pct = 0, speed = 0, selfDmg = 0, selfHeal = 0, selfSlow = 0, evade = 0, armorPlus = 0, dtm = 1, debuff = 0, dot = 0, aoeDot = 0, teamBuff = 0;
+  const regen = (species.health_regen_per_tick ?? 0) * TICKS_PER_SECOND;
+  const dotOf = mod => (mod?.tick_effects ?? []).filter(t => t.kind === 'damage').reduce((v, t) => v + (t.magnitude?.base ?? 0), 0) * TICKS_PER_SECOND / Math.max(1, mod?.tick_interval_ticks ?? 1);
 
   for (const id of species.abilities ?? []) {
     const a = abilityById.get(id);
@@ -60,6 +62,16 @@ export function skillValue(species, { abilityById, modifierById }) {
           || (mod.damage_taken_multiplier ?? 1) < 1 || (mod.flat_damage_reduction ?? 0) > 0;
         const harm = msm < 1 || asm < 1 || (mod.miss_chance ?? 0) > 0 || (mod.armor_delta ?? 0) < 0 || (mod.damage_taken_multiplier ?? 1) > 1;
         const secs = (mod.duration_ticks ?? 0) / TICKS_PER_SECOND;
+        const tick = dotOf(mod);
+        const every = (a.trigger?.interval_ticks ?? 0) / TICKS_PER_SECOND;
+        const up = trig === 'aura' ? 1 : trig === 'periodic' ? (every > 0 ? Math.min(1, secs / every) : 1) : Math.min(1, (perSec || chance * 0.5) * secs);
+        if (tick > 0 && toSelf) selfDmg += tick * up;
+        else if (tick > 0 && toEnemy && !cond) {
+          dot += tick * up;
+          debuff += (tick * up) / 1000;
+          if (aim?.kind === 'circle' || aim?.kind === 'all_in_base') { aoeDot += tick * up; roles.add('aoe'); }
+          roles.add('dot');
+        }
         if (buff && cond) { uncertain.push(a.id); continue; }
         if (trig === 'aura' && aim?.kind === 'all_in_base') continue;
         if (toSelf && harm) {
@@ -73,12 +85,14 @@ export function skillValue(species, { abilityById, modifierById }) {
         }
         if ((mod.evade_chance ?? 0) > 0) roles.add('evade');
         if ((mod.armor_delta ?? 0) > 0 || (mod.damage_taken_multiplier ?? 1) < 1 || (mod.flat_damage_reduction ?? 0) > 0) roles.add('tank');
-        if (buff && asm > 1 && hitting) {
-          const up = Math.min(1, chance * aps * secs);
-          speed = Math.max(speed, (asm - 1) * up);
+        if (buff && hitting && !onSelf && e.target !== 'attacker' && aim?.filter === 'ally') {
+          teamBuff += (Math.min(1, chance * aps * secs) / 8) * (Math.max(0, asm - 1) + Math.max(0, (mod.attack_damage_multiplier ?? 1) - 1));
+          roles.add('aura');
+        } else if (buff && asm > 1 && hitting) {
+          speed = Math.max(speed, (asm - 1) * Math.min(1, chance * aps * secs));
         }
         if (harm && toEnemy && !cond) {
-          const up = trig === 'aura' || trig === 'periodic' ? 1 : Math.min(1, (perSec || chance * 0.5) * secs);
+          ccv += up * ((1 - Math.min(1, asm)) + 0.5 * (1 - Math.min(1, msm)) + 0.06 * Math.max(0, -(mod.armor_delta ?? 0)) + (mod.miss_chance ?? 0) + Math.max(0, (mod.damage_taken_multiplier ?? 1) - 1));
           debuff += up * ((1 - Math.min(1, asm)) + 0.5 * (1 - Math.min(1, msm)) + 0.06 * Math.max(0, -(mod.armor_delta ?? 0)) + (mod.miss_chance ?? 0) + Math.max(0, (mod.damage_taken_multiplier ?? 1) - 1));
           roles.add((mod.armor_delta ?? 0) < 0 ? 'shred' : 'cc');
         }
@@ -86,12 +100,45 @@ export function skillValue(species, { abilityById, modifierById }) {
     }
   }
   const dps = base * aps;
-  const eff = (dps * (1 + mult) * (1 + speed) + flat * aps * (1 + speed)) * (1 - Math.min(0.9, selfSlow));
-  const selfDps = Math.max(0, selfDmg - selfHeal);
+  const eff = (dps * (1 + mult) * (1 + speed) + flat * aps * (1 + speed)) * (1 - Math.min(0.9, selfSlow)) + dot;
+  const selfDps = Math.max(0, selfDmg - selfHeal - regen);
   if (selfDps > hp * 0.002 || selfSlow >= 0.02) roles.add('selfharm');
   const r1 = v => Math.round(v * 10) / 10;
   return {
     eff: r1(eff), pct: Math.round(pct * 1e5) / 1e5, roles: [...roles].sort(), uncertain,
     selfDps: r1(selfDps), selfSlow: Math.round(selfSlow * 1000) / 1000, evade, armorPlus, dtm, debuff: Math.round(debuff * 1000) / 1000,
+    selfHeal: r1(selfHeal + regen), aoeDot: r1(aoeDot), teamBuff: Math.round(teamBuff * 1000) / 1000, ccv: Math.round(ccv * 1000) / 1000,
   };
+}
+
+export function interpretAbility(a, modifierById) {
+  if (!a) return ['missing'];
+  if (a.status !== 'executable') return ['inert'];
+  const trig = a.trigger?.kind;
+  const hitting = trig === 'on_hit' || trig === 'on_attack';
+  const tags = new Set();
+  for (const e of a.effects ?? []) {
+    const aim = e.targeting ?? a.targeting;
+    const toSelf = (!e.target && aim?.kind === 'self') || (e.target === 'attacker' && hitting) || (e.target === 'killing_unit');
+    const toEnemy = !toSelf && ((e.target === 'trigger_unit' && hitting) || (e.target === 'attacker' && (trig === 'on_attacked' || trig === 'on_damaged'))
+      || (!e.target && aim?.filter === 'enemy_creep') || (e.target === 'enum_unit' && aim?.filter === 'enemy_creep'));
+    const who = toSelf ? 'self' : toEnemy ? 'enemy' : aim?.kind === 'all_in_base' ? 'team' : 'ally';
+    const mod = e.kind === 'apply_modifier' ? modifierById.get(e.modifier_id) : null;
+    if (e.kind === 'damage' || e.kind === 'health_loss' || e.kind === 'set_health') tags.add(`${who}_damage`);
+    else if (e.kind === 'heal') tags.add(`${who}_heal`);
+    else if (e.kind === 'force_attack_target') tags.add('taunt');
+    else if (e.kind === 'summon') tags.add('summon');
+    else if (e.kind === 'destroy') tags.add('execute');
+    else if (mod) {
+      const asm = mod.attack_speed_multiplier ?? 1, msm = mod.move_speed_multiplier ?? 1, adm = mod.attack_damage_multiplier ?? 1;
+      const up = asm > 1 || adm > 1 || (mod.evade_chance ?? 0) > 0 || (mod.armor_delta ?? 0) > 0 || (mod.damage_taken_multiplier ?? 1) < 1 || (mod.flat_damage_reduction ?? 0) > 0;
+      const down = asm < 1 || msm < 1 || (mod.miss_chance ?? 0) > 0 || (mod.armor_delta ?? 0) < 0 || (mod.damage_taken_multiplier ?? 1) > 1;
+      if ((mod.tick_effects ?? []).some(t => t.kind === 'damage')) tags.add(`${who}_dot`);
+      if (up) tags.add(`${who}_buff`);
+      if (down) tags.add(`${who}_debuff`);
+      if (!up && !down && !(mod.tick_effects ?? []).length) tags.add('inert_modifier');
+    }
+  }
+  if ((a.conditions ?? []).some(c => CONDITIONAL.has(c.kind))) tags.add('conditional');
+  return [...tags].sort();
 }

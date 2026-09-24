@@ -104,6 +104,9 @@ export default {
           </div>` : '';
         })}
       </section>` : html`<div class="empty">Chưa có dòng pet bắt được nào có ${tab.name} thật trong dữ liệu game hiện tại.</div>`}
+      ${lines.some(l => l.also?.some(([r]) => r === tab.key)) ? html`<h3 class="trade-only">Cũng đảm nhận được ${tab.name} <small class="dim">(vai trò chính khác, xếp theo ${tab.unit})</small></h3>
+        <div class="mchips">${lines.flatMap(l => (l.also ?? []).filter(([r]) => r === tab.key).map(([, score, tier, v]) => ({ l, score, tier, v }))).sort((a, b) => b.score - a.score)
+          .map(({ l, tier, v }) => html`<a class="mchip" href="#/pet/${l.slug}">${img(unit(l.id).model, l.name, '', 40)}<span>${l.name} ${tierChip(tier, `Hạng ${tab.name} (vai trò phụ)`, 'sm')}</span><small>${ROLE_TABS[l.role].name} chính · ${tab.fmt(v)}</small></a>`)}</div>` : ''}
       ${S.tradeOnly?.some(x => x.role === tab.key) ? html`<h3 class="trade-only">Chỉ có qua trade</h3>
         <div class="mchips">${S.tradeOnly.filter(x => x.role === tab.key).map(x => html`<a class="mchip" href="#/unit/${x.id.replace(/^unit_/, '')}">${img(unit(x.id)?.model, '', '', 40)}<span>${stageName(x.id)}</span><small>${tab.fmt(x.rv)} · hạng ${x.tier ?? '—'}</small></a>`)}</div>` : ''}
 

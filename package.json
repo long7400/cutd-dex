@@ -11,7 +11,8 @@
     "build": "npm run data && vite build",
     "preview": "vite preview",
     "test": "node --test --test-force-exit --test-timeout=120000 \"scripts/test/*.test.mjs\"",
-    "art": "node scripts/art.mjs"
+    "art": "node scripts/art.mjs",
+    "roles": "node scripts/roles.mjs"
   },
   "devDependencies": {
     "@fontsource/barlow": "^5.3.0",
