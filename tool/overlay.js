@@ -150,7 +150,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .kit .k-atk{background:#3d2226;color:#ff9c9c}.kit .k-tank{background:#1b2d4a;color:#9fe3ff}.kit .k-buff{background:#3a2f10;color:#ffde8f}
 .kit .k-cc{background:#16324a;color:#9fe3ff}.kit .k-heal{background:#1d3a2a;color:#9fd6a8}.kit .k-evade{background:#2a2148;color:#cbb3ff}
 .kit .k-taunt,.kit .k-boss{background:#3d2226;color:#ffb4aa}.kit .k-aoe{background:#3a3016;color:#f0a35e}
-.toast{margin:6px 10px;padding:6px 10px;border-radius:8px;background:#3d2226;color:#ff9c9c;font-size:12px}
+.toast{margin:6px 10px;padding:6px 10px;border-radius:8px;background:#3d2226;color:#ff9c9c;font-size:12px}.toast.info{background:#15243b;color:#aec4d3;font-size:11.5px}
 [hidden]{display:none!important}
 `;
 
@@ -263,7 +263,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     slowed = true;
     window.requestAnimationFrame = fn => setTimeout(() => fn(performance.now()), 1000);
     window.cancelAnimationFrame = id => clearTimeout(id);
-    toast = 'Đang chạy trận trong khung (bản game cũ phía sau đã giảm còn 1 khung/giây). Lần sau bấm bookmark ở sảnh trước khi vào trận để nhẹ máy hơn.';
+    notice('Tool đã mở lại trận trong khung để móc hàm game (bấm bookmark khi đang trong trận). Bản game cũ phía sau được giảm còn 1 khung/giây cho đỡ nặng máy. Lần sau bấm bookmark ở sảnh trước khi vào trận thì không cần khung.');
   }
   function attach(ws) {
     if (socket || dead) return;
@@ -370,7 +370,13 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   };
   const empty = t => h('p', { class: 'empty', text: t });
 
-  let toast = '';
+  let toast = '', note = '', noteTimer = 0;
+  function notice(text) {
+    note = text;
+    clearTimeout(noteTimer);
+    noteTimer = setTimeout(() => { note = ''; dirty = true; render(true); }, 15000);
+    dirty = true; render(true);
+  }
   const cycles = new Map();
   const picks = [];
   const cycle = (group, keys) => {
@@ -911,10 +917,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   }
   function liteClick(e, on) {
     if (!realClick(e)) return;
-    toast = !writeLite(realm.win, on) ? 'Trình duyệt chặn ghi cài đặt của game.'
-      : on ? 'Đã lưu đồ hoạ nhẹ vào cài đặt của game — nhấn F5 để áp dụng (trận tự vào lại), rồi bấm lại bookmark.'
-      : 'Đã trả đồ hoạ về mặc định — nhấn F5 để áp dụng.';
-    dirty = true; render(true);
+    if (!writeLite(realm.win, on)) { toast = 'Trình duyệt chặn ghi cài đặt của game.'; dirty = true; render(true); return; }
+    notice(on ? 'Đã lưu đồ hoạ nhẹ vào cài đặt của game — nhấn F5 để áp dụng (trận tự vào lại), rồi bấm lại bookmark.' : 'Đã trả đồ hoạ về mặc định — nhấn F5 để áp dụng.');
   }
   const QUALITY = { auto: 'Tự động', low: 'Thấp', medium: 'Vừa', high: 'Cao' };
   function viewLite() {
@@ -1036,8 +1040,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     } catch (err) {
       content = h('p', { class: 'empty bad', text: `Lỗi hiển thị: ${err?.message ?? err}` });
     }
-    const body = h('div', { class: 'body' }, toast ? h('p', { class: 'toast', text: toast }) : null, content);
-    const shape = `${tab}|${wildSort}|${wildRole}|${teamFilter}|${toast ? 1 : 0}|${status ?? ''}|${sig.join(',')}`;
+    const body = h('div', { class: 'body' }, toast ? h('p', { class: 'toast', text: toast }) : null, note ? h('p', { class: 'toast info', text: note }) : null, content);
+    const shape = `${tab}|${wildSort}|${wildRole}|${teamFilter}|${toast ? 1 : 0}${note ? 1 : 0}|${status ?? ''}|${sig.join(',')}`;
     if (shape !== lastLayout) { lastLayout = shape; layoutAt = performance.now(); }
     const bind = `${shape}|${picks.join(';')}`;
     panel.className = `panel ${layout}`;
@@ -1128,6 +1132,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     socket?.removeEventListener('close', onClose);
     clearTimeout(pending);
     clearTimeout(autoTimer);
+    clearTimeout(noteTimer);
     window.removeEventListener('pointermove', onMove);
     window.removeEventListener('pointerup', onUp);
     window.removeEventListener('pointerdown', outsideClose, true);
