@@ -133,7 +133,9 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .dnm{display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden}.dnm b{font-size:11.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis}.dnm small{font-size:10.5px;color:#6f8fb8}
 .dnm .role{font-size:9px;padding:0 4px;line-height:13px}.dnm .tier{margin:0;min-width:0;font-size:9.5px;line-height:13px;padding:0 4px}
 .dbar{position:relative;height:6px;margin-top:3px;border-radius:3px;background:#0b1526;overflow:hidden}
-.dbar i{position:absolute;left:0;top:0;bottom:0;border-radius:3px}.dbar .calc{background:#2b4a6e}.dbar .real{background:#ffde8f;top:1px;bottom:1px}
+.dbar i{position:absolute;left:0;top:0;bottom:0;border-radius:3px}.dbar .real{background:#c98a8a}.dbar .real.tank{background:#6fb3d6}.dbar .real.heal{background:#7fbf8b}
+.dst{display:flex;gap:9px;margin-top:2px;white-space:nowrap;overflow:hidden}.st{font-size:10.5px;color:#aec4d3}.st .g{font-size:10.5px;font-weight:800;margin-right:2px}
+.g-dps{color:#ff9c9c}.g-tank{color:#9fe3ff}.g-ally{color:#9fd6a8}.g-self{color:#e8b4b8}.dsum .st{font-size:11px;font-weight:700}
 .dval{text-align:right;line-height:1.15;min-width:54px}.dval b{display:block;font-size:12px;font-weight:800;color:#ffde8f}.dval small{font-size:10px;color:#6f8fb8;white-space:nowrap}
 .hint{padding:2px 10px 6px;color:#6f8fb8;font-size:11px;line-height:1.45}.hint.now{color:#dbe8f7;font-size:11.5px}.hint b{font-size:11.5px;font-weight:800;color:#ffde8f}
 .tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;padding:6px 10px}
@@ -213,7 +215,9 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   }
   let tps = TICKS_PER_SECOND;
   const SHOTS = 1024;
-  const meter = { wave: null, start: 0, last: 0, done: true, total: 0, dmg: new Map(), skill: new Map(), shots: new Map() };
+  const meter = { wave: null, start: 0, last: 0, done: true, total: 0, dmg: new Map(), skill: new Map(), taken: new Map(), healSelf: new Map(), healAlly: new Map(), shots: new Map() };
+  let heals = new Map();
+  const bump = (map, id, v) => map.set(id, (map.get(id) ?? 0) + v);
   const meterSecs = () => (meter.start && meter.last > meter.start ? (meter.last - meter.start) / tps : 0);
   function meterPhase(was) {
     const now = state.summary?.phase;
@@ -222,7 +226,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       meter.start = meter.last = state.summary.tick;
       meter.done = false;
       meter.total = 0;
-      meter.dmg.clear(); meter.skill.clear(); meter.shots.clear();
+      meter.dmg.clear(); meter.skill.clear(); meter.taken.clear(); meter.healSelf.clear(); meter.healAlly.clear(); meter.shots.clear();
     } else if (now !== 'wave' && was === 'wave' && !meter.done) {
       meter.done = true;
       meter.shots.clear();
@@ -230,7 +234,14 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   }
   function meterHits(msg) {
     if (meter.done) return;
+    const hitAt = new Map();
     for (const e of msg.effects) {
+      if (e?.kind === 'unit_damaged' && Number.isFinite(e.amount) && e.amount > 0) {
+        const who = Number.isInteger(e.entity_id) ? e.entity_id : e.target_id;
+        const ownHit = (e.source_collection === 'unit' || e.source_collection == null) && e.source_id === who;
+        if (Number.isInteger(who) && state.units.has(who) && !ownHit) bump(meter.taken, who, e.amount);
+        continue;
+      }
       if (e?.kind === 'projectile_fired' && e.source_collection === 'unit' && Number.isInteger(e.entity_id) && Number.isInteger(e.source_id)) {
         meter.shots.set(e.entity_id, e.source_id);
         if (meter.shots.size > SHOTS) meter.shots.delete(meter.shots.keys().next().value);
@@ -240,9 +251,21 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       if ((e.target_collection ?? e.entity_collection ?? 'creep') !== 'creep') continue;
       const from = e.source_collection === 'projectile' ? meter.shots.get(e.source_id) : e.source_collection === 'unit' || e.source_collection == null ? e.source_id : null;
       if (!Number.isInteger(from) || !state.units.has(from)) continue;
-      meter.dmg.set(from, (meter.dmg.get(from) ?? 0) + e.amount);
-      if (e.content_id) meter.skill.set(from, (meter.skill.get(from) ?? 0) + e.amount);
+      bump(meter.dmg, from, e.amount);
+      bump(hitAt, from, e.amount);
+      if (e.content_id) bump(meter.skill, from, e.amount);
       meter.total += e.amount;
+    }
+    for (const e of msg.effects) {
+      if (e?.kind !== 'ability_triggered' || typeof e.content_id !== 'string') continue;
+      const parts = heals.get(e.content_id);
+      const by = Number.isInteger(e.source_id) ? e.source_id : e.entity_id;
+      const u = parts && state.units.get(by);
+      if (!u) continue;
+      for (const p of parts) {
+        const amount = p.base + p.perWave * (meter.wave ?? 0) + p.mult * (hitAt.get(by) ?? 0) + p.pct * (u.maxHp ?? 0);
+        if (amount > 0) bump(p.own ? meter.healSelf : meter.healAlly, by, amount);
+      }
     }
     if (Number.isFinite(msg.tick) && msg.tick > meter.last) meter.last = msg.tick;
   }
@@ -877,30 +900,48 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     ].filter(Boolean);
   }
 
-  function viewDps() {
+  let combatSort = 'dps';
+  const G = { dps: '⚔︎', tank: '⛨', ally: '✚', self: '♥︎' };
+  const SORTS = [['dps', `${G.dps} DPS`], ['tank', `${G.tank} Gánh`], ['heal', `${G.ally} Hồi`]];
+  function viewCombat() {
     const mine = myUnits(state);
     if (!mine.length) return empty('Chưa có lính (hoặc đang chờ dữ liệu).');
     const secs = meterSecs();
     const scale = tps / TICKS_PER_SECOND;
-    const real = r => (secs ? r.dmg / secs : null);
-    const rows = mine.map(u => ({ u, calc: (U(u.stage)?.ed ?? U(u.stage)?.dps ?? 0) * scale, dmg: meter.dmg.get(u.id) ?? 0, skill: meter.skill.get(u.id) ?? 0 }))
-      .sort((a, b) => (real(b) ?? b.calc) - (real(a) ?? a.calc) || b.calc - a.calc || a.u.id - b.u.id);
-    const most = Math.max(1, ...rows.map(r => Math.max(r.calc, real(r) ?? 0)));
-    const pct = v => `width:${Math.max(0, Math.min(100, Math.round((v / most) * 100)))}%`;
-    const calcSum = rows.reduce((n, r) => n + r.calc, 0);
+    const rows = mine.map(u => {
+      const dmg = meter.dmg.get(u.id) ?? 0;
+      return { u, dmg, calc: (U(u.stage)?.ed ?? U(u.stage)?.dps ?? 0) * scale, real: secs ? dmg / secs : null, skill: meter.skill.get(u.id) ?? 0,
+        taken: meter.taken.get(u.id) ?? 0, hs: meter.healSelf.get(u.id) ?? 0, ha: meter.healAlly.get(u.id) ?? 0 };
+    });
+    const metric = { dps: r => r.real ?? r.calc, tank: r => r.taken, heal: r => r.ha + r.hs }[combatSort];
+    rows.sort((a, b) => metric(b) - metric(a) || b.calc - a.calc || a.u.id - b.u.id);
+    const most = Math.max(1, ...rows.map(metric));
+    const sum = key => rows.reduce((n, r) => n + (r[key] ?? 0), 0);
     const head = meter.wave == null ? 'Chưa đo — đợt tới bắt đầu đo' : `Đợt ${meter.wave} · ${Math.round(secs)}s${meter.done ? '' : ' · đang đo'}`;
+    const stat = (g, cls, text) => h('span', { class: 'st' }, h('b', { class: `g ${cls}`, text: g }), text);
+    const line = r => h('div', { class: 'dst' },
+      stat(G.dps, 'g-dps', r.real != null ? `${short(r.real)}/s` : '—'),
+      r.taken ? stat(G.tank, 'g-tank', short(r.taken)) : null,
+      r.ha ? stat(G.ally, 'g-ally', short(r.ha)) : null,
+      r.hs ? stat(G.self, 'g-self', short(r.hs)) : null);
+    const big = r => (combatSort === 'dps' ? [r.real != null ? short(r.real) : '—', `≈${short(r.calc)}/s`]
+      : combatSort === 'tank' ? [short(r.taken), secs ? `${short(r.taken / secs)}/s` : '']
+      : [short(r.ha + r.hs), secs ? `${short((r.ha + r.hs) / secs)}/s` : '']);
     return [
-      h('div', { class: 'bar-row dsum', title: `Đo = sát thương thật lên quái trong đợt (không tính đòn dội vào chính pet). Tính = công thức: đòn thường × tốc đánh + chí mạng / proc + kỹ năng + độc + lan (giả định ${AOE_TARGETS} quái đứng gần), chưa tính buff đồng đội.` },
+      h('div', { class: 'bar-row dsum', title: `Đo từ sự kiện trận của server trong đợt này:\n${G.dps} DPS = sát thương lên quái / giây (không tính đòn dội vào chính pet)\n${G.tank} Gánh = sát thương nhận vào từ quái\n${G.ally} Hồi đồng đội · ${G.self} Tự hồi = theo kỹ năng hồi máu mỗi lần kích hoạt (ước tính, hồi vùng tính 1 lần)` },
         h('b', { text: head }), h('span', { class: 'grow' }),
-        h('span', { class: 'dv real', text: secs ? `${short(meter.total)} · ${short(meter.total / secs)}/s` : '—' }), h('span', { class: 'dv', text: `≈${short(calcSum)}/s` })),
+        stat(G.dps, 'g-dps', secs ? `${short(meter.total / secs)}/s` : '—'), stat(G.tank, 'g-tank', short(sum('taken'))), stat(G.ally, 'g-ally', short(sum('ha'))), stat(G.self, 'g-self', short(sum('hs')))),
+      h('div', { class: 'bar-row' }, SORTS.map(([key, text]) => h('button', { class: `chip sm ${combatSort === key ? 'on' : ''}`, tabindex: '-1', text,
+        onClick: () => { combatSort = key; dirty = true; render(true); } }))),
       rows.map(r => {
-        const d = U(r.u.stage) ?? {}, v = real(r);
-        return h('div', { class: `drow${r.u.active ? '' : ' down'}`, title: `${nameOf(r.u.stage)}\nSát thương đợt này: ${fmt(Math.round(r.dmg))}${r.dmg ? ` (đòn thường ${fmt(Math.round(r.dmg - r.skill))} · kỹ năng ${fmt(Math.round(r.skill))})` : ''}\nTính theo công thức: ${fmt(Math.round(r.calc))}/s` },
+        const d = U(r.u.stage) ?? {}, [v, sub] = big(r);
+        return h('div', { class: `drow${r.u.active ? '' : ' down'}`, title: `${nameOf(r.u.stage)}\nSát thương đợt này: ${fmt(Math.round(r.dmg))}${r.dmg ? ` (đòn thường ${fmt(Math.round(r.dmg - r.skill))} · kỹ năng ${fmt(Math.round(r.skill))})` : ''}\nGánh: ${fmt(Math.round(r.taken))} · hồi đồng đội ${fmt(Math.round(r.ha))} · tự hồi ${fmt(Math.round(r.hs))}\nDPS theo công thức: ${fmt(Math.round(r.calc))}/s` },
           img(r.u.stage, 28),
           h('div', { class: 'dmid' },
             h('div', { class: 'dnm' }, h('b', { text: d.n ?? r.u.stage }), d.l ? h('small', { text: ` Lv${d.l}` }) : null, tierPill(r.u.stage, true), d.ro ? h('span', { class: `k-${d.ro} role`, text: ROLE_NAME[d.ro] }) : null),
-            h('div', { class: 'dbar' }, h('i', { class: 'calc', style: pct(r.calc) }), v != null ? h('i', { class: 'real', style: pct(v) }) : null)),
-          h('div', { class: 'dval' }, h('b', { text: v != null ? short(v) : '—' }), h('small', { text: `${r.dmg ? `${short(r.dmg)} · ` : ''}≈${short(r.calc)}` })));
+            line(r),
+            h('div', { class: 'dbar' }, h('i', { class: `real ${combatSort}`, style: `width:${Math.max(0, Math.min(100, Math.round((metric(r) / most) * 100)))}%` }))),
+          h('div', { class: 'dval' }, h('b', { text: v }), sub ? h('small', { text: sub }) : null));
       }),
     ];
   }
@@ -981,7 +1022,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   document.documentElement.append(host);
 
   let drag = null;
-  const TABS = [['trade', 'Trade'], ['wild', 'Wild'], ['team', 'Đội'], ['dps', 'DPS'], ['wave', 'Đợt'], ['players', 'Phòng'], ['lite', '⚡']];
+  const TABS = [['trade', 'Trade'], ['wild', 'Wild'], ['team', 'Đội'], ['combat', 'Chiến'], ['wave', 'Đợt'], ['players', 'Phòng'], ['lite', '⚙︎']];
   let layout = 'v';
   function setLayout(next) {
     layout = next;
@@ -1031,7 +1072,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     let content;
     try {
       content = status && tab !== 'lite' ? empty(status) : ({
-        trade: viewTrade, wild: viewWild, team: viewTeam, dps: viewDps, wave: viewWave, players: viewPlayers, lite: viewLite,
+        trade: viewTrade, wild: viewWild, team: viewTeam, combat: viewCombat, wave: viewWave, players: viewPlayers, lite: viewLite,
       })[tab]();
     } catch (err) {
       content = h('p', { class: 'empty bad', text: `Lỗi hiển thị: ${err?.message ?? err}` });
@@ -1207,6 +1248,25 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     return o;
   };
   const byte = v => (N(v) === undefined ? undefined : Math.max(0, Math.min(255, Math.round(v))));
+  function healTable(abilities) {
+    const out = new Map();
+    for (const a of Array.isArray(abilities) ? abilities.slice(0, 5000) : []) {
+      if (a?.status !== 'executable' || !ID(a.id)) continue;
+      const hitting = a.trigger?.kind === 'on_hit' || a.trigger?.kind === 'on_attack';
+      const parts = [];
+      for (const e of Array.isArray(a.effects) ? a.effects.slice(0, 16) : []) {
+        if (e?.kind !== 'heal') continue;
+        const aim = e.targeting ?? a.targeting, m = e.magnitude ?? {};
+        const own = (hitting && e.target === 'attacker') || e.target === 'killing_unit' || (!e.target && aim?.kind === 'self');
+        const ally = !own && aim?.filter === 'ally' && aim?.kind !== 'self';
+        if (!own && !ally) continue;
+        parts.push({ own, base: N(m.base) ?? 0, perWave: N(m.per_wave) ?? 0, mult: m.basis === 'attack_damage' ? N(m.multiplier) ?? 0 : 0,
+          pct: m.basis === 'max_health' && ['attacker', 'enum_unit', undefined].includes(m.of) ? (N(m.percent) ?? 0) / 100 : 0 });
+      }
+      if (parts.length) out.set(a.id, parts);
+    }
+    return out;
+  }
   const cleanUnit = x => ({
     n: S(x.n), m: ID(x.m), hp: N(x.hp), dps: N(x.dps), a: ID(x.a), at: ID(x.at), ar: N(x.ar), rg: N(x.rg), b: N(x.b), lk: N(x.lk),
     f: ID(x.f), ed: N(x.ed), l: N(x.l), el: ID(x.el), c: N(x.c), k: N(x.k), p: ID(x.p), pw: N(x.pw), st: TIER(x.st), L: N(x.L),
@@ -1240,6 +1300,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     .then(raw => {
       gameCat = buildGameCatalog(raw);
       rawCat = raw.catalog;
+      heals = healTable(raw.catalog?.abilities);
       gameCatReady = true; mergeGameCatalog();
     })
     .catch(() => { if (dead) return; toast = 'Không tải được catalog của game — nút Bắt/Tiến hóa/Trade tạm khoá.'; dirty = true; try { render(true); } catch { } });

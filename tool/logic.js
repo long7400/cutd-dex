@@ -155,6 +155,8 @@ export const ROW_AT = [-240, -120, 0, 140];
 export const BANDS = [[-400, -180], [-180, -60], [-60, 70], [70, 300]];
 const LINE_OFF = [[0, -60, -120], [0, -35, 35], [0, -35, 35], [0, 60, 120]];
 const HYST = 15, SAME_POS = 24, SETTLE_MS = 1000, GAP = 80, MARGIN = 48;
+export const LAT_MAX = [220, 220, 380, 380];
+const LAT_HYST = 20, DEPTH_W = 0.5, Q_W = 3;
 export const POS_ROW = [0, 0, 1, 1, 1, 1, 2, 3];
 export const POS_ACCEPT = [[0], [0], [1], [1], [1], [1, 0], [2, 3], [3, 2]];
 
@@ -207,7 +209,7 @@ export function makeFrame(ground) {
     return { x: g.A.x + g.dx * t + g.nx * lat, y: g.A.y + g.dy * t + g.ny * lat };
   };
   const inside = (q, m = MARGIN / 2) => q.x >= a.originX + m && q.x <= a.originX + a.width - m && q.y >= a.originY + m && q.y <= a.originY + a.height - m;
-  return { a, cx, cy, pointAt, inside, along: q => project(q).s - sRef };
+  return { a, cx, cy, pointAt, inside, along: q => project(q).s - sRef, lat: q => project(q).d };
 }
 
 export function inBand(f, row, pos, confirmed) {
@@ -215,7 +217,7 @@ export function inBand(f, row, pos, confirmed) {
   const [lo, hi] = BANDS[row];
   const h = confirmed ? -HYST : HYST;
   const at = f.along(pos);
-  return at >= lo + h && at <= hi - h;
+  return at >= lo + h && at <= hi - h && f.lat(pos) <= LAT_MAX[row] + (confirmed ? LAT_HYST : -LAT_HYST);
 }
 
 export function rowSlots(f, row) {
@@ -228,7 +230,7 @@ export function rowSlots(f, row) {
     for (let step = base ? 0 : 1; step <= K; step++) lats.push(base + step * GAP, -(base + step * GAP));
     for (const lat of lats) {
       const q = f.pointAt(along, lat);
-      const slot = { id: `${row}:${line}:${Math.round(lat / (GAP / 2))}`, row, line, q: line * 100 + Math.round((2 * Math.abs(lat)) / GAP), x: Math.round(q.x), y: Math.round(q.y) };
+      const slot = { id: `${row}:${line}:${Math.round(lat / (GAP / 2))}`, row, line, q: Math.round(Math.abs(lat) + DEPTH_W * Math.abs(off)), x: Math.round(q.x), y: Math.round(q.y) };
       if (f.inside(slot, MARGIN) && inBand(f, row, slot, false)) out.push(slot);
     }
   });
@@ -346,7 +348,7 @@ export function planMoves(mem, members, ground) {
     if (!n) continue;
     const levels = [...new Set(take.map(m => m.score))].sort((a, b) => a - b);
     const weight = m => levels.indexOf(m.score) + 1;
-    const match = minCostAssign(take.map(m => slots.map(sl => 1e5 * weight(m) * sl.q + hyp(m.pos.x, m.pos.y, sl.x, sl.y))));
+    const match = minCostAssign(take.map(m => slots.map(sl => Q_W * weight(m) * sl.q + hyp(m.pos.x, m.pos.y, sl.x, sl.y))));
     take.forEach((m, i) => { const sl = slots[match[i]]; if (!sl) return; status.set(m.key, 'move'); moves.push({ key: m.key, row, x: sl.x, y: sl.y, slot: sl.id, unit: m }); });
   }
   const hi0 = BANDS[0][1];

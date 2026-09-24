@@ -231,7 +231,7 @@ test('bookmarklet: bấm ở sảnh → bỏ qua socket sảnh, bám đúng sock
   const root = log.roots[0];
   const btn = title => [...root.querySelectorAll('button')].find(b => b.title === title || b.textContent.startsWith(title));
   assert.ok(!btn('Đo tải'), 'bỏ tab Đo tải');
-  assert.deepEqual([...root.querySelectorAll('.tab')].map(b => b.textContent.replace(/\s*\d+$/, '')), ['Trade', 'Wild', 'Đội', 'DPS', 'Đợt', 'Phòng', '⚡']);
+  assert.deepEqual([...root.querySelectorAll('.tab')].map(b => b.textContent.replace(/\s*\d+$/, '')), ['Trade', 'Wild', 'Đội', 'Chiến', 'Đợt', 'Phòng', '⚙︎']);
 
   btn('Chuyển sang ngang').click();
   assert.ok(root.querySelector('.panel').classList.contains('h'));
@@ -707,7 +707,7 @@ test('bookmarklet: bản web chạy trong khung → dừng vòng vẽ của game
   w.__cutdHelper.destroy();
 });
 
-test('bookmarklet: tab DPS — mỗi con 1 dòng, đo sát thương thật trong đợt (đạn tính cho con bắn, không tính đòn dội vào chính nó), DPS tính theo công thức', async t => {
+test('bookmarklet: tab Chiến — mỗi con 1 dòng: DPS đo thật (đạn tính cho con bắn, không tính đòn dội vào chính nó) + DPS công thức, sát thương gánh chịu, hồi đồng đội / tự hồi; xếp theo từng chỉ số', async t => {
   const { w, log, code, FakeWS } = setupDom();
   t.after(() => w.close());
   w.eval(code);
@@ -718,11 +718,14 @@ test('bookmarklet: tab DPS — mỗi con 1 dòng, đo sát thương thật trong
   emit(summary);
   await tick(0);
   const unit = (id, stage) => ({ id, stage_id: stage, owner_id: 11, health: 10, max_health: 10, active: true });
-  emit(keyframe([unit(1, scenario.c), unit(2, scenario.c), unit(3, scenario.a)]));
+  const stageOf = (n, l) => Object.keys(overlay.u).find(id => overlay.u[id].n === n && overlay.u[id].l === l);
+  const chansey = stageOf('Chansey', 20), venusaur = stageOf('Venusaur', 36);
+  const skillOf = (stage, name) => overlay.u[stage].sk.find(id => overlay.ab[id]?.n === name);
+  emit(keyframe([unit(1, scenario.c), unit(2, scenario.c), unit(3, scenario.a), unit(4, chansey), unit(5, venusaur)]));
   await tick(1200);
   const root = log.roots[0];
-  [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith('DPS')).click();
-  assert.equal(root.querySelectorAll('.drow').length, 3, 'mỗi con 1 dòng, 2 con cùng loại vẫn tách 2 dòng');
+  [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith('Chiến')).click();
+  assert.equal(root.querySelectorAll('.drow').length, 5, 'mỗi con 1 dòng, 2 con cùng loại vẫn tách 2 dòng');
   assert.match(root.querySelector('.dsum').textContent, /Chưa đo/);
   emit({ ...summary, phase: 'wave', tick: 1000, wave_index: 4 });
   await tick(50);
@@ -735,19 +738,35 @@ test('bookmarklet: tab DPS — mỗi con 1 dòng, đo sát thương thật trong
     { kind: 'damage', tick: 1090, entity_id: 52, source_collection: 'unit', source_id: 77, amount: 5000 },
   ] });
   emit({ type: 'base_delta', tick: 1100, base, effects: [{ kind: 'damage', tick: 1095, entity_id: 54, source_collection: 'unit', source_id: 3, content_id: 'ability_x', amount: 500 }] });
+  emit({ type: 'base_delta', tick: 1100, base, effects: [
+    { kind: 'unit_damaged', tick: 1096, entity_collection: 'unit', entity_id: 2, source_collection: 'creep', source_id: 50, amount: 700 },
+    { kind: 'unit_damaged', tick: 1096, entity_collection: 'unit', entity_id: 2, source_collection: 'unit', source_id: 2, amount: 999 },
+    { kind: 'ability_triggered', tick: 1097, content_id: skillOf(chansey, 'Heal'), source_collection: 'unit', source_id: 4 },
+    { kind: 'damage', tick: 1098, entity_id: 55, source_collection: 'unit', source_id: 5, amount: 1500 },
+    { kind: 'ability_triggered', tick: 1098, content_id: skillOf(venusaur, 'Drain Attack'), source_collection: 'unit', source_id: 5 },
+  ] });
   await tick(1100);
   const val = () => [...root.querySelectorAll('.drow')].map(r => r.querySelector('.dval b').textContent);
   const vals = val();
-  assert.ok(vals.includes('600') && vals.includes('200') && vals.includes('100'), `5 giây: 3000 → 600/s (đạn của con 1), 1000 → 200/s (con 2), kỹ năng 500 → 100/s (con 3), không cộng 999 tự dội; có: ${vals}`);
+  assert.deepEqual(vals.slice(0, 4), ['600', '300', '200', '100'], `5 giây: đạn con 1 3000 → 600/s, Venusaur 1500 → 300/s, con 2 1000 → 200/s (không cộng 999 tự dội), kỹ năng con 3 500 → 100/s; có: ${vals}`);
   assert.match(root.querySelector('.dsum').textContent, /Đợt 4 · 5s · đang đo/);
-  assert.match(root.querySelector('.dsum').textContent, /4\.5k · 900\/s/, 'tổng sát thương cả đội trong đợt + DPS đội, không tính con không phải của mình');
+  assert.match(root.querySelector('.dsum').textContent, /1\.2k\/s/, 'DPS cả đội, không tính con không phải của mình');
+  const chip = text => [...root.querySelectorAll('.bar-row button')].find(b => b.textContent.endsWith(text));
+  chip('Gánh').click();
+  assert.equal(root.querySelector('.drow .dval b').textContent, '700', 'gánh: 700 từ quái, không cộng 999 tự dội');
+  chip('Hồi').click();
+  assert.equal(root.querySelector('.drow .dval b').textContent, '1.8k', 'hồi: Venusaur hút máu 1,2 × 1500 = 1.800 (tự hồi) đứng đầu');
+  const rowOf = name => [...root.querySelectorAll('.drow')].find(r => r.querySelector('.dnm b').textContent === name);
+  assert.match(rowOf('Chansey').querySelector('.dst').textContent, /✚100/, 'Chansey hồi đồng đội 100 (ký hiệu ✚)');
+  assert.match(rowOf('Venusaur').querySelector('.dst').textContent, /♥︎1\.8k/, 'Venusaur tự hồi (ký hiệu ♥)');
+  chip('DPS').click();
   assert.ok([...root.querySelectorAll('.drow .dval small')].every(x => /≈/.test(x.textContent)), 'kèm DPS tính theo công thức');
   assert.ok([...root.querySelectorAll('.drow')].some(r => /kỹ năng 500/.test(r.title)), 'tách sát thương kỹ năng / đòn thường');
   emit({ ...summary, phase: 'planning', tick: 1200 });
   emit({ type: 'base_delta', tick: 1300, base, effects: [{ kind: 'damage', tick: 1300, entity_id: 53, source_collection: 'unit', source_id: 1, amount: 99999 }] });
   await tick(1100);
   assert.ok(val().includes('600'), 'hết đợt → giữ số đo của đợt vừa rồi, không cộng sát thương ngoài đợt');
-  assert.deepEqual(val().slice(0, 3), ['600', '200', '100'], 'con DPS đo cao nhất lên đầu');
+  assert.deepEqual(val().slice(0, 3), ['600', '300', '200'], 'con DPS đo cao nhất lên đầu');
   assert.doesNotMatch(root.querySelector('.panel').textContent, /CÁC ĐỢT GẦN ĐÂY/, 'không có thống kê các đợt trước');
   for (let n = 0; n < 12; n++) {
     emit({ ...summary, phase: 'wave', wave_index: 5 + n, tick: 2000 + n * 100 });
@@ -785,7 +804,7 @@ test('bookmarklet: chạy lâu (hàng trăm đợt) không phình bộ nhớ, kh
   emit(keyframe(units()));
   await tick(1200);
   const root = log.roots[0];
-  const tabs = ['Đội', 'Wild', 'DPS', 'Trade'];
+  const tabs = ['Đội', 'Wild', 'Chiến', 'Trade'];
   const round = async r => {
     emit({ ...summary, phase: 'planning', tick: tickNo += 10, wave_index: r });
     if (r % 5 === 0) { unitId += 3; emit({ ...keyframe(units()), tick: tickNo += 1 }); }
@@ -821,7 +840,7 @@ test('bookmarklet: chạy lâu (hàng trăm đợt) không phình bộ nhớ, kh
   assert.equal(live, 0, 'tắt tool → gỡ hết listener');
 });
 
-test('bookmarklet: tab ⚡ — giới hạn khung hình áp dụng ngay (tắt tool là bỏ), đồ hoạ nhẹ chỉ ghi 5 khoá cài đặt của game, chỉ khi người bấm', async t => {
+test('bookmarklet: tab ⚙ — giới hạn khung hình áp dụng ngay (tắt tool là bỏ), đồ hoạ nhẹ chỉ ghi 5 khoá cài đặt của game, chỉ khi người bấm', async t => {
   const { w, log, code, FakeWS } = setupDom();
   t.after(() => w.close());
   const nativeRaf = w.requestAnimationFrame;
@@ -832,7 +851,7 @@ test('bookmarklet: tab ⚡ — giới hạn khung hình áp dụng ngay (tắt t
   ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(summary) }));
   await tick(1200);
   const root = log.roots[0];
-  [...root.querySelectorAll('.tab')].find(b => b.textContent === '⚡').click();
+  [...root.querySelectorAll('.tab')].find(b => b.textContent === '⚙︎').click();
   const chip = text => [...root.querySelectorAll('button')].find(b => b.textContent === text);
   assert.match(root.querySelector('.panel').textContent, /Đang dùng.*Tự động · 60 FPS/);
   chip('Bật đồ hoạ nhẹ').click();

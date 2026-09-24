@@ -1,6 +1,6 @@
 import { test as nodeTest } from 'node:test';
 import assert from 'node:assert/strict';
-import { makeFrame, rowSlots, inBand, planMoves, createMemory, observe, onSent, onAck, minCostAssign as hungarian, BANDS } from '../../tool/logic.js';
+import { makeFrame, rowSlots, inBand, planMoves, createMemory, observe, onSent, onAck, minCostAssign as hungarian, BANDS, LAT_MAX } from '../../tool/logic.js';
 
 const plan = (...a) => { const r = planMoves(...a); return { ...r, status: Object.fromEntries(r.status) }; };
 
@@ -12,10 +12,11 @@ const U = (key, row, x, y, extra = {}) => ({ key, stage: `s_${key}`, level: 10, 
 function planning(mem, units, now = 5000) { observe(mem, { phase: 'planning', units }, now); return plan(mem, units, down); }
 function freshMem(units) { const m = createMemory(); observe(m, { phase: 'wave', units }, 0); return m; } // boot: units present at boot are established
 
-test('T1 straight path: slots identical to current formation (608-centred lines at y 2800/2920/3040/3180)', () => {
+test('T1 straight path: row centres at y 2800/2920/3040/3180; next slots form a compact block (staggered line behind before widening the row)', () => {
   const f = makeFrame(down);
   assert.deepEqual([0, 1, 2, 3].map(r => rowSlots(f, r)[0]).map(s => [s.x, s.y]), [[1608, 2800], [1608, 2920], [1608, 3040], [1608, 3180]]);
-  assert.deepEqual(rowSlots(f, 0).slice(1, 3).map(s => [s.x, s.y]), [[1528, 2800], [1688, 2800]]);
+  assert.deepEqual(rowSlots(f, 0).slice(1, 3).map(s => [s.x, s.y]), [[1568, 2740], [1648, 2740]]);
+  for (let r = 0; r < 4; r++) assert.ok(rowSlots(f, r).every(s => Math.abs(s.x - 1608) <= LAT_MAX[r] - 20), `row ${r}: every slot within the lateral cap (no row stretched to the arena edge)`);
 });
 
 test('T2 every generated slot passes the strict acceptance test of its own row (no self-oscillation) — straight, diagonal, L-shaped', () => {
@@ -126,7 +127,7 @@ test('T11 strongest misplaced unit gets the centre slot; equal scores → shorte
   const r = planning(freshMem(units), units);
   const at = Object.fromEntries(r.moves.map(m => [m.key, [m.x, m.y]]));
   assert.deepEqual(at.strong, [1608, 2920]);
-  assert.deepEqual(at.weak, [1528, 2920]);
+  assert.deepEqual(at.weak, [1568, 2955], 'weak unit: compact slot beside the centre on its own side, not 80 px out on the same line');
   const eq = [U('left', 1, 1100, 3500), U('right', 1, 2100, 3500), U('c', 1, 1608, 2920)];
   const r2 = planning(freshMem(eq), eq);
   const at2 = Object.fromEntries(r2.moves.map(m => [m.key, m.x]));
@@ -136,19 +137,28 @@ test('T11 strongest misplaced unit gets the centre slot; equal scores → shorte
 test('T12 accepted units keep their slots; a newcomer never displaces them', () => {
   const units = [U('a', 1, 1608, 2920, { score: 1 }), U('b', 1, 1300, 3500, { score: 999 })];
   const r = planning(freshMem(units), units);
-  assert.deepEqual(r.moves.map(m => [m.key, m.x, m.y]), [['b', 1528, 2920]], 'strong newcomer takes next best free slot; weak accepted unit is not moved');
+  assert.deepEqual(r.moves.map(m => [m.key, m.x, m.y]), [['b', 1568, 2955]], 'strong newcomer takes next best free compact slot; weak accepted unit is not moved');
 });
 
-test('T13 overflow: 20 melee to place → 15 on the main line + 5 on the staggered second line, all distinct, then plan is empty', () => {
+test('T13 overflow: 20 melee → a 3-deep block of 17 within ±200 of the path (not one line stretched to the walls); the 3 extra stay put; then plan is empty', () => {
   const units = Array.from({ length: 20 }, (_, i) => U(`m${i}`, 1, 1050 + i * 50, 3600, { score: i }));
   const mem = freshMem(units);
   let r = planning(mem, units, 5000);
-  assert.equal(r.moves.length, 20);
-  assert.equal(new Set(r.moves.map(m => `${m.x},${m.y}`)).size, 20);
-  assert.equal(r.moves.filter(m => m.y === 2920).length, 15);
-  const placed = units.map(u => { const m = r.moves.find(x => x.key === u.key); return { ...u, pos: { x: m.x, y: m.y } }; });
+  assert.equal(r.moves.length, 17);
+  assert.equal(new Set(r.moves.map(m => `${m.x},${m.y}`)).size, 17);
+  assert.ok(r.moves.every(m => Math.abs(m.x - 1608) <= 200), 'every melee within ±200 of the creep path');
+  assert.deepEqual([...new Set(r.moves.map(m => m.y))].sort(), [2885, 2920, 2955], '3 lines deep');
+  assert.equal(Object.values(r.status).filter(v => v === 'full').length, 3, 'row full → the rest are not dragged to the edges');
+  const placed = units.map(u => { const m = r.moves.find(x => x.key === u.key); return m ? { ...u, pos: { x: m.x, y: m.y } } : u; });
   observe(mem, { phase: 'wave', units: placed }, 6000);
   assert.deepEqual(planning(mem, placed, 9000).moves, []);
+});
+
+test('T20 a unit already in its row but far from the creep path (hypotenuse too long) is pulled into the block; one within reach is left alone', () => {
+  const units = [U('c', 1, 1608, 2920), U('far', 1, 1608 + 320, 2920), U('near', 1, 1608 - 150, 2920)];
+  const r = planning(freshMem(units), units);
+  assert.deepEqual(r.moves.map(m => m.key), ['far']);
+  assert.ok(Math.abs(r.moves[0].x - 1608) <= 200 && r.moves[0].x > 1608, 'pulled in on its own side');
 });
 
 test('T14 unknown / broken ground → no moves', () => {
