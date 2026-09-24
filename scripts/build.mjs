@@ -298,6 +298,23 @@ export function build({ raw, client, changelog = [], registry = null }) {
   };
 }
 
+const num1 = v => Number(String(v).replace(/\./g, '').replace(',', '.'));
+const fmtVi = v => (Math.round(v * 10) / 10).toLocaleString('vi-VN');
+export function shortSkill(a) {
+  if (a.inert || !a.available) return 'Không có tác dụng (game chưa làm)';
+  const when = String(a.summary ?? '').replace(/Xác suất /g, '').replace(/ · trễ [\d,]+s/g, '').replace(/Kích hoạt · Tự thi triển/, 'Tự thi triển');
+  const parts = (a.effects ?? []).map(e => String(e.t ?? '')
+    .replace(/ — dội vào chính con pet \(issue #1\)/g, '')
+    .replace(/trong ([\d,]+)s · hiệu ứng định kỳ mỗi ([\d,]+)s: Gây ([\d.,]+) sát thương/g, (m, dur, every, dmg) => (num1(dmg) > 0 ? `đốt ${fmtVi(num1(dmg) / Math.max(0.01, num1(every)))} máu/giây trong ${dur}s` : ''))
+    .replace(/sát thương đòn đánh kích hoạt sát thương/g, 'sát thương đòn')
+    .replace(/sát thương đòn đánh kích hoạt máu/g, 'sát thương đòn thành máu')
+    .replace(/ · trong 0,06s/g, '')
+    .replace(/^Gây /, '')
+    .trim()).filter(Boolean);
+  const text = [...new Set(parts)].slice(0, 3).join('; ');
+  return (text ? `${when}: ${text}` : when).slice(0, 140);
+}
+
 export function buildOverlay(db) {
   const slugOf = new Map(db.pets.map(p => [p.id, p.slug]));
   const u = {};
@@ -307,6 +324,7 @@ export function buildOverlay(db) {
       ar: x.armor || undefined, rg: x.range || undefined, c: x.catch || undefined, b: x.book || undefined, L: x.legendary ? 1 : undefined,
       k: x.catchable ? 1 : undefined, lk: x.leak || undefined, f: x.family, p: x.pet ? slugOf.get(x.pet) : undefined,
       s: x.skills?.length ? x.skills.map(id => db.abilities[id]?.name).filter(Boolean) : undefined,
+      sk: x.skills?.length ? x.skills.filter(id => db.abilities[id]) : undefined,
       e: x.evo?.length ? x.evo.filter(e => Number.isFinite(e.cost) && e.cost >= 0).map(e => [e.to, e.cost]) : undefined,
       ...overlayFields({
         eff: x.eff, roles: x.roles ?? [], peak: x.peak ?? null, power: x.power ?? 0, unlocks: x.unlocks ?? [], stageTier: x.stageTier, path: x.path ?? [], kit: x.kit ?? [],
@@ -320,6 +338,10 @@ export function buildOverlay(db) {
     v: db.meta.catalogHash.slice(0, 12), sell: db.game.rules.sellGold,
     el: Object.fromEntries(Object.entries(db.elements).map(([k, e]) => [k, { n: e.name, c: e.mid }])),
     lb: db.labels, u, dmg: db.damage.table, rn: ROLE_NAMES, ov: db.registry?.overrideRoots ?? {},
+    ab: Object.fromEntries([...new Set(Object.values(u).flatMap(x => x.sk ?? []))].map(id => {
+      const a = db.abilities[id];
+      return [id, { n: a.name, g: a.inert ? 'Không có tác dụng' : a.summary, t: (a.effects ?? []).slice(0, 3).map(e => e.t), d: shortSkill(a), i: a.icon, x: (a.effects ?? []).some(e => e.self) ? 1 : undefined, off: !a.available || a.inert ? 1 : undefined }];
+    })),
   };
 }
 

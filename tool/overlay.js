@@ -14,7 +14,7 @@ const NS = '__cutdHelper';
 const CSS = `
 :host{all:initial}
 *{box-sizing:border-box;margin:0;font:12.5px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-.panel{width:min(360px,calc(100vw - 24px));max-height:calc(100vh - 24px);display:flex;flex-direction:column;background:#0f1a2df5;color:#e6f2ff;border:1px solid #33496b;border-radius:12px;box-shadow:0 10px 30px #000a;overflow:hidden}
+.panel{width:min(380px,calc(100vw - 24px));max-height:calc(100vh - 24px);display:flex;flex-direction:column;background:#0f1a2df5;color:#e6f2ff;border:1px solid #33496b;border-radius:12px;box-shadow:0 10px 30px #000a;overflow:hidden}
 .top{display:flex;align-items:center;gap:6px;padding:6px 6px 6px 12px;cursor:move;user-select:none}
 .top b{color:#ffde8f;font-weight:700;letter-spacing:.2px}
 .grow{flex:1}
@@ -29,6 +29,24 @@ const CSS = `
 .chip{all:unset;cursor:pointer;padding:2px 9px;border-radius:99px;border:1px solid #33496b;color:#8fb7e8;font-weight:600;font-size:11.5px}
 .chip.on{background:#ffde8f;color:#0b1526;border-color:transparent}
 .chip.sm{padding:1px 8px;font-size:11px}.chip:disabled{opacity:.35;cursor:default}
+.wrap{display:flex;gap:8px;align-items:flex-start}.wrap.h{flex-direction:column-reverse}
+.drawer{width:270px;max-height:calc(100vh - 24px);overflow-y:auto;background:#0f1a2df5;color:#e6f2ff;border:1px solid #33496b;border-radius:12px;box-shadow:0 10px 30px #000a;padding:12px;scrollbar-width:thin}
+.wrap.h .drawer{max-height:45vh}
+.dh{display:grid;grid-template-columns:64px 1fr;gap:10px;align-items:center}.dh .pt{width:64px;height:64px;border:0;background:transparent;object-fit:contain}
+.dh b{font-size:16px;font-weight:800}.dl{display:flex;align-items:center;gap:6px;margin-top:5px}
+.role{font-size:10px;font-weight:800;padding:1px 5px;border-radius:4px}.k-atk.role{background:#3d2226;color:#ff9c9c}.k-tank.role{background:#1b2d4a;color:#9fe3ff}.k-buff.role{background:#3a2f10;color:#ffde8f}.k-debuff.role{background:#2a2148;color:#cbb3ff}
+.harm{color:#ff9c9c;font-weight:800}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:10px 0}.stats span{background:#101c30;border-radius:6px;padding:4px 0;text-align:center;font-weight:800;font-size:11.5px}
+.evo{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}.path{display:flex;align-items:flex-start;gap:1px;flex-wrap:wrap}
+.node{display:flex;flex-direction:column;align-items:center;width:38px;gap:1px}.node .pt{width:32px;height:32px}
+.node.now .pt{border-color:#ffde8f}.node.trap .pt{border-color:#ff9c9c}.node small{font-size:9.5px;color:#8fb7e8;font-weight:700}.node small.gold{color:#ffde8f}
+.node .tier{font-size:9.5px;padding:0 3px;min-width:0;line-height:13px}.path .ar{color:#4a6fa5;font-size:11px;margin-top:9px}
+.sks{display:grid;gap:7px;margin-bottom:10px}.sk{display:grid;grid-template-columns:26px 1fr;gap:8px;align-items:start}
+.sk img{width:26px;height:26px;border-radius:6px;border:1px solid #33496b}.skn b{color:#9fd6a8;font-size:12px}.skn small{color:#6f8fb8;font-size:10.5px}
+.skd{color:#c7d8ea;font-size:11px;line-height:1.35}.sk.self img{border-color:#ff9c9c}.sk.self .skn b,.sk.self .skd{color:#ff9c9c}
+.sk.off{opacity:.45}.sk.off img{filter:grayscale(1)}
+.info{all:unset;cursor:pointer;width:17px;height:17px;display:grid;place-items:center;border-radius:5px;border:1px solid #33496b;color:#8fb7e8;font:italic 700 11px/1 Georgia,serif;flex-shrink:0}
+.info:hover{color:#fff}.info.on{background:#ffde8f;color:#0b1526;border-color:transparent}
 .star{all:unset;cursor:pointer;width:16px;text-align:center;color:#4a6fa5;font-size:14px;line-height:1}.star:hover{color:#ffde8f}.star.on{color:#ffde8f}
 .kit .k-debuff{background:#2a2148;color:#cbb3ff}.kit .k-selfharm{background:#3d2226;color:#ff9c9c}
 .muted{margin-left:auto;color:#6f8fb8;font-size:11.5px}
@@ -78,7 +96,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .tier{min-width:26px;text-align:center;padding:1px 6px;border-radius:6px;font-size:11.5px;font-weight:800;background:#1b2a44;color:#8fb7e8}
 .tier.t-sp{background:#ffde8f;color:#0b1526}.tier.t-s{background:#f0a35e;color:#0b1526}.tier.t-a{background:#1d3a2a;color:#9fd6a8}
 .tier.t-b{background:#1b2a44;color:#8fb7e8}.tier.t-c,.tier.t-x{background:transparent;color:#6f8fb8;border:1px solid #2a3d5c}
-.line2{display:flex;align-items:center;gap:6px;margin-top:3px;min-width:0}
+.line2{display:flex;align-items:center;gap:6px;margin-top:3px;min-width:0;overflow:hidden}
+.line2 .kit{flex-wrap:wrap;flex:1 1 0;min-width:0;height:14px;overflow:hidden}
 .ptw{width:32px;height:32px}.ptw.down img{filter:grayscale(1) brightness(.6)}
 .hpw{display:inline-flex;align-items:center;gap:4px;flex-shrink:0;font-size:10.5px;font-weight:700;color:#9fd6a8}
 .hpw .hpb{width:40px;height:5px;border-radius:3px;background:#0b1526;overflow:hidden;box-shadow:inset 0 0 0 1px #243552}.hpw .hpb i{display:block;height:100%;background:#9fd6a8}
@@ -330,7 +349,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   }
   const pickable = (el, key) => {
     el.classList.add('pick');
-    el.addEventListener('click', e => { if (!e.target.closest('a,.act,.star')) selectInGame(typeof key === 'function' ? key() : key, e); });
+    el.addEventListener('click', e => { if (!e.target.closest('a,.act,.star,.info')) selectInGame(typeof key === 'function' ? key() : key, e); });
     return el;
   };
 
@@ -550,7 +569,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       const side = id => h('div', { class: 'side', title: statsTip(id) }, img(id, 28),
         h('div', { class: 'mid' }, title(id, { noLevel: true }), h('div', { class: 'sub' }, U(id)?.l ? `Lv${U(id).l}` : '', tierPill(id, true))));
       return pickable(h('div', { class: `trade ${o.ready.length ? 'is-ok' : o.evolve ? 'is-warn' : ''}`, title: 'Bấm để chọn slot này trong game' },
-        h('span', { class: 'slot', text: `S${o.slot}` }), side(o.give), h('span', { class: 'arrow', text: '→' }), side(o.get), status), `t${o.slot}`);
+        h('span', { class: 'slot', text: `S${o.slot}` }), side(o.give), h('span', { class: 'arrow', text: '→' }), side(o.get), h('span', { class: 'right' }, status, infoBtn(o.get))), `t${o.slot}`);
     });
   }
 
@@ -571,6 +590,12 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const famOf = stage => { const f = U(stage)?.f; return typeof f === 'string' && SAFE_ID.test(f) ? f : stage; };
   const wished = stage => wish.has(famOf(stage));
   const byWish = (a, b) => Number(wished(b.stage)) - Number(wished(a.stage));
+  let info = null;
+  const infoBtn = (stage, id = null) => {
+    const on = !!info && (id != null ? info.id === id : info.stage === stage && info.id == null);
+    return h('button', { class: `info ${on ? 'on' : ''}`, text: 'i', tabindex: '-1', title: 'Xem pet',
+      onClick: e => { e.stopPropagation(); info = on ? null : { stage, id }; dirty = true; render(true); } });
+  };
   const starBtn = stage => {
     const on = wished(stage);
     return h('button', { class: `star ${on ? 'on' : ''}`, text: on ? '★' : '☆', tabindex: '-1',
@@ -641,7 +666,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         h('div', { class: 'line2' }, strip(stage), kitChips(stage), (u.c ?? 1) < 0.5 ? h('span', { class: 'rare', text: `${Math.round((u.c ?? 0) * 100)}%`, title: 'Tỉ lệ bắt thấp' }) : null),
         [starBtn(stage), tierPill(stage), count > 1 ? pill(`×${count}`, 'mute') : null,
           trades.length ? pill('Trade', 'warn', trades.map(t => `S${t.slot}: cần ${nameOf(t.give)} → nhận ${nameOf(t.get)}`).join('\n')) : null,
-          act(`Bắt ${short(u.b ?? 0)}g`, 'catch', `w${idList[0]}`, null, { stage }, (u.b ?? 0) <= state.gold ? 'ok' : 'bad', `Bắt 1 con ${nameOf(stage)}`)],
+          act(`Bắt ${short(u.b ?? 0)}g`, 'catch', `w${idList[0]}`, null, { stage }, (u.b ?? 0) <= state.gold ? 'ok' : 'bad', `Bắt 1 con ${nameOf(stage)}`), infoBtn(stage)],
         { tip: `Bắt ${Math.round((u.c ?? 0) * 100)}% · đỉnh ${short(peak)} DPS thật\n${statsTip(stage)}\nBấm để chọn trong game${count > 1 ? ' (bấm tiếp để đổi con)' : ''}` }), cycle(`w:${stage}`, idList.map(id => `w${id}`))))
         : empty(state.wilds.size ? 'Không có con nào đúng vai trò này.' : 'Bãi đang trống.'),
     ];
@@ -681,9 +706,63 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
             const warn = trap === 2 ? `\n⚠ BẪY: ${drop}, lên tiếp cũng không hồi lại — nên dừng ở đây` : trap === 1 ? `\n⚠ Tạm tụt: ${drop}, các cấp sau mới mạnh hơn` : '';
             return act(`↑${evo.length > 1 ? `${U(to)?.n ?? ''} ` : ''}${short(cost)}g${trap ? ' ⚠' : ''}`, 'evolve', `u${u.id}`, to, { stage: u.stage },
               trap === 2 || cost > state.gold ? 'bad' : 'ok', `Tiến hóa lên ${nameOf(to)}: ${fmt(cost)} vàng${warn}`);
-          }) : pill('Max', 'mute', 'Dạng cuối')],
+          }) : pill('Max', 'mute', 'Dạng cuối'), infoBtn(u.stage, u.id)],
         { portrait: unitPortrait(u), tip: `${statsTip(u.stage)}\nBán: ${fmt(Math.floor(u.book * (db.sell ?? 0)))} vàng\nBấm để chọn trong game` }), `u${u.id}`);
     })];
+  }
+
+  function viewInfo() {
+    const live = info.id != null ? myUnits(state).find(x => x.id === info.id) : null;
+    const stage = live?.stage ?? info.stage;
+    const u = U(stage);
+    if (!u) return [];
+    const paths = [];
+    const grow = (id, cost, trail, depth) => {
+      const next = [...trail, [id, cost]];
+      const kids = depth < 10 ? (U(id)?.e ?? []).slice(0, 3) : [];
+      if (!kids.length || paths.length >= 3) { if (paths.length < 3) paths.push(next); return; }
+      for (const [to, c] of kids) grow(to, cost + c, next, depth + 1);
+    };
+    grow(stage, 0, [], 0);
+    const node = ([id, cost], i, list) => {
+      const d = U(id) ?? {};
+      const prev = i ? list[i - 1][0] : null;
+      const trap = prev && U(prev)?.tp?.[id] === 2;
+      return h('div', { class: `node ${i ? '' : 'now'} ${trap ? 'trap' : ''}`,
+        title: `${nameOf(id)} · DPS ${fmt(Math.round(d.ed ?? d.dps ?? 0))} · máu ${fmt(d.hp)}${i ? ` · ${fmt(cost)} vàng từ bây giờ` : ' · đang ở đây'}${trap ? '\n⚠ Bẫy: lên dạng này bị tụt' : ''}${d.sd ? '\n⚠ Tự hại (issue #1)' : ''}` },
+        img(id, 34), d.st ? h('span', { class: `tier ${TIER_CLASS[d.st]}`, text: d.st }) : null, h('small', { class: i ? 'gold' : '', text: i ? short(cost) : `Lv${d.l ?? '?'}` }));
+    };
+    const seen = new Set(), skills = [];
+    for (const list of paths) for (const [id] of list) for (const sk of U(id)?.sk ?? []) {
+      const a = db.ab?.[sk];
+      if (!a || seen.has(a.n)) continue;
+      seen.add(a.n);
+      skills.push([sk, id]);
+    }
+    const where = id => `${nameOf(id)}${U(id)?.l ? ` Lv${U(id).l}` : ''}`;
+    const tier = u.pw != null ? powerTier(u.pw) : u.st;
+    return [
+      h('div', { class: 'dh' }, img(stage, 64),
+        h('div', null,
+          h('div', { class: 'nm' }, h('i', { class: 'dot', style: `background:${rgbOf(u.el)}` }), h('b', { text: u.n ?? '?' }), u.l ? h('small', { text: ` Lv${u.l}` }) : null),
+          h('div', { class: 'dl' },
+            tier ? h('span', { class: `tier ${TIER_CLASS[tier]}`, text: tier, title: `Hạng ${ROLE_NAME[u.ro] ?? ''} của cả dòng` }) : null,
+            u.ro ? h('span', { class: `k-${u.ro} role`, text: ROLE_NAME[u.ro] }) : null,
+            u.sd ? h('span', { class: 'harm', text: '⚠', title: `Tự hại (issue #1): mất ${fmt(Math.round(u.sd))} máu/giây` }) : null))),
+      h('div', { class: 'stats' },
+        h('span', { text: `❤ ${short(u.hp ?? 0)}`, title: 'Máu' }), h('span', { text: `⚔ ${short(Math.round(u.ed ?? u.dps ?? 0))}`, title: 'DPS thật' }),
+        h('span', { text: `↔ ${u.rg ?? '?'}`, title: 'Tầm đánh' }), h('span', { text: `⛨ ${u.ar ?? 0}`, title: 'Giáp' })),
+      paths.length && paths[0].length > 1 ? h('div', { class: 'evo' }, paths.map(list => h('div', { class: 'path' }, list.map((x, i) => [i ? h('span', { class: 'ar', text: '›' }) : null, node(x, i, list)])))) : null,
+      skills.length ? h('div', { class: 'sks' }, skills.map(([sk, id]) => {
+        const a = db.ab[sk];
+        return h('div', { class: `sk ${a.x ? 'self' : ''} ${a.off ? 'off' : ''}` },
+          h('img', { width: 26, height: 26, alt: '', src: a.i && SAFE_ID.test(a.i) ? `${DATA_URL}skills/${a.i}.webp` : null }),
+          h('div', null,
+            h('div', { class: 'skn' }, h('b', { text: a.n }), id !== stage ? h('small', { text: ` từ Lv${U(id)?.l ?? '?'}`, title: where(id) }) : null),
+            h('div', { class: 'skd', text: `${a.d ?? a.g ?? ''}${a.x ? ' — ⚠ dội vào chính nó' : ''}` })));
+      })) : null,
+      kitChips(stage),
+    ].filter(Boolean);
   }
 
   function viewWave() {
@@ -790,7 +869,18 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const root = host.attachShadow({ mode: 'closed' });
   root.append(h('style', { text: CSS }));
   const panel = h('div', { class: 'panel' });
-  root.append(panel);
+  const drawer = h('div', { class: 'drawer' });
+  drawer.hidden = true;
+  const wrap = h('div', { class: 'wrap' }, panel, drawer);
+  root.append(wrap);
+  let keepInfo = false;
+  root.addEventListener('pointerdown', e => {
+    const path = e.composedPath();
+    keepInfo = path.includes(drawer) || path.some(n => n?.classList?.contains?.('info'));
+    if (!keepInfo && info) { info = null; dirty = true; render(true); }
+  });
+  const outsideClose = e => { if (info && !e.composedPath().includes(host)) { info = null; dirty = true; render(true); } };
+  window.addEventListener('pointerdown', outsideClose, true);
   panel.addEventListener('pointerdown', e => { if (e.isTrusted) downAt = performance.now(); }, true);
   document.documentElement.append(host);
 
@@ -852,6 +942,11 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     if (shape !== lastLayout) { lastLayout = shape; layoutAt = performance.now(); }
     panel.className = `panel ${layout}`;
     panel.replaceChildren(header, tabs, body);
+    wrap.className = `wrap ${layout}`;
+    let infoView = [];
+    try { infoView = info ? viewInfo() : []; } catch { infoView = []; }
+    drawer.hidden = panel.hidden || !infoView.length;
+    drawer.replaceChildren(...infoView);
     body.scrollTop = scroll;
   }
 
@@ -918,7 +1013,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 
   function destroy() {
     dead = true;
-    if (arranging) arranging.stop = true;
     const quiet = fn => { try { fn(); } catch { } };
     quiet(unpatch);
     socket?.removeEventListener('message', onMessage);
@@ -928,6 +1022,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     observers.forEach(o => o.disconnect());
     window.removeEventListener('pointermove', onMove);
     window.removeEventListener('pointerup', onUp);
+    window.removeEventListener('pointerdown', outsideClose, true);
     quiet(() => unlisten(window));
     if (realm.win !== window) quiet(() => unlisten(realm.win));
     quiet(disarmWebCapture);
@@ -1008,7 +1103,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     n: S(x.n), m: ID(x.m), hp: N(x.hp), dps: N(x.dps), a: ID(x.a), at: ID(x.at), ar: N(x.ar), rg: N(x.rg), b: N(x.b), lk: N(x.lk),
     f: ID(x.f), ed: N(x.ed), l: N(x.l), el: ID(x.el), c: N(x.c), k: N(x.k), p: ID(x.p), pw: N(x.pw), st: TIER(x.st), L: N(x.L),
     e: list(x.e, v => tuple(v, [ID, N]), 8), pk: tuple(x.pk, [ID, N, N]), ul: list(x.ul, v => tuple(v, [ID, ID, N])),
-    pg: list(x.pg, ID), kt: list(x.kt, ID), r: list(x.r, ID), ro: ['atk', 'tank', 'buff', 'debuff'].includes(x.ro) ? x.ro : undefined, sd: N(x.sd), pc: Number.isInteger(x.pc) && x.pc >= 0 && x.pc < 8 ? x.pc : undefined, s: list(x.s, v => S(v, 60)), tp: dict(x.tp, v => (v === 1 || v === 2 ? v : undefined), 16),
+    pg: list(x.pg, ID), kt: list(x.kt, ID), r: list(x.r, ID), ro: ['atk', 'tank', 'buff', 'debuff'].includes(x.ro) ? x.ro : undefined, sd: N(x.sd), pc: Number.isInteger(x.pc) && x.pc >= 0 && x.pc < 8 ? x.pc : undefined, sk: list(x.sk, ID, 12), s: list(x.s, v => S(v, 60)), tp: dict(x.tp, v => (v === 1 || v === 2 ? v : undefined), 16),
   });
   getJSON(`${DATA_URL}overlay.json`, 4 * 1024 * 1024)
     .then(d => {
@@ -1026,6 +1121,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         rn: dict(d.rn, v => S(v, 40), 64),
         dmg: dict(d.dmg, row => dict(row, v => (N(v) !== undefined ? Math.max(0, Math.min(10, v)) : undefined), 16), 16),
         ov: dict(d.ov, v => (['atk', 'tank', 'buff', 'debuff'].includes(v) ? v : undefined), 400),
+        ab: dict(d.ab, x => (x && typeof x === 'object' ? { n: S(x.n, 60), g: S(x.g, 80), t: list(x.t, v => S(v, 160), 3), d: S(x.d, 160), i: ID(x.i), x: x.x === 1 ? 1 : undefined, off: x.off === 1 ? 1 : undefined } : undefined), 1000),
         u,
       };
       mergeGameCatalog();
