@@ -33,18 +33,21 @@ export function unitChip(id, extra = '') {
     ${img(u.model, u.name, '', 32)}<span>${u.name}${u.level ? html` <small>Lv${u.level}</small>` : ''}${extra}</span></a>`;
 }
 
+const DPS_PARTS = [['basic', 'đòn thường'], ['proc', 'chí mạng / proc'], ['skill', 'kỹ năng'], ['dot', 'độc'], ['aoe', 'lan (giả định 3 quái đứng gần)']];
+const dpsParts = u => `DPS chưa tính buff đồng đội: ${DPS_PARTS.filter(([k]) => u.parts?.[k] > 0).map(([k, t]) => `${t} ${num(Math.round(u.parts[k]))}`).join(' · ') || num(u.dps)}`;
+
 export function statGrid(u) {
   const dmg = u.dmgMin != null ? `${num(u.dmgMin)}–${num(u.dmgMax)}` : num(u.dmg);
   const cells = [
     ['Máu', num(u.hp), u.regen ? `+${num(u.regen)}/s` : ''],
     ['Sát thương', dmg, label(u.atk)],
-    ['DPS', num(u.dps), `${num(u.aps)} đòn/s`],
+    ['DPS', num(Math.round(u.eff ?? u.dps)), `${num(u.aps)} đòn/s`, dpsParts(u)],
     ['Tầm đánh', num(u.range), u.groundOnly ? 'chỉ mặt đất' : ''],
     ['Giáp', num(u.armor ?? 0), label(u.armorType)],
     ['Tốc chạy', num(u.move), label(u.movement)],
   ];
-  return html`<div class="statgrid">${cells.map(([k, v, s]) => html`
-    <div class="stat"><div class="v">${v}</div><div class="k">${k}</div>${s ? html`<div class="s">${s}</div>` : ''}</div>`)}
+  return html`<div class="statgrid">${cells.map(([k, v, s, tip]) => html`
+    <div class="stat" title="${tip ?? ''}"><div class="v">${v}</div><div class="k">${k}</div>${s ? html`<div class="s">${s}</div>` : ''}</div>`)}
   </div>
   ${u.splash ? html`<div class="note">Đánh lan: bán kính ${num(u.splash.small_radius)}${u.splash.medium_radius ? ` · ${num(u.splash.medium_factor * 100)}% trong ${num(u.splash.medium_radius)}` : ''}${u.splash.small_factor ? ` · ${num(u.splash.small_factor * 100)}% vùng ngoài` : ''}</div>` : ''}
   ${u.bounce ? html`<div class="note">Đánh nảy: tối đa ${u.bounce.targets} mục tiêu · tầm nảy ${num(u.bounce.radius)}${u.bounce.damage_loss ? ` · mất ${num(u.bounce.damage_loss * 100)}%/lần` : ''}</div>` : ''}`;

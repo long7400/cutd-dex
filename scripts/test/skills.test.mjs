@@ -5,7 +5,7 @@ import { build, buildOverlay, PATHS } from '../build.mjs';
 import { readJSON } from '../lib/fsx.mjs';
 
 const ctx = (abilities, modifiers = []) => ({ abilityById: new Map(abilities.map(a => [a.id, a])), modifierById: new Map(modifiers.map(m => [m.id, m])) });
-const species = abilities => ({ id: 'u', attack_damage: 100, attack_cooldown_ticks: 32, max_health: 1000, abilities: abilities.map(a => a.id) });
+const species = abilities => ({ id: 'u', attack_damage: 100, attack_cooldown_ticks: 20, max_health: 1000, abilities: abilities.map(a => a.id) });
 
 test('skillValue: chí mạng / sát thương cố định theo xác suất / % máu bản thân', () => {
   const crit = { id: 'c', status: 'executable', trigger: { kind: 'on_hit' }, conditions: [{ kind: 'chance', chance: 0.5 }], effects: [{ kind: 'damage', magnitude: { basis: 'attack_damage', multiplier: 2 } }] };
@@ -81,17 +81,47 @@ test('hạng theo vai trò: mỗi dòng chỉ so với dòng cùng vai trò, đ�
   const a = analyzeCatalog(readJSON(PATHS.catalog).catalog);
   const at = (name, level) => a.get(find(name, level).id);
   const tierOf = (name, level) => powerTier(at(name, level).power);
-  assert.equal(at('Machop', 1).role, 'buff', 'Machoke mở hào quang cả đội → BUFF');
-  assert.equal(at('Bramblin', 1).role, 'tank');
+  assert.equal(at('Machop', 1).lineRole, 'buff', 'dòng Machop: Machoke mở hào quang cả đội → BUFF');
+  assert.equal(at('Machop', 1).role, 'atk', 'riêng Machop Lv1 chưa có hào quang → ATK');
+  assert.equal(at('Machoke', 16).role, 'buff');
+  assert.equal(at('Bramblin', 1).lineRole, 'tank');
   assert.equal(at('Abra', 1).role, 'atk');
   assert.equal(tierOf('Abra', 1), 'S+');
   assert.equal(tierOf('Treecko', 1), 'S+');
   assert.equal(at('Abra', 1).kit[0], 'atk');
   assert.ok(['C', 'B'].includes(tierOf('Hitmonlee', 60)), 'tự chết vài giây → tụt hạng ATK');
   assert.ok(at('Eevee', 1).kit.includes('selfharm'));
-  assert.equal(at('Magnemite', 1).role, 'tank');
+  assert.equal(at('Magnemite', 1).lineRole, 'atk', 'Magneton / Iron-Crown bắn xa 600 → ATK, không phải TANK dù nhiều máu');
   assert.ok(['C', 'B'].includes(tierOf('Kyogre', 1)), 'huyền thoại không tiến hóa, chỉ số thấp');
-  for (const role of ['atk', 'tank', 'buff']) assert.ok([...a.values()].some(u => u.role === role && u.power >= 0.9), `${role} có nhóm đầu S+`);
+  for (const role of ['atk', 'tank', 'buff']) assert.ok([...a.values()].some(u => u.lineRole === role && u.power >= 0.9), `${role} có nhóm đầu S+`);
+});
+
+test('vai trò theo từng dạng: đánh xa không làm TANK, tự chết nhanh không làm TANK, DPS mạnh + giáp vẫn là ATK', () => {
+  const a = analyzeCatalog(readJSON(PATHS.catalog).catalog);
+  const at = (name, level) => a.get(find(name, level).id);
+  for (const lv of [36, 50, 70, 100]) assert.equal(at('Blastoise', lv).role, 'atk', `Blastoise Lv${lv} tầm 500 → ATK`);
+  assert.equal(at('Squirtle', 1).lineRole, 'atk', 'dòng Squirtle kết thúc ở Blastoise bắn xa');
+  assert.equal(at('Charizard', 36).role, 'tank', 'Charizard tầm 170, trâu → TANK');
+  assert.equal(at('Aerodactyl', 100).role, 'atk', 'DPS cao nhất dòng, có giáp vẫn là ATK');
+  assert.notEqual(at('Shadow Mewtwo', 60).role, 'tank', 'tự hại chết sau ~10 giây → không làm TANK');
+  for (const u of a.values()) if (u.role === 'tank' && !u.roles.includes('taunt')) assert.ok(u.range <= 300, `${u.id} TANK phải đánh gần / tầm ngắn`);
+  assert.equal(at('Blastoise', 70).traps[find('Blastoise', 100).id], 'trap', 'Lv70 → Lv100: sát thương đòn 981 → 481, kỹ năng chỉ 1 sát thương × 2 mục tiêu');
+  assert.ok(at('Blastoise', 100).stageTier !== 'S' && at('Blastoise', 100).stageTier !== 'S+', 'không còn chấm hạng S theo máu như TANK');
+});
+
+test('DPS = đòn thường × tốc đánh (20 tick/giây) + chí mạng / proc + kỹ năng tự bắn / định kỳ + độc + lan', () => {
+  const a = analyzeCatalog(readJSON(PATHS.catalog).catalog);
+  const at = (name, level) => a.get(find(name, level).id);
+  assert.equal(at('Blastoise', 70).parts.basic, 981, '981 sát thương / 20 tick = 1 đòn mỗi giây');
+  const aero = at('Aerodactyl', 100);
+  assert.ok(aero.parts.skill >= 1000, 'Void of Stones 125 sát thương mỗi 0,1s được tính');
+  assert.equal(aero.eff, Math.round((aero.parts.basic + aero.parts.proc + aero.parts.skill + aero.parts.dot + aero.parts.aoe) * 10) / 10);
+  assert.ok(at('Swampert', 100).parts.aoe > 0, 'đòn lan (splash) được tính thêm');
+  assert.ok(at('Blastoise', 100).parts.skill > 0 && at('Blastoise', 100).parts.skill < 5, 'Multi Hydro Pump theo dữ liệu game: 1 sát thương');
+  const bounce = { id: 'b', attack_damage: 100, attack_cooldown_ticks: 20, max_health: 1000, attack_bounce: { targets: 2, radius: 600, damage_loss: 0 }, abilities: [] };
+  assert.equal(skillValue(bounce, ctx([])).eff, 300, 'nảy 2 lần không giảm sát thương, giả định 3 quái đứng gần');
+  const periodic = { id: 'p', status: 'executable', trigger: { kind: 'periodic', interval_ticks: 10 }, targeting: { kind: 'unit', filter: 'enemy_creep', max_targets: 1 }, effects: [{ kind: 'damage', magnitude: { base: 50 } }] };
+  assert.equal(skillValue(species([periodic]), ctx([periodic])).eff, 200, '50 sát thương mỗi 0,5s = 100/giây + đòn thường 100');
 });
 
 test('hạng từng dạng theo tầm cấp: thấy được dòng yếu giữa đường nhưng mạnh cuối (vd Staryu)', () => {

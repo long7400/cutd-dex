@@ -40,7 +40,7 @@ export function buildStrategy({ units, pets, waveSets, damage }) {
     const first = units[p.id];
     const cost = reach(units, p.id);
     const catchCost = (first.catch ?? 1) < 0.5 ? (first.book ?? 0) / Math.max(first.catch ?? 1, 0.05) : 0;
-    const role = first.role ?? 'atk';
+    const role = first.lineRole ?? first.role ?? 'atk';
     const val = id => units[id].rv?.[role] ?? units[id].eff ?? 0;
     const bestWithin = limit => {
       let best = null;
@@ -66,7 +66,7 @@ export function buildStrategy({ units, pets, waveSets, damage }) {
     };
   });
   const ROLE_MIN = { buff: 0.05, debuff: 0.05 };
-  const lineMax = new Map(lines.map(l => [l.id, Object.fromEntries(['atk', 'tank', 'buff', 'debuff'].map(r => [r, Math.max(0, ...[...reach(units, l.id).keys()].map(id => units[id].rv?.[r] ?? 0))]))]));
+  const lineMax = new Map(lines.map(l => [l.id, Object.fromEntries(['atk', 'tank', 'buff', 'debuff'].map(r => [r, Math.max(0, ...[...reach(units, l.id).keys()].filter(id => r === l.role || units[id].role === r).map(id => units[id].rv?.[r] ?? 0))]))]));
   const median = list => [...list].sort((a, b) => a - b)[Math.floor(list.length / 2)] ?? Infinity;
   const floor = {
     atk: median(lines.filter(l => l.role === 'atk').map(l => lineMax.get(l.id).atk)),

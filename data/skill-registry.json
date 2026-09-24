@@ -1996,7 +1996,7 @@
    "root": "unit_h00g",
    "reviewed": "2026-09-24",
    "role": "tank",
-   "tier": "A",
+   "tier": "S+",
    "also": [],
    "agent": {
     "primary": "tank",
@@ -2012,7 +2012,7 @@
    "root": "unit_h00o",
    "reviewed": "2026-09-24",
    "role": "tank",
-   "tier": "C",
+   "tier": "A",
    "also": [],
    "agent": {
     "primary": "tank",
@@ -2027,8 +2027,8 @@
    "hash": "d771d8870d3f795f",
    "root": "unit_h00w",
    "reviewed": "2026-09-24",
-   "role": "tank",
-   "tier": "A",
+   "role": "atk",
+   "tier": "C",
    "also": [],
    "agent": {
     "primary": "tank",
@@ -2037,7 +2037,7 @@
      "atk": 3.5
     }
    },
-   "note": "Split peak: Lv70 is the best damage and tank mix, Lv100 is a pure armored wall with half the DPS. Long range makes it a back-line tank. No team or enemy effects."
+   "note": "Per stage: Squirtle and Wartortle are melee; Blastoise shoots at range 500, so every Blastoise stage is ATK (ranged units are never TANK). Lv70 -> Lv100 halves the attack (981 -> 481 per second at 20 ticks/s). Multi Hydro Pump is WC3 Barrage: the game data gives 1 damage x 2 targets, so it does not make up the loss. Use the tool DPS tab in a match to confirm. Lv100 only adds HP (27k -> 40k)."
   },
   "caterpie": {
    "hash": "f28a2c4c8a4801ac",
@@ -2062,9 +2062,7 @@
    "reviewed": "2026-09-24",
    "role": "atk",
    "tier": "B",
-   "also": [
-    "debuff:C"
-   ],
+   "also": [],
    "agent": {
     "primary": "atk",
     "roles": {
@@ -2095,9 +2093,7 @@
    "reviewed": "2026-09-24",
    "role": "atk",
    "tier": "A",
-   "also": [
-    "tank:A"
-   ],
+   "also": [],
    "agent": {
     "primary": "atk",
     "roles": {
@@ -2128,9 +2124,7 @@
    "reviewed": "2026-09-24",
    "role": "buff",
    "tier": "S+",
-   "also": [
-    "tank:A"
-   ],
+   "also": [],
    "agent": {
     "primary": "buff",
     "roles": {
@@ -2161,10 +2155,8 @@
    "root": "unit_h02f",
    "reviewed": "2026-09-24",
    "role": "tank",
-   "tier": "C",
-   "also": [
-    "buff:C"
-   ],
+   "tier": "S",
+   "also": [],
    "agent": {
     "primary": "tank",
     "roles": {
@@ -2180,7 +2172,7 @@
    "root": "unit_h02k",
    "reviewed": "2026-09-24",
    "role": "atk",
-   "tier": "C",
+   "tier": "B",
    "also": [],
    "agent": {
     "primary": "atk",
@@ -2241,9 +2233,7 @@
    "reviewed": "2026-09-24",
    "role": "atk",
    "tier": "C",
-   "also": [
-    "debuff:C"
-   ],
+   "also": [],
    "agent": {
     "primary": "atk",
     "roles": {
@@ -2291,7 +2281,7 @@
    "root": "unit_h03o",
    "reviewed": "2026-09-24",
    "role": "tank",
-   "tier": "C",
+   "tier": "A",
    "also": [],
    "agent": {
     "primary": "tank",
@@ -2308,9 +2298,7 @@
    "reviewed": "2026-09-24",
    "role": "atk",
    "tier": "S",
-   "also": [
-    "tank:A"
-   ],
+   "also": [],
    "agent": {
     "primary": "atk",
     "roles": {
@@ -2355,8 +2343,8 @@
    "hash": "8722a5e033e77d36",
    "root": "unit_h08x",
    "reviewed": "2026-09-24",
-   "role": "tank",
-   "tier": "C",
+   "role": "atk",
+   "tier": "B",
    "also": [],
    "agent": {
     "primary": "tank",
@@ -2365,7 +2353,7 @@
      "atk": 3
     }
    },
-   "note": "Sonic Wave's second modifier is the WC3 Faerie Fire buff (Bfae) and carries no stats, so the intent was probably -5 armor. The sign looks mis-ported. If it is fixed, Zubat becomes a real DEBUFF (-5 armor = +26.6% team damage on its target, 100% uptime) at DEBUFF score ~6. As shipped it is not listed under DEBUFF. The repo's skillvalue.js tags it 'tank' because armor_delta > 0, which is wrong because the armor lands on the enemy."
+   "note": "Sonic Wave's second modifier is the WC3 Faerie Fire buff (Bfae) and carries no stats, so the intent was probably -5 armor. The sign looks mis-ported. If it is fixed, Zubat becomes a real DEBUFF (-5 armor = +26.6% team damage on its target, 100% uptime) at DEBUFF score ~6. As shipped it is not listed under DEBUFF. The repo's skillvalue.js tags it 'tank' because armor_delta > 0, which is wrong because the armor lands on the enemy. Range 600 on every stage, so the line is ATK (ranged units are never TANK)."
   },
   "psyduck": {
    "hash": "c8c3116f32f2a295",
@@ -2404,9 +2392,7 @@
    "reviewed": "2026-09-24",
    "role": "atk",
    "tier": "S",
-   "also": [
-    "tank:A"
-   ],
+   "also": [],
    "agent": {
     "primary": "atk",
     "roles": {
@@ -2421,7 +2407,7 @@
    "root": "unit_h09i",
    "reviewed": "2026-09-24",
    "role": "tank",
-   "tier": "C",
+   "tier": "A",
    "also": [],
    "agent": {
     "primary": "tank",
@@ -2454,7 +2440,7 @@
    "hash": "2d71bf9326c2dc17",
    "root": "unit_h09u",
    "reviewed": "2026-09-24",
-   "role": "tank",
+   "role": "atk",
    "tier": "B",
    "also": [],
    "agent": {
@@ -2464,7 +2450,7 @@
      "atk": 4
     }
    },
-   "note": "Evolving past Magneton Lv30 lowers DPS (8 aps -> 3.2 -> 1.6 aps), so the line splits: stop at Lv30 for cheap early DPS, or go to Lv100 for a 50000-HP ranged tank. Electric Impulse does not qualify as ATK or DEBUFF."
+   "note": "Range 600 on every stage, so the whole line is ATK. Evolving past Magneton Lv30 lowers DPS (Iron-Crown attacks slower). Electric Impulse is WC3 Barrage: the game data gives 1 damage x 2/4/8 targets, so it adds almost nothing unless the tool DPS tab shows otherwise in a match."
   },
   "fuecoco": {
    "hash": "0ef4d972eaabfcc3",
@@ -2487,7 +2473,7 @@
    "root": "unit_h0a5",
    "reviewed": "2026-09-24",
    "role": "tank",
-   "tier": "B",
+   "tier": "S",
    "also": [],
    "agent": {
     "primary": "tank",
@@ -2504,9 +2490,7 @@
    "reviewed": "2026-09-24",
    "role": "atk",
    "tier": "A",
-   "also": [
-    "buff:C"
-   ],
+   "also": [],
    "agent": {
     "primary": "atk",
     "roles": {
@@ -2597,7 +2581,7 @@
    "hash": "f5d6c1eba16181f5",
    "root": "unit_h0b5",
    "reviewed": "2026-09-24",
-   "role": "tank",
+   "role": "atk",
    "tier": "C",
    "also": [],
    "agent": {
@@ -2631,9 +2615,7 @@
    "reviewed": "2026-09-24",
    "role": "atk",
    "tier": "A",
-   "also": [
-    "tank:S"
-   ],
+   "also": [],
    "agent": {
     "primary": "atk",
     "roles": {
@@ -2679,7 +2661,7 @@
    "root": "unit_h0bx",
    "reviewed": "2026-09-24",
    "role": "tank",
-   "tier": "B",
+   "tier": "S",
    "also": [],
    "agent": {
     "primary": "tank",
@@ -2866,9 +2848,7 @@
    "reviewed": "2026-09-24",
    "role": "atk",
    "tier": "S+",
-   "also": [
-    "tank:A"
-   ],
+   "also": [],
    "agent": {
     "primary": "atk",
     "roles": {
@@ -2883,9 +2863,7 @@
    "reviewed": "2026-09-24",
    "role": "atk",
    "tier": "S+",
-   "also": [
-    "tank:S"
-   ],
+   "also": [],
    "agent": {
     "primary": "atk",
     "roles": {
@@ -2901,9 +2879,7 @@
    "reviewed": "2026-09-24",
    "role": "tank",
    "tier": "S+",
-   "also": [
-    "atk:A"
-   ],
+   "also": [],
    "agent": {
     "primary": "tank",
     "roles": {
@@ -2919,9 +2895,7 @@
    "reviewed": "2026-09-24",
    "role": "atk",
    "tier": "B",
-   "also": [
-    "tank:A"
-   ],
+   "also": [],
    "agent": {
     "primary": "atk",
     "roles": {
@@ -2939,9 +2913,7 @@
    "reviewed": "2026-09-24",
    "role": "atk",
    "tier": "S+",
-   "also": [
-    "tank:A"
-   ],
+   "also": [],
    "agent": {
     "primary": "atk",
     "roles": {
@@ -2954,8 +2926,8 @@
    "hash": "9fb418aab1a93b73",
    "root": "unit_h0fg",
    "reviewed": "2026-09-24",
-   "role": "tank",
-   "tier": "S+",
+   "role": "atk",
+   "tier": "S",
    "also": [],
    "agent": {
     "primary": "tank",
@@ -2964,7 +2936,7 @@
      "atk": 5.5
     }
    },
-   "note": "The line has no abilities at all, only stats. The biggest raw HP in the batch, and its splash is good against wave packs."
+   "note": "The line has no abilities, only stats. Marshtomp and Swampert shoot at range 500, so the line is ATK. Swampert splash (full damage radius 100-350) makes it strong against wave packs."
   },
   "gimmighoul": {
    "hash": "4fbe533c04519572",
@@ -3104,7 +3076,7 @@
    "root": "unit_h0h3",
    "reviewed": "2026-09-24",
    "role": "tank",
-   "tier": "C",
+   "tier": "B",
    "also": [],
    "agent": {
     "primary": "tank",
@@ -3122,7 +3094,7 @@
    "root": "unit_h0h8",
    "reviewed": "2026-09-24",
    "role": "atk",
-   "tier": "C",
+   "tier": "B",
    "also": [],
    "agent": {
     "primary": "atk",
@@ -3152,7 +3124,7 @@
    "root": "unit_h0hg",
    "reviewed": "2026-09-24",
    "role": "atk",
-   "tier": "A",
+   "tier": "S",
    "also": [],
    "agent": {
     "primary": "atk",
@@ -3168,9 +3140,7 @@
    "reviewed": "2026-09-24",
    "role": "atk",
    "tier": "A",
-   "also": [
-    "debuff:S+"
-   ],
+   "also": [],
    "agent": {
     "primary": "atk",
     "roles": {
@@ -3200,7 +3170,7 @@
    "root": "unit_h0hs",
    "reviewed": "2026-09-24",
    "role": "atk",
-   "tier": "B",
+   "tier": "A",
    "also": [],
    "agent": {
     "primary": "atk",
@@ -3231,7 +3201,7 @@
    "root": "unit_h0j8",
    "reviewed": "2026-09-24",
    "role": "tank",
-   "tier": "B",
+   "tier": "S+",
    "also": [],
    "agent": {
     "primary": "tank",
@@ -3293,7 +3263,7 @@
    "root": "unit_h0k2",
    "reviewed": "2026-09-24",
    "role": "atk",
-   "tier": "C",
+   "tier": "S",
    "also": [],
    "agent": {
     "primary": "atk",

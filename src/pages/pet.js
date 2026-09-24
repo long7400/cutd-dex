@@ -16,7 +16,7 @@ export function stageCard(u, { cost = null, highlight = false } = {}) {
     <div class="grow">
       <div class="stitle">
         <b>${u.name}</b>
-        ${tierChip(u.stageTier, 'Hạng so với các con cùng vai trò, cùng tầm cấp')}${u.selfDps ? html`<span class="badge warn" title="Chí mạng / choáng dạng self dội vào chính con pet (issue #1)">⚠ tự mất ${num(Math.round(u.selfDps))} máu/s</span>` : ''}
+        ${u.role ? html`<span class="role r-${u.role}" title="Vai trò của dạng này (đọc từ chỉ số + kỹ năng của chính nó)">${u.role.toUpperCase()}</span>` : ''}${tierChip(u.stageTier, 'Hạng so với các con cùng vai trò, cùng tầm cấp')}${u.selfDps ? html`<span class="badge warn" title="Chí mạng / choáng dạng self dội vào chính con pet (issue #1)">⚠ tự mất ${num(Math.round(u.selfDps))} máu/s</span>` : ''}
         ${cost != null ? html`<span class="badge gold" title="Giá tiến hóa lên dạng này">⬆ ${num(cost)} vàng</span>` : ''}
         ${sell ? html`<span class="badge" title="Bán nhận ${pct(db.game.rules.sellGold, 0)} giá trị">Bán ${num(sell)}</span>` : ''}
         <a class="permalink mono" href="${unitUrl(u.id)}" title="Trang riêng của dạng này">#${sid(u.id)}</a>

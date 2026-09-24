@@ -1,4 +1,5 @@
-export const TICKS_PER_SECOND = 32;
+import { TICKS_PER_SECOND } from '../../tool/skillvalue.js';
+export { TICKS_PER_SECOND };
 
 const GLOSSARY = {
   Chaos: 'Hỗn mang', Hero: 'Anh hùng', Siege: 'Công thành', Magic: 'Phép', Pierce: 'Xuyên',

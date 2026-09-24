@@ -165,7 +165,7 @@ export function build({ raw, client, changelog = [], registry = null }) {
       splash: s.attack_splash ?? null,
       auras: an.auras, eff: an.eff, pctHit: an.pct || null, roles: an.roles, unsure: an.unsure,
       peak: an.peak, power: an.power, unlocks: an.unlocks, stageTier: an.stageTier, path: an.path, kit: an.kit,
-      role: an.role, rv: an.rv, selfDps: an.selfDps || null,
+      role: an.role, lineRole: an.lineRole, rv: an.rv, selfDps: an.selfDps || null, single: an.single, parts: an.parts,
       bounce: s.attack_bounce ?? null,
       armor: s.armor ?? 0,
       armorType: s.armor_type ?? 'normal',
@@ -308,10 +308,11 @@ export function shortSkill(a) {
     .replace(/trong ([\d,]+)s · hiệu ứng định kỳ mỗi ([\d,]+)s: Gây ([\d.,]+) sát thương/g, (m, dur, every, dmg) => (num1(dmg) > 0 ? `đốt ${fmtVi(num1(dmg) / Math.max(0.01, num1(every)))} máu/giây trong ${dur}s` : ''))
     .replace(/sát thương đòn đánh kích hoạt sát thương/g, 'sát thương đòn')
     .replace(/sát thương đòn đánh kích hoạt máu/g, 'sát thương đòn thành máu')
-    .replace(/ · trong 0,06s/g, '')
+    .replace(/ · trong 0,(06|1)s/g, '')
     .replace(/^Gây /, '')
     .trim()).filter(Boolean);
-  const text = [...new Set(parts)].slice(0, 3).join('; ');
+  const many = /(\d+)\D{0,12}(mục tiêu|targets)/.exec(String(a.targeting ?? ''))?.[1];
+  const text = [...new Set(parts)].slice(0, 3).join('; ') + (Number(many) > 1 ? ` × ${many} mục tiêu` : '');
   return (text ? `${when}: ${text}` : when).slice(0, 140);
 }
 
@@ -328,7 +329,7 @@ export function buildOverlay(db) {
       e: x.evo?.length ? x.evo.filter(e => Number.isFinite(e.cost) && e.cost >= 0).map(e => [e.to, e.cost]) : undefined,
       ...overlayFields({
         eff: x.eff, roles: x.roles ?? [], peak: x.peak ?? null, power: x.power ?? 0, unlocks: x.unlocks ?? [], stageTier: x.stageTier, path: x.path ?? [], kit: x.kit ?? [],
-        role: x.role, selfDps: x.selfDps ?? 0,
+        role: x.role, lineRole: x.lineRole, selfDps: x.selfDps ?? 0, parts: x.parts,
         traps: Object.fromEntries((x.evo ?? []).filter(e => e.trap).map(e => [e.to, e.trap])),
       }),
       pc: x.pc ? POSITION_CLASSES.indexOf(x.pc) : undefined,

@@ -1,4 +1,4 @@
-import { skillValue } from './skillvalue.js';
+import { skillValue, TICKS_PER_SECOND } from './skillvalue.js';
 
 const round = (v, d = 2) => Math.round(v * 10 ** d) / 10 ** d;
 const POWER_TIERS = [[0.9, 'S+'], [0.65, 'S'], [0.45, 'A'], [0.28, 'B'], [0, 'C']];
@@ -7,8 +7,8 @@ const LEVEL_BANDS = [2, 20, 40, 70, Infinity];
 const KIT_OF_ROLE = { aura: 'buff', cc: 'cc', shred: 'cc', sustain: 'heal', evade: 'evade', taunt: 'taunt', boss: 'boss', aoe: 'aoe', selfharm: 'selfharm' };
 const KIT_ORDER = ['atk', 'tank', 'buff', 'debuff', 'cc', 'heal', 'evade', 'taunt', 'boss', 'aoe', 'selfharm'];
 export const ROLE_KEYS = ['atk', 'tank', 'buff', 'debuff'];
-const BUFF_MIN = 0.05, DEBUFF_MIN = 0.05, SELF_WINDOW = 40, ARMOR_K = 0.06, TEAM_DPS = 24000;
-export const ROLE_RULES = { BUFF_MIN, DEBUFF_MIN, SELF_WINDOW, ARMOR_K, TEAM_DPS, PRESSURE: 6000, HOLD_CAP: 60 };
+const BUFF_MIN = 0.05, DEBUFF_MIN = 0.05, SELF_WINDOW = 40, ARMOR_K = 0.06, TEAM_DPS = 15000, TANK_RATIO = 19.2, TANK_ARMOR = 15, TANK_RANGE = 300, FRAGILE_SEC = 20;
+export const ROLE_RULES = { BUFF_MIN, DEBUFF_MIN, SELF_WINDOW, ARMOR_K, TEAM_DPS, TANK_RATIO, TANK_ARMOR, TANK_RANGE, FRAGILE_SEC, PRESSURE: 6000, HOLD_CAP: 60 };
 const p90 = list => [...list].sort((x, y) => x - y)[Math.floor(list.length * 0.9)] || 1;
 const bandOf = level => LEVEL_BANDS.findIndex(max => (level || 1) < max);
 
@@ -34,7 +34,7 @@ function allyHeals(s, abilityById) {
   for (const id of s.abilities ?? []) {
     const a = abilityById.get(id);
     if (a?.status !== 'executable' || a.targeting?.filter !== 'ally' || a.targeting?.kind === 'self') continue;
-    const every = Math.max(1, (a.trigger?.cooldown_ticks ?? a.cooldown_ticks ?? 160) / 32);
+    const every = Math.max(1, (a.trigger?.cooldown_ticks ?? a.cooldown_ticks ?? 160) / TICKS_PER_SECOND);
     for (const e of a.effects ?? []) if (e.kind === 'heal') perSec += (e.magnitude?.base ?? 0) / every;
   }
   return perSec;
@@ -43,11 +43,23 @@ function allyHeals(s, abilityById) {
 const PRESSURE = 6000, HOLD_CAP = 60;
 function roleValues(u) {
   const survive = u.selfDps > 0 ? Math.max(0.1, Math.min(1, u.hp / u.selfDps / SELF_WINDOW)) : 1;
-  const buff = u.auras.reduce((v, [, dmg, spd, armor, taken]) => v + (dmg - 1) + (spd - 1) + 0.5 * ARMOR_K * armor + 0.5 * (1 - taken), 0) + u.teamBuff + u.heals / 20000;
+  const buff = u.auras.reduce((v, [, dmg, spd, armor, taken]) => v + (dmg - 1) + (spd - 1) + 0.5 * ARMOR_K * armor + 0.5 * (1 - taken), 0) + u.teamBuff + u.heals / 12500;
   const taken = PRESSURE / (1 + ARMOR_K * (u.armor + u.armorPlus)) * (1 - u.evade) * Math.max(0.2, u.dtm) * (u.roles.includes('taunt') ? 1 : 0.9);
   const net = taken + u.selfDps - u.selfHeal - u.heals;
   const hold = net <= 0 ? HOLD_CAP : Math.min(HOLD_CAP, u.hp / net);
-  return { atk: round((u.eff + u.aoeDot * 2) * survive, 1), tank: round(PRESSURE * hold, 0), buff: round(buff, 3), debuff: round(u.debuff, 3), ccv: round(u.ccv, 3) };
+  return { atk: round(u.eff * survive, 1), tank: round(PRESSURE * hold, 0), buff: round(buff, 3), debuff: round(u.debuff, 3), ccv: round(u.ccv, 3) };
+}
+
+export const ehpOf = u => (u.hp * (1 + ARMOR_K * (u.armor + u.armorPlus))) / Math.max(0.1, 1 - u.evade) / Math.max(0.2, u.dtm);
+
+function stageRole(u, floor) {
+  const { atk, buff, ccv } = u.rv;
+  if (buff >= BUFF_MIN && buff * TEAM_DPS >= atk) return 'buff';
+  if (ccv >= DEBUFF_MIN && ccv * TEAM_DPS >= atk) return 'debuff';
+  const ehp = ehpOf(u);
+  const tanky = u.roles.includes('taunt') || (ehp >= floor && ehp / Math.max(1, u.eff) >= TANK_RATIO);
+  const fragile = u.selfDps > 0 && u.hp / u.selfDps < FRAGILE_SEC;
+  return u.range <= TANK_RANGE && tanky && !fragile ? 'tank' : 'atk';
 }
 
 export function analyzeCatalog(catalog, { overrides = null } = {}) {
@@ -87,38 +99,23 @@ export function analyzeCatalog(catalog, { overrides = null } = {}) {
     const heals = allyHeals(s, abilityById);
     if (heals > 0) roles.add('sustain');
     const level = levelOf(s) ?? 0;
-    if (level >= 20 && ((s.armor ?? 0) >= 15 || (s.max_health ?? 0) / Math.max(1, sv.eff) >= 18)) roles.add('tank');
+    if (level >= 20 && (s.attack_range ?? 0) <= TANK_RANGE && ((s.armor ?? 0) >= TANK_ARMOR || (s.max_health ?? 0) / Math.max(1, sv.eff) >= TANK_RATIO * 1.5)) roles.add('tank');
     out.set(s.id, {
-      eff: sv.eff, pct: sv.pct, roles: [...roles].sort(), unsure: sv.uncertain, auras, heals,
+      eff: sv.eff, single: sv.single, parts: sv.parts, pct: sv.pct, roles: [...roles].sort(), unsure: sv.uncertain, auras, heals,
       selfDps: sv.selfDps, selfSlow: sv.selfSlow, evade: sv.evade, armorPlus: sv.armorPlus, dtm: sv.dtm, debuff: sv.debuff,
       selfHeal: sv.selfHeal, aoeDot: sv.aoeDot, teamBuff: sv.teamBuff, ccv: sv.ccv,
       role: null, rv: null, lineRole: null,
       splash: !!(s.attack_splash || s.attack_bounce),
       evo: (s.evolutions ?? []).filter(e => typeof e?.stage_id === 'string' && Number.isFinite(e.cost) && e.cost >= 0).map(e => [e.stage_id, e.cost]),
-      level, legendary: !!s.legendary, hp: s.max_health ?? 0, armor: s.armor ?? 0,
+      level, legendary: !!s.legendary, hp: s.max_health ?? 0, armor: s.armor ?? 0, range: s.attack_range ?? 0,
       traps: {}, unlocks: [], peak: null, power: 0, stageTier: null, path: [], kit: [],
       stats: {
-        hp: s.max_health ?? 0, dps: round(((s.attack_damage ?? 0) * 32) / Math.max(1, s.attack_cooldown_ticks ?? 32), 1),
+        hp: s.max_health ?? 0, dps: round(((s.attack_damage ?? 0) * TICKS_PER_SECOND) / Math.max(1, s.attack_cooldown_ticks ?? TICKS_PER_SECOND), 1),
         a: s.attack_type ?? 'normal', at: s.armor_type ?? 'normal', ar: s.armor || undefined, ms: s.move_speed || undefined, rg: s.attack_range || undefined,
         lk: s.leak_free ? undefined : s.leak_lives || undefined, L: s.legendary ? 1 : undefined, k: s.catchable ? 1 : undefined,
         f: find(s.id), el: affinity.get(find(s.id)) ?? undefined,
       },
     });
-  }
-
-  const best = new Map();
-  const ahead = (id, depth = 0) => {
-    if (best.has(id)) return best.get(id);
-    best.set(id, out.get(id).eff);
-    const v = Math.max(out.get(id).eff, ...(depth < 50 ? out.get(id).evo.filter(([to]) => out.has(to)).map(([to]) => ahead(to, depth + 1)) : []));
-    best.set(id, v);
-    return v;
-  };
-  for (const u of out.values()) {
-    for (const [to] of u.evo) {
-      const next = out.get(to);
-      if (next && next.eff < u.eff * 0.98) u.traps[to] = ahead(to) <= u.eff * 1.02 ? 'trap' : 'dip';
-    }
   }
 
   const inPool = new Set();
@@ -153,11 +150,8 @@ export function analyzeCatalog(catalog, { overrides = null } = {}) {
     return { peak, unlocks, path };
   };
   for (const id of inPool) {
-    const { peak, unlocks, path } = climb(id);
-    const u = out.get(id);
-    u.peak = [peak[0], peak[1], out.get(peak[0]).eff];
-    u.path = path;
-    u.unlocks = [...unlocks].map(([r, [to, c]]) => [r, to, c]);
+    const { unlocks } = climb(id);
+    out.get(id).unlocks = [...unlocks].map(([r, [to, c]]) => [r, to, c]);
   }
   for (const u of out.values()) u.rv = roleValues(u);
   const reachOf = id => {
@@ -173,61 +167,90 @@ export function analyzeCatalog(catalog, { overrides = null } = {}) {
     families.get(f).add(id);
   }
   const forced = new Map(Object.entries(overrides ?? {}).filter(([id, r]) => out.has(id) && ROLE_KEYS.includes(r)).map(([id, r]) => [find(id), r]));
+  const common = [...out.values()].filter(u => !u.legendary && u.level > 0);
+  const floors = new Map();
+  const floorAt = lv => {
+    if (!floors.has(lv)) {
+      const list = common.filter(u => Math.abs(u.level - lv) <= 10).map(ehpOf).sort((x, y) => x - y);
+      floors.set(lv, list[Math.floor(list.length / 2)] ?? 0);
+    }
+    return floors.get(lv);
+  };
+  for (const [id, u] of out) u.role = forced.get(find(id)) ?? stageRole(u, floorAt(u.level));
+  const raw = new Map([...out].map(([id, u]) => [id, u.role]));
+  const upOf = new Map();
+  for (const [id, u] of out) for (const [to] of u.evo) if (out.has(to)) upOf.set(to, id);
+  const SWAP = new Set(['atk', 'tank']);
+  for (const [id, u] of out) {
+    const p = upOf.get(id), kids = u.evo.map(([to]) => to).filter(to => out.has(to));
+    if (forced.has(find(id)) || !SWAP.has(raw.get(id)) || !p || !kids.length) continue;
+    const around = raw.get(p);
+    if (SWAP.has(around) && around !== raw.get(id) && kids.every(k => raw.get(k) === around)) u.role = around;
+  }
   const lineRole = new Map();
   for (const [f, ids] of families) {
-    const peakIds = new Set([...ids].map(id => out.get(id).peak?.[0]).filter(Boolean));
-    const peakList = peakIds.size ? [...peakIds] : [...ids];
-    const tanky = peakList.some(id => { const p = out.get(id); return p.armor >= 15 || p.hp / Math.max(1, p.eff + p.aoeDot * 2) >= 12; });
-    const atkEq = topOf(ids, 'atk'), buff = topOf(ids, 'buff'), ccv = topOf(ids, 'ccv');
-    lineRole.set(f, forced.get(f) ?? (buff >= BUFF_MIN && buff * TEAM_DPS >= atkEq ? 'buff' : ccv >= DEBUFF_MIN && ccv * TEAM_DPS >= atkEq ? 'debuff' : tanky ? 'tank' : 'atk'));
-  }
-  for (const id of inPool) {
-    const u = out.get(id);
-    const role = lineRole.get(find(id));
-    const { peak, path } = climb(id, x => out.get(x).rv[role]);
-    u.peak = [peak[0], peak[1], out.get(peak[0]).eff];
-    u.path = path;
+    const leaves = [...ids].filter(id => !out.get(id).evo.some(([to]) => ids.has(to)));
+    const last = (leaves.length ? leaves : [...ids]).reduce((a, b) => {
+      const x = out.get(a), y = out.get(b);
+      return y.level > x.level || (y.level === x.level && y.rv[y.role] > x.rv[x.role]) ? b : a;
+    });
+    lineRole.set(f, forced.get(f) ?? out.get(last).role);
   }
   const lineScore = new Map();
   for (const id of inPool) {
     const u = out.get(id);
     u.lineRole = lineRole.get(find(id));
+    const { peak, path } = climb(id, x => out.get(x).rv[u.lineRole]);
+    u.peak = [peak[0], peak[1], out.get(peak[0]).eff];
+    u.path = path;
     lineScore.set(id, topOf(reachOf(id), u.lineRole));
   }
   const refs = Object.fromEntries(ROLE_KEYS.map(r => [r, p90([...roots].filter(id => out.get(id).lineRole === r).map(id => lineScore.get(id)))]));
   for (const id of inPool) {
     const u = out.get(id);
     u.power = round(Math.min(1, lineScore.get(id) / refs[u.lineRole]));
-  }
-  for (const id of inPool) {
-    const u = out.get(id);
     const extra = new Set(u.path.flatMap(st => out.get(st)?.roles ?? []).map(r => KIT_OF_ROLE[r]).filter(Boolean));
-    extra.delete(u.lineRole);
-    u.kit = [u.lineRole, ...KIT_ORDER.filter(k => extra.has(k))];
-    u.role = u.lineRole;
+    extra.delete(u.role);
+    u.kit = [u.role, ...KIT_ORDER.filter(k => extra.has(k))];
+  }
+  const best = new Map();
+  const ahead = (id, role, depth = 0) => {
+    const key = `${role}:${id}`;
+    if (best.has(key)) return best.get(key);
+    best.set(key, out.get(id).rv[role]);
+    const v = Math.max(out.get(id).rv[role], ...(depth < 50 ? out.get(id).evo.filter(([to]) => out.has(to)).map(([to]) => ahead(to, role, depth + 1)) : []));
+    best.set(key, v);
+    return v;
+  };
+  for (const u of out.values()) {
+    const now = u.rv[u.role];
+    for (const [to] of u.evo) {
+      const next = out.get(to);
+      if (next && next.rv[u.role] < now * 0.98) u.traps[to] = ahead(to, u.role) <= now * 1.02 ? 'trap' : 'dip';
+    }
   }
   const bands = new Map();
   for (const id of inPool) {
     const u = out.get(id);
     if (u.legendary) continue;
-    const key = `${u.lineRole}:${bandOf(u.level)}`;
+    const key = `${u.role}:${bandOf(u.level)}`;
     if (!bands.has(key)) bands.set(key, []);
-    bands.get(key).push(u.rv[u.lineRole]);
+    bands.get(key).push(u.rv[u.role]);
   }
-  const roleRef = Object.fromEntries(ROLE_KEYS.map(r => [r, p90([...inPool].filter(id => out.get(id).lineRole === r).map(id => out.get(id).rv[r]))]));
+  const roleRef = Object.fromEntries(ROLE_KEYS.map(r => [r, p90([...inPool].filter(id => out.get(id).role === r).map(id => out.get(id).rv[r]))]));
   for (const id of inPool) {
     const u = out.get(id);
-    const list = bands.get(`${u.lineRole}:${bandOf(u.level)}`);
-    const ref = list && list.length >= 5 ? p90(list) : roleRef[u.lineRole];
-    u.stageTier = powerTier(Math.min(1, u.rv[u.lineRole] / (ref || 1)));
+    const list = bands.get(`${u.role}:${bandOf(u.level)}`);
+    const ref = list && list.length >= 5 ? p90(list) : roleRef[u.role];
+    u.stageTier = powerTier(Math.min(1, u.rv[u.role] / (ref || 1)));
   }
   return out;
 }
 
 export function overlayFields(a) {
   return {
-    ed: a.eff, r: a.roles.length ? a.roles : undefined, pk: a.peak ?? undefined, pw: a.peak ? a.power : undefined,
-    ro: a.role ?? undefined, sd: a.selfDps > 0 ? a.selfDps : undefined,
+    ed: a.eff, dp: a.parts ? [a.parts.basic, a.parts.proc, a.parts.skill, a.parts.dot, a.parts.aoe] : undefined, r: a.roles.length ? a.roles : undefined, pk: a.peak ?? undefined, pw: a.peak ? a.power : undefined,
+    ro: a.role ?? undefined, lr: a.lineRole ?? undefined, sd: a.selfDps > 0 ? a.selfDps : undefined,
     ul: a.unlocks.length ? a.unlocks : undefined, st: a.stageTier ?? undefined,
     pg: a.path?.length > 1 ? a.path : undefined, kt: a.kit?.length ? a.kit : undefined,
     tp: Object.keys(a.traps).length ? Object.fromEntries(Object.entries(a.traps).map(([to, k]) => [to, k === 'trap' ? 2 : 1])) : undefined,

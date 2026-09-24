@@ -1,11 +1,11 @@
-export const POSITION_RULES_VERSION = 1;
+export const POSITION_RULES_VERSION = 2;
 export const T = {
   MELEE_MAX: 170,
   SHORT_MAX: 300,
   ARMOR_K: 0.06,
-  TANK_RATIO: 12,          // enter FRONT (line role tank): EHP/atk >= 12 (~2x the game's default 6.25 hp-per-dps)
-  TANK_RATIO_OTHER: 15,
-  STAY_RATIO: 9,
+  TANK_RATIO: 19.2,        // enter FRONT (line role tank): EHP/atk >= 19.2 at 20 ticks/s
+  TANK_RATIO_OTHER: 24,
+  STAY_RATIO: 14.4,
   TANK_FLOOR: 1.0,
   STAY_FLOOR: 0.6,
   LEVEL_WINDOW: 10,
@@ -108,7 +108,7 @@ export function buildPositions({ catalog, units, pets }) {
     return {
       id: u.id, name: u.name, level: u.level ?? 1, legendary: !!s.legendary, range: s.attack_range ?? 0, hp, armor, evade: f.evade, ehp,
       atk: Math.round(atk * 10) / 10, ratio: Math.round(ehp / Math.max(1, atk) * 10) / 10, selfDps, selfDeath: selfDps > 0 ? Math.round(hp / selfDps) : null,
-      lineRole: u.role, buff: u.rv?.buff ?? 0, f, evo: (u.evo ?? []).map(e => e.to),
+      role: u.role, lineRole: u.lineRole ?? u.role, buff: u.rv?.buff ?? 0, f, evo: (u.evo ?? []).map(e => e.to),
     };
   });
   const byId = new Map(rows.map(r => [r.id, r]));
@@ -127,10 +127,10 @@ export function buildPositions({ catalog, units, pets }) {
     const enter = r.ehp >= lm * T.TANK_FLOOR && (r.ratio >= enterRatio || r.armor >= T.ARMOR_TANK);
     const stay = wasFront && (r.armor >= T.ARMOR_TANK || (r.ratio >= T.STAY_RATIO && r.ehp >= lm * T.STAY_FLOOR));
     if (r.f.selfTaunt.length) return ['FRONT_TAUNT', 'R1 self-taunt ' + r.f.selfTaunt.join('+')];
-    if (r.f.teamAura.length && r.buff >= T.BUFF_MIN) return ['SUPPORT_BACK', `R2 team aura ${r.f.teamAura.join('+')} buff=${r.buff}`];
+    if (r.f.teamAura.length && r.role === 'buff') return ['SUPPORT_BACK', `R2 team aura ${r.f.teamAura.join('+')} buff=${r.buff}`];
     if (r.f.allyHealTouch > 0) return ['HEALER_NEAR', `R3 ally heal range<=${T.HEAL_TOUCH} (${Math.round(r.f.allyHealTouch)} hp/s)` + (selfFragile ? `, self-harm dies in ${r.selfDeath}s` : '')];
     if (selfFragile) return [melee || short ? 'MELEE_SELFHARM' : 'RANGED', `R4 self-harm ${r.selfDps}/s -> dies in ${r.selfDeath}s < ${T.SELF_WAVE_SEC}s`];
-    if (enter || stay) return ['FRONT_TANK', `R5 ${enter ? 'enter' : 'stay'} ehp=${r.ehp} ratio=${r.ratio} armor=${r.armor}${r.evade ? ` evade=${r.evade}` : ''} lvMedian=${lm}`];
+    if (r.role === 'tank') return ['FRONT_TANK', `R5 role tank ehp=${r.ehp} ratio=${r.ratio} armor=${r.armor}${r.evade ? ` evade=${r.evade}` : ''} lvMedian=${lm}${enter || stay ? '' : ' (skill)'}`];
     if (melee) return ['MELEE', `R6 range ${r.range} <= ${T.MELEE_MAX}`];
     if (short) return ['RANGED_SHORT', `R6 range ${r.range} (250..300) shoots from row 1`];
     return ['RANGED', `R6 range ${r.range} > ${T.SHORT_MAX}`];
@@ -154,6 +154,7 @@ export function buildPositions({ catalog, units, pets }) {
     const orig = new Map(rows.map(r => [r.id, r.cls]));
     const smooth = (r, target, why) => {
       const cls = statFor(target, r);
+      if ((cls === 'FRONT_TANK') !== (r.role === 'tank')) return;
       r.why = `S smoothed ${r.cls}->${cls} (${why}); was: ${r.why}`;
       r.cls = cls;
     };

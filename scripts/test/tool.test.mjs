@@ -231,7 +231,7 @@ test('bookmarklet: bấm ở sảnh → bỏ qua socket sảnh, bám đúng sock
   const root = log.roots[0];
   const btn = title => [...root.querySelectorAll('button')].find(b => b.title === title || b.textContent.startsWith(title));
   assert.ok(!btn('Đo tải'), 'bỏ tab Đo tải');
-  assert.equal([...root.querySelectorAll('.tab')].length, 5);
+  assert.deepEqual([...root.querySelectorAll('.tab')].map(b => b.textContent.replace(/\s*\d+$/, '')), ['Trade', 'Wild', 'Đội', 'DPS', 'Đợt', 'Phòng']);
 
   btn('Chuyển sang ngang').click();
   assert.ok(root.querySelector('.panel').classList.contains('h'));
@@ -703,6 +703,47 @@ test('bookmarklet: bản web chạy trong khung → dừng vòng vẽ của game
   await tick(100);
   assert.equal(innerRan, 1, 'game trong khung vẫn vẽ bình thường');
   w.__cutdHelper.destroy();
+});
+
+test('bookmarklet: tab DPS — mỗi con 1 dòng, đo sát thương thật trong đợt (đạn tính cho con bắn, không tính đòn dội vào chính nó), DPS tính theo công thức', async t => {
+  const { w, log, code, FakeWS } = setupDom();
+  t.after(() => w.close());
+  w.eval(code);
+  const ws = new FakeWS();
+  ws.addEventListener('message', e => e.data);
+  const emit = m => ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
+  emit({ type: 'server_hello', base_id: 7, simulation_ticks_per_second: 20 });
+  emit(summary);
+  await tick(0);
+  const unit = (id, stage) => ({ id, stage_id: stage, owner_id: 11, health: 10, max_health: 10, active: true });
+  emit(keyframe([unit(1, scenario.c), unit(2, scenario.c), unit(3, scenario.a)]));
+  await tick(1200);
+  const root = log.roots[0];
+  [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith('DPS')).click();
+  assert.equal(root.querySelectorAll('.drow').length, 3, 'mỗi con 1 dòng, 2 con cùng loại vẫn tách 2 dòng');
+  assert.match(root.querySelector('.dsum').textContent, /Chưa đo/);
+  emit({ ...summary, phase: 'wave', tick: 1000, wave_index: 4 });
+  await tick(50);
+  const base = { base_id: 7, lives: 30, gold: 5000, lumber: 0, alive: true, research: [] };
+  emit({ type: 'base_delta', tick: 1100, base, effects: [
+    { kind: 'projectile_fired', tick: 1050, entity_collection: 'projectile', entity_id: 900, source_collection: 'unit', source_id: 1 },
+    { kind: 'damage', tick: 1060, entity_id: 50, source_collection: 'projectile', source_id: 900, amount: 3000 },
+    { kind: 'damage', tick: 1070, entity_id: 51, source_collection: 'unit', source_id: 2, amount: 1000 },
+    { kind: 'damage', tick: 1080, target_collection: 'unit', target_id: 2, source_collection: 'unit', source_id: 2, amount: 999 },
+    { kind: 'damage', tick: 1090, entity_id: 52, source_collection: 'unit', source_id: 77, amount: 5000 },
+  ] });
+  await tick(1100);
+  const val = name => [...root.querySelectorAll('.drow')].map(r => r.querySelector('.dval b').textContent);
+  const vals = val();
+  assert.ok(vals.includes('600') && vals.includes('200'), `5 giây: 3000 → 600/s (đạn của con 1), 1000 → 200/s (con 2), không cộng 999 tự dội; có: ${vals}`);
+  assert.match(root.querySelector('.dsum').textContent, /Đợt 4/);
+  assert.match(root.querySelector('.dsum').textContent, /Đo 800/, 'tổng đội chỉ tính quái, không tính con không phải của mình');
+  assert.ok([...root.querySelectorAll('.drow .dval small')].every(s => /^≈/.test(s.textContent)), 'kèm DPS tính theo công thức');
+  emit({ ...summary, phase: 'planning', tick: 1200 });
+  emit({ type: 'base_delta', tick: 1300, base, effects: [{ kind: 'damage', tick: 1300, entity_id: 53, source_collection: 'unit', source_id: 1, amount: 99999 }] });
+  await tick(1100);
+  assert.ok(val().includes('600'), 'hết đợt → giữ số đo của đợt vừa rồi');
+  assert.equal(log.sent, 0);
 });
 
 test('bookmarklet: bản web — tắt tool trước khi vào trận thì gỡ bẫy', t => {

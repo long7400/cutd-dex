@@ -68,7 +68,7 @@ test('describer: dịch theo bảng của game + mô tả điều kiện/modifie
   const catalog = {
     display_names: [{ id: 'n1', value: 'Flame |cffff0000Strike|r' }],
     species: [],
-    modifiers: [{ id: 'm1', attack_speed_multiplier: 1.25, armor_delta: -3, duration_ticks: 64, flags: ['invulnerable'] }],
+    modifiers: [{ id: 'm1', attack_speed_multiplier: 1.25, armor_delta: -3, duration_ticks: 40, flags: ['invulnerable'] }],
     abilities: [{
       id: 'a1', display_name_id: 'n1', status: 'executable', trigger: { kind: 'on_hit' }, conditions: [{ kind: 'chance', chance: 0.33 }],
       targeting: { kind: 'unit', filter: 'enemy_creep', max_targets: 3 }, delivery: { kind: 'instant' },
