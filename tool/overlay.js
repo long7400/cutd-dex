@@ -116,6 +116,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const seen = new WeakSet();
 
   const acks = new Map();
+  const cmdLog = [];
   let suspect = new Set();
   const skillProbe = { fired: 0, selfHit: 0, selfDmg: 0, otherHit: 0, otherDmg: 0, samples: [] };
   const cut = v => (typeof v === 'number' && Number.isFinite(v) ? v : typeof v === 'string' ? v.slice(0, 48) : undefined);
@@ -160,6 +161,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       return true;
     }
     if (msg?.type === 'command_ack' && Number.isInteger(msg.sequence)) {
+      cmdLog.push(performance.now());
+      if (cmdLog.length > 200) cmdLog.splice(0, cmdLog.length - 200);
       acks.set(msg.sequence, { ok: msg.accepted === true, reason: typeof msg.reason === 'string' ? msg.reason.slice(0, 80) : '' });
       if (acks.size > 64) acks.delete(acks.keys().next().value);
       return true;
@@ -328,12 +331,28 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 
   let lastAction = 0, downAt = 0;
   const SHIFT_MS = 350;
+  const RATE_WINDOW = 30000, RATE_MAX = 36, RATE_GAP = 800;
+  const recentCmds = () => {
+    const t = performance.now();
+    while (cmdLog.length && t - cmdLog[0] > RATE_WINDOW) cmdLog.shift();
+    return cmdLog.length;
+  };
+  const rateWait = () => {
+    const t = performance.now(), n = recentCmds();
+    const gap = lastAction + RATE_GAP - t;
+    const full = n >= RATE_MAX ? cmdLog[n - RATE_MAX] + RATE_WINDOW - t : 0;
+    return Math.max(0, gap, full);
+  };
   function runAction(e, kind, key, arg, expect) {
     e.stopPropagation();
     e.currentTarget.blur();
     if (!realClick(e)) return;
     const t = performance.now();
-    if (t - lastAction < 600) return;
+    const hold = rateWait();
+    if (hold > 0) {
+      if (hold > RATE_GAP) { toast = `Game giới hạn 2 lệnh/giây — chờ ${Math.ceil(hold / 1000)} giây rồi bấm tiếp.`; dirty = true; render(true); }
+      return;
+    }
     if (downAt > 0 && t - downAt < 1500 && downAt - lastRender < SHIFT_MS) { toast = 'Danh sách vừa đổi chỗ — nhìn lại rồi bấm lần nữa.'; dirty = true; render(true); return; }
     lastAction = t;
     e.currentTarget.disabled = true;
@@ -361,7 +380,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   };
 
   const ROWS = [['TANK', 'k-tank', 'Hàng đầu: máu / giáp dày'], ['CẬN', 'k-atk', 'Hàng 2: đấu sĩ cận chiến / phép tầm ngắn'], ['BUFF', 'k-buff', 'Hàng 3: hào quang / hồi máu'], ['XA', 'k-cc', 'Hàng cuối: tay dài (tầm > 300)']];
-  const MOVE_GAP = 300, ACK_WAIT = 1500, ARRANGE_COOLDOWN = 4000, IN_PLACE = 24;
+  const ACK_WAIT = 1500, ARRANGE_COOLDOWN = 4000, IN_PLACE = 24;
   let arranging = null, arrangeReady = 0;
   const wait = ms => new Promise(r => setTimeout(r, ms));
   async function waitAck(seq) {
@@ -403,6 +422,9 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       if (!found || found.ent.contentId !== m.stage) { run.n--; continue; }
       const pos = found.ent.pos;
       if (pos && Math.hypot(pos.x - m.x, pos.y - m.y) <= IN_PLACE) { run.n--; continue; }
+      for (let hold = rateWait(); hold > 0 && !run.stop && !dead; hold = rateWait()) await wait(Math.min(hold, 400));
+      if (run.stop || dead) break;
+      lastAction = performance.now();
       const r = moveCreature(g, found.ent, m);
       if (r.fail) { toast = FAIL[r.fail]; break; }
       const ack = await waitAck(r.seq);
@@ -410,7 +432,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       if (!ack.ok) { toast = `Game từ chối: ${ack.reason.replace(/_/g, ' ') || 'không rõ'} — đã dừng.`; break; }
       run.done++;
       dirty = true; render(true);
-      await wait(MOVE_GAP);
     }
     arranging = null;
     arrangeReady = performance.now() + ARRANGE_COOLDOWN;

@@ -285,21 +285,21 @@ test('bookmarklet: nút Bắt/Tiến hóa/Trade gọi đúng hàm game, chỉ kh
   trustedClick(w, btn('Trade'));
   assert.deepEqual(calls.at(-1), ['tradePet', 'u1', 1]);
 
-  await tick(700);
+  await tick(850);
   tab('Wild');
   trustedClick(w, btn('Bắt'));
   trustedClick(w, btn('Bắt'));
   assert.equal(calls.filter(c => c[0] === 'catchWild').length, 1);
   assert.deepEqual(calls.at(-1), ['catchWild', 'w1']);
 
-  await tick(700);
+  await tick(850);
   tab('Đội');
   const up = [...root.querySelectorAll('button.act')].find(b => b.textContent.startsWith('↑'));
   trustedClick(w, up);
   assert.equal(calls.at(-1)[0], 'evolveCreature');
   assert.ok(overlay.u[entities.get(calls.at(-1)[1]).contentId].e.some(([to]) => to === calls.at(-1)[2]), 'nhánh tiến hóa phải hợp lệ');
 
-  await tick(700);
+  await tick(850);
   trustedClick(w, root.querySelector('.row.pick .mid'));
   assert.equal(calls.at(-1)[0], 'selectEntity');
 
@@ -401,7 +401,7 @@ test('bookmarklet: nhãn + đích của nút lấy từ catalog GAME, overlay gi
     trustedClick(w, b);
     const sent = calls.at(-1);
     assert.ok(b.title.includes(`${cost(sent).toLocaleString('vi-VN')} vàng`), `nút "${b.textContent}" gửi ${sent} nhưng giá không khớp`);
-    await tick(650);
+    await tick(850);
   }
 
   emit({ ...keyframe([{ id: 1, stage_id: branchy.id, owner_id: 12, health: 5, max_health: 10, active: true }]), base: { base_id: 8, lives: 1, gold: 9, lumber: 0 } });
@@ -480,13 +480,22 @@ test('bookmarklet: bản web — dán từ sảnh → móc session/interaction l
   const btn = text => [...root.querySelectorAll('button.act')].find(b => b.textContent.startsWith(text));
   trustedClick(w, btn('Trade'));
   assert.deepEqual([...w.__calls.at(-1)], ['trade', 'u1', 1]);
-  await tick(700);
+  await tick(850);
   [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith('Wild')).click();
   trustedClick(w, btn('Bắt'));
   assert.deepEqual([...w.__calls.at(-1)], ['catch', 'w1']);
   trustedClick(w, root.querySelector('.row.pick .mid'));
   assert.deepEqual([...w.__calls.at(-1)], ['select', 'w1']);
   assert.equal(w.__session.nextSequence, 3, 'số thứ tự do chính game tăng');
+  const before = w.__calls.length;
+  await tick(300);
+  trustedClick(w, btn('Bắt'));
+  assert.equal(w.__calls.length, before, 'cách lệnh trước < 0,8 giây → không gửi');
+  for (let i = 0; i < 36; i++) emit({ type: 'command_ack', sequence: 100 + i, accepted: true, tick: 200 + i });
+  await tick(900);
+  trustedClick(w, btn('Bắt'));
+  assert.equal(w.__calls.length, before, '36 lệnh trong 30 giây (kể cả bấm tay) → tool nhường, không gửi thêm');
+  assert.match(root.querySelector('.toast').textContent, /2 lệnh\/giây/);
   await tick(1500);
   assert.equal(w.document.querySelectorAll('iframe').length, 0, 'đã móc từ sảnh → không mở khung');
   assert.equal(log.sent, 0);
