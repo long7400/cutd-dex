@@ -1,7 +1,7 @@
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM, VirtualConsole } from 'jsdom';
-import { createState, applyMessage, tradeOptions, evolvePath, nextWaveForBase, myUnits, formation, formationRow, arrangeMoves, minCostAssign, trackRoster, heldThisRound } from '../../tool/logic.js';
+import { createState, applyMessage, tradeOptions, evolvePath, nextWaveForBase, myUnits, formationRow, minCostAssign } from '../../tool/logic.js';
 import { buildTool } from '../build-tool.mjs';
 import { build, buildOverlay, PATHS } from '../build.mjs';
 import { readJSON } from '../lib/fsx.mjs';
@@ -59,68 +59,22 @@ test('logic: keyframe + delta + trade + đợt tới', () => {
   assert.deepEqual(nextWaveForBase(s).map(g => g.count), [3]);
 });
 
+test('logic: hàng theo bảng vị trí (pc) — không có pc thì theo vai trò; ghép ô tối ưu', () => {
+  assert.equal(formationRow({ pc: 0 }), 0);
+  assert.equal(formationRow({ pc: 6 }), 2);
+  assert.equal(formationRow({ pc: 7 }), 3);
+  assert.equal(formationRow({ ro: 'buff' }), 3);
+  assert.equal(formationRow({ ro: 'tank' }), 0);
+  assert.equal(formationRow({ ro: 'atk', rg: 600 }), 2);
+  assert.equal(formationRow({ ro: 'atk', rg: 90, kt: ['atk', 'heal'] }), 1, 'hút máu cho bản thân không bị đẩy ra sau');
+  assert.deepEqual(minCostAssign([[5, 1, 9], [1, 5, 9]]), [1, 0]);
+});
+
 test('logic: dữ liệu rác không làm vỡ', () => {
   const s = createState();
   for (const m of [null, 1, 'x', [], { type: 'base_keyframe' }, { type: 'base_keyframe', base: 5 }, { type: 'room_summary', bases: 'x' }]) {
     assert.doesNotThrow(() => applyMessage(s, m));
   }
-});
-
-test('logic: pet mới mua để yên round đó, sang round sau mới xếp; tiến hóa đổi vai trò thì xếp ngay; ghép ô tối ưu', () => {
-  const meta = new Map();
-  const rows = { a: 1, b: 1, c: 3 };
-  const rowOf = st => rows[st];
-  trackRoster(meta, [{ id: 1, stage: 'a' }], rowOf, 0, true);
-  assert.equal(heldThisRound(meta, 1, 0), false, 'con có sẵn lúc bật tool không bị giữ');
-  trackRoster(meta, [{ id: 1, stage: 'a' }, { id: 2, stage: 'a' }], rowOf, 0, false);
-  assert.equal(heldThisRound(meta, 2, 0), true, 'vừa mua trong round 0 → để yên');
-  assert.equal(heldThisRound(meta, 2, 1), false, 'sang round 1 → được xếp');
-  assert.deepEqual(trackRoster(meta, [{ id: 1, stage: 'b' }, { id: 2, stage: 'a' }], rowOf, 0, false), [], 'tiến hóa cùng hàng → không coi là đổi vai trò');
-  const changed = trackRoster(meta, [{ id: 1, stage: 'b' }, { id: 2, stage: 'c' }], rowOf, 0, false);
-  assert.deepEqual(changed.map(u => u.id), [2], 'tiến hóa đổi hàng → báo đổi vai trò');
-  assert.equal(heldThisRound(meta, 2, 0), false, 'đổi vai trò → xếp ngay dù mới mua');
-  trackRoster(meta, [{ id: 1, stage: 'b' }], rowOf, 0, false);
-  assert.ok(!meta.has(2), 'con đã bán / chết khỏi danh sách');
-  assert.deepEqual(minCostAssign([[5, 1, 9], [1, 5, 9]]), [1, 0], 'ghép chéo tối ưu, không tham lam');
-  assert.deepEqual(minCostAssign([[1, 2], [1, 100]]), [1, 0], 'nhường ô gần cho con mà chỉ ô đó mới gần');
-});
-
-test('logic: xếp đội — TANK gần phía quái nhất, XA rồi HEAL/BUFF ở sau cùng, mạnh nhất ở giữa, luôn trong sân', () => {
-  const arena = { originX: 1000, originY: 2384, width: 1216, height: 1312 };
-  const down = { arena, path: [{ x: 1608, y: 2192 }, { x: 1608, y: 3552 }] };
-  const members = [
-    { key: 'u1', row: 3, score: 5 }, { key: 'u2', row: 0, score: 900 }, { key: 'u3', row: 0, score: 100 },
-    { key: 'u4', row: 1, score: 50 }, { key: 'u5', row: 2, score: 1 }, { key: 'u6', row: 0, score: 500 },
-  ];
-  const at = f => Object.fromEntries(f.map(m => [m.key, m]));
-  const p = at(formation(members, down));
-  assert.ok(p.u2.y < p.u4.y && p.u4.y < p.u5.y && p.u5.y < p.u1.y, 'từ phía quái vào: TANK → CẬN → XA → HEAL');
-  assert.equal(p.u2.x, 1608, 'tank máu nhất đứng giữa đường quái');
-  assert.equal(p.u2.y, p.u3.y);
-  assert.ok(p.u6.x !== p.u3.x && Math.abs(p.u6.x - 1608) === 80, 'tank thứ 2 đứng cạnh');
-  for (const m of Object.values(p)) assert.ok(m.x >= arena.originX && m.x <= arena.originX + arena.width && m.y >= arena.originY && m.y <= arena.originY + arena.height);
-  const up = at(formation(members, { arena, path: [...down.path].reverse() }));
-  assert.ok(up.u2.y > up.u1.y, 'quái đi ngược → đội quay theo');
-  const many = formation(Array.from({ length: 40 }, (_, i) => ({ key: `u${i}`, row: 0, score: i })), down);
-  assert.equal(new Set(many.map(m => `${m.x},${m.y}`)).size, 40, 'đông quá thì xuống hàng, không chồng');
-  assert.deepEqual(formation(members, null), []);
-  assert.equal(formationRow({ hp: 5000, ed: 100 }), 0);
-  assert.equal(formationRow({ hp: 100, ed: 50, r: ['aura'] }), 3);
-  assert.equal(formationRow({ hp: 100, ed: 50, r: ['sustain'], rg: 600 }), 3, 'hồi máu tay dài vẫn đứng sau cùng');
-  assert.equal(formationRow({ hp: 100, ed: 50, rg: 600 }), 2);
-  assert.equal(formationRow({ hp: 100, ed: 50, rg: 90 }), 1);
-  const slots = formation(members, down);
-  const placed = members.map(m => ({ ...m, pos: { x: slots.find(sl => sl.key === m.key).x, y: slots.find(sl => sl.key === m.key).y } }));
-  assert.deepEqual(arrangeMoves(placed, down), [], 'đội đã đúng chỗ → 0 lệnh');
-  const swapped = placed.map(m => (m.key === 'u2' ? { ...m, pos: placed.find(x => x.key === 'u6').pos } : m.key === 'u6' ? { ...m, pos: placed.find(x => x.key === 'u3').pos } : m.key === 'u3' ? { ...m, pos: placed.find(x => x.key === 'u2').pos } : m));
-  assert.deepEqual(arrangeMoves(swapped, down), [], '3 tank đổi chỗ vòng cho nhau trong cùng hàng → KHÔNG dời (không spam)');
-  const oneOff = placed.map(m => (m.key === 'u1' ? { ...m, pos: { x: 1300, y: 2800 } } : m));
-  const mv = arrangeMoves(oneOff, down);
-  assert.equal(mv.length, 1, 'chỉ con lệch hàng bị dời');
-  assert.equal(mv[0].key, 'u1');
-  assert.ok(mv[0].y > p.u5.y, 'tới hàng sau cùng');
-  const drift = placed.map(m => (m.key === 'u4' ? { ...m, pos: { x: m.pos.x + 150, y: m.pos.y + 30 } } : m));
-  assert.deepEqual(arrangeMoves(drift, down), [], 'lệch ngang trong hàng / lệch nhẹ → không dời');
 });
 
 function setupDom(url = 'https://cutd.site/?room=TEST') {
@@ -566,7 +520,7 @@ test('bookmarklet: Xếp đội — mỗi lần bấm dời đúng 1 con lệch 
     window.Interaction = class { constructor() { this._selectedEntityId = null; } selectEntity() {} tapGround() {} clearSelection() {} }
     const arena = { originX: 0, originY: 384, width: 1216, height: 1312 };
     const entities = new Map([
-      ['u1', { id: 'u1', kind: 'creature', wireId: 1, contentId: ${JSON.stringify(ranged)}, pos: { x: 608, y: 1040 } }],
+      ['u1', { id: 'u1', kind: 'creature', wireId: 1, contentId: ${JSON.stringify(ranged)}, pos: { x: 400, y: 920 } }],
       ['u2', { id: 'u2', kind: 'creature', wireId: 2, contentId: ${JSON.stringify(tank)}, pos: { x: 608, y: 1040 } }],
       ['u3', { id: 'u3', kind: 'creature', wireId: 3, contentId: ${JSON.stringify(melee)}, pos: { x: 608, y: 920 } }],
     ]);
@@ -584,7 +538,7 @@ test('bookmarklet: Xếp đội — mỗi lần bấm dời đúng 1 con lệch 
   [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith('Đội')).click();
   const btn = () => [...root.querySelectorAll('.bar-row button')].find(b => /Xếp đội|Đang dời|đúng hàng/.test(b.textContent));
   assert.ok(btn() && !btn().disabled);
-  assert.match(btn().textContent, /2 con lệch/, 'chỉ tank và con hồi máu đứng sai hàng; con cận chiến đã đúng hàng');
+  assert.match(btn().textContent, /2 con lệch/, 'tank và con BUFF đứng sai hàng; con cận chiến đã đúng hàng');
   assert.match(root.querySelector('.bar-row').textContent, /TANK 1.*CẬN 1.*HEAL 1/);
   btn().click();
   await tick(50);

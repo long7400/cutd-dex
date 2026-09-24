@@ -149,6 +149,7 @@ export default {
         <li><b>ATK</b>: DPS thật = sát thương thường × (1 + chí mạng bắn ra quái) × buff tốc đánh + sát thương cố định. Chí mạng / choáng dạng "self" (issue #1) dội vào chính con pet: không cộng, và nếu con pet tự chết trước 40 giây thì điểm bị nhân theo thời gian sống.</li>
         <li><b>TANK</b>: máu × (1 + 0,06 × giáp) ÷ (1 − né) ÷ hệ số nhận sát thương, ×1,25 nếu tự hồi máu, ×1,2 nếu khiêu khích.</li>
         <li><b>BUFF</b>: tổng % hào quang toàn căn cứ (sát thương + tốc đánh + ½ phần giảm sát thương nhờ giáp) + hồi máu đồng đội. <b>DEBUFF</b>: (giảm tốc đánh + ½ làm chậm + phá giáp + trượt đòn) × thời gian hiệu lực.</li>
+        <li><b>Vị trí (nút Xếp đội trong CUTD Helper)</b>: mỗi dạng pet thuộc 1 trong 8 loại — TANK khiêu khích / TANK / CẬN / CẬN tự hại / tầm ngắn / hồi máu sát TANK (tầm hồi chỉ 100) / XA / hào quang cả đội (đứng đâu cũng buff được nên ra sau). Bảng đầy đủ từng dạng + lý do: <a class="rootlink" href="positions.json" target="_blank" rel="noopener">positions.json</a>.</li>
         <li>Điểm 100 = nhóm 10% đầu của vai trò. Chuỗi ảnh trên thẻ: Lv1 → mạnh nhất với ≤ 1.500 vàng tiến hóa → đỉnh, tính theo đúng chỉ số của vai trò.</li>
       </ul></details>
     </main>${footer()}`;

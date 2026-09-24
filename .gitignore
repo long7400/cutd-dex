@@ -5,3 +5,4 @@ src/data/
 *.tmp
 public/overlay.json
 build/
+public/positions.json

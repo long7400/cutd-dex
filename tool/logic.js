@@ -153,61 +153,88 @@ export function nextWaveForBase(s) {
   return (s.summary?.nextWave ?? []).filter(g => g.target == null || g.target === s.baseId);
 }
 
-const ROW_AT = [-240, -120, 0, 140];
+export const ROW_AT = [-240, -120, 0, 140];
+export const BANDS = [[-400, -180], [-180, -60], [-60, 70], [70, 300]];
+const LINE_OFF = [[0, -60, -120], [0, -35, 35], [0, -35, 35], [0, 60, 120]];
+const HYST = 15, SAME_POS = 24, SETTLE_MS = 1000, GAP = 80, MARGIN = 48;
+export const POS_ROW = [0, 0, 1, 1, 1, 1, 2, 3];
+export const POS_ACCEPT = [[0], [0], [1], [1], [1], [1, 0], [2, 3], [3, 2]];
 
 export function formationRow(u) {
   if (!u) return 1;
-  const far = (u.rg ?? 0) > 300;
+  if (Number.isInteger(u.pc) && u.pc >= 0 && u.pc < POS_ROW.length) return POS_ROW[u.pc];
   const main = u.ro ?? u.kt?.[0];
-  if (main === 'buff' || (u.r ?? []).some(r => r === 'aura' || r === 'sustain') || (u.kt ?? []).includes('heal')) return 3;
-  if (main === 'tank' || (!main && ((u.ar ?? 0) >= 15 || (u.hp ?? 0) / Math.max(1, u.ed ?? u.dps ?? 0) >= 18))) return 0;
-  return far ? 2 : 1;
+  if (main === 'buff') return 3;
+  if (main === 'tank') return 0;
+  return (u.rg ?? 0) > 300 ? 2 : 1;
 }
+export const acceptRows = u => (Number.isInteger(u?.pc) && POS_ACCEPT[u.pc] ? POS_ACCEPT[u.pc] : [formationRow(u)]);
 
-export function formation(members, ground, { gap = 80, lineGap = 60, margin = 48 } = {}) {
+const hyp = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
+
+export function makeFrame(ground) {
   const a = ground?.arena;
-  if (!a || !(a.width > 0) || !(a.height > 0)) return [];
-  let dx = 0, dy = 1;
-  const p = ground.path;
-  if (p?.length >= 2) {
-    const len = Math.hypot(p[1].x - p[0].x, p[1].y - p[0].y);
-    if (len > 0) { dx = (p[1].x - p[0].x) / len; dy = (p[1].y - p[0].y) / len; }
-  }
+  if (!a || !(a.width > 0) || !(a.height > 0) || ![a.originX, a.originY].every(Number.isFinite)) return null;
   const cx = a.originX + a.width / 2, cy = a.originY + a.height / 2;
-  const across = Math.abs(dy) * a.width + Math.abs(dx) * a.height - 2 * margin;
-  const perLine = Math.max(1, Math.floor(across / gap) + 1);
-  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-  const out = [];
-  for (let row = 0; row < ROW_AT.length; row++) {
-    const list = members.filter(m => m.row === row).sort((x, y) => y.score - x.score);
-    list.forEach((m, i) => {
-      const idx = i % perLine;
-      const slot = idx % 2 ? (idx + 1) / 2 : -idx / 2;
-      const along = ROW_AT[row] + Math.floor(i / perLine) * lineGap;
-      out.push({
-        key: m.key, row,
-        x: Math.round(clamp(cx + dx * along - dy * slot * gap, a.originX + margin, a.originX + a.width - margin)),
-        y: Math.round(clamp(cy + dy * along + dx * slot * gap, a.originY + margin, a.originY + a.height - margin)),
-      });
+  let pts = (Array.isArray(ground.path) ? ground.path : []).filter(q => Number.isFinite(q?.x) && Number.isFinite(q?.y)).slice(0, 64);
+  pts = pts.filter((q, i) => i === 0 || hyp(q.x, q.y, pts.at(i - 1).x, pts.at(i - 1).y) > 1e-6);
+  if (pts.length < 2) pts = [{ x: cx, y: a.originY }, { x: cx, y: a.originY + a.height }];
+  const segs = [];
+  let cum = 0;
+  pts.forEach((B, i) => {
+    if (!i) return;
+    const A = pts.at(i - 1), len = hyp(A.x, A.y, B.x, B.y);
+    const dx = (B.x - A.x) / len, dy = (B.y - A.y) / len;
+    segs.push({ A, len, dx, dy, nx: -dy, ny: dx, s0: cum });
+    cum += len;
+  });
+  const lastSeg = segs.length - 1;
+  const project = q => {
+    let found = null;
+    segs.forEach((g, i) => {
+      let t = (q.x - g.A.x) * g.dx + (q.y - g.A.y) * g.dy;
+      if (i > 0) t = Math.max(0, t);
+      if (i < lastSeg) t = Math.min(g.len, t);
+      const fx = g.A.x + g.dx * t, fy = g.A.y + g.dy * t, d = hyp(q.x, q.y, fx, fy);
+      if (!found || d < found.d - 1e-9) found = { d, s: g.s0 + t };
     });
-  }
-  return out;
+    return found;
+  };
+  const sRef = project({ x: cx, y: cy }).s;
+  const pointAt = (along, lat) => {
+    const at = sRef + along;
+    let g = segs[0];
+    for (const x of segs) if (at >= x.s0) g = x;
+    const t = at - g.s0;
+    return { x: g.A.x + g.dx * t + g.nx * lat, y: g.A.y + g.dy * t + g.ny * lat };
+  };
+  const inside = (q, m = MARGIN / 2) => q.x >= a.originX + m && q.x <= a.originX + a.width - m && q.y >= a.originY + m && q.y <= a.originY + a.height - m;
+  return { a, cx, cy, pointAt, inside, along: q => project(q).s - sRef };
 }
 
-const BAND = 55;
+export function inBand(f, row, pos, confirmed) {
+  if (!pos || !f.inside(pos)) return false;
+  const [lo, hi] = BANDS[row];
+  const h = confirmed ? -HYST : HYST;
+  const at = f.along(pos);
+  return at >= lo + h && at <= hi - h;
+}
 
-function frame(ground, margin) {
-  const a = ground?.arena;
-  if (!a || !(a.width > 0) || !(a.height > 0)) return null;
-  let dx = 0, dy = 1;
-  const p = ground.path;
-  if (p?.length >= 2) {
-    const len = Math.hypot(p[1].x - p[0].x, p[1].y - p[0].y);
-    if (len > 0) { dx = (p[1].x - p[0].x) / len; dy = (p[1].y - p[0].y) / len; }
-  }
-  const cx = a.originX + a.width / 2, cy = a.originY + a.height / 2;
-  const inside = q => q.x >= a.originX + margin / 2 && q.x <= a.originX + a.width - margin / 2 && q.y >= a.originY + margin / 2 && q.y <= a.originY + a.height - margin / 2;
-  return { a, dx, dy, cx, cy, inside, along: q => (q.x - cx) * dx + (q.y - cy) * dy };
+export function rowSlots(f, row) {
+  const out = [];
+  const reach = Math.hypot(f.a.width, f.a.height);
+  LINE_OFF[row].forEach((off, line) => {
+    const along = ROW_AT[row] + off;
+    const base = line ? GAP / 2 : 0;
+    const K = Math.ceil(reach / GAP), lats = base ? [] : [0];
+    for (let step = base ? 0 : 1; step <= K; step++) lats.push(base + step * GAP, -(base + step * GAP));
+    for (const lat of lats) {
+      const q = f.pointAt(along, lat);
+      const slot = { id: `${row}:${line}:${Math.round(lat / (GAP / 2))}`, row, line, q: line * 100 + Math.round((2 * Math.abs(lat)) / GAP), x: Math.round(q.x), y: Math.round(q.y) };
+      if (f.inside(slot, MARGIN) && inBand(f, row, slot, false)) out.push(slot);
+    }
+  });
+  return out.sort((x, y) => x.q - y.q || x.line - y.line);
 }
 
 const put = (arr, i, val) => arr.fill(val, i, i + 1);
@@ -242,56 +269,94 @@ export function minCostAssign(cost) {
   return result;
 }
 
-export function arrangeMoves(members, ground, { gap = 80, lineGap = 60, margin = 48 } = {}) {
-  const f = frame(ground, margin);
-  if (!f) return [];
-  const slots = formation(members.map(m => ({ key: m.key, row: m.row, score: m.score })), ground, { gap, lineGap, margin });
-  const lines = new Map();
-  for (const sl of slots) {
-    const at = f.along(sl);
-    const r = lines.get(sl.row) ?? [Infinity, -Infinity];
-    lines.set(sl.row, [Math.min(r[0], at), Math.max(r[1], at)]);
-  }
-  const inRow = m => {
-    const r = lines.get(m.row);
-    if (!r || !m.pos || !f.inside(m.pos)) return false;
-    const at = f.along(m.pos);
-    return at >= r[0] - BAND && at <= r[1] + BAND;
-  };
-  const stay = members.filter(inRow);
-  const free = slots.map(sl => ({ ...sl, taken: false }));
-  for (const m of stay) {
-    const near = free.filter(sl => sl.row === m.row && !sl.taken && Math.hypot(m.pos.x - sl.x, m.pos.y - sl.y) < gap);
-    if (near.length) near.reduce((b, sl) => (Math.hypot(m.pos.x - sl.x, m.pos.y - sl.y) < Math.hypot(m.pos.x - b.x, m.pos.y - b.y) ? sl : b)).taken = true;
-  }
-  const moves = [];
-  for (const row of [...new Set(members.map(m => m.row))].sort((a, b) => a - b)) {
-    const out = members.filter(m => m.row === row && !inRow(m));
-    const vacant = free.filter(sl => sl.row === row && !sl.taken);
-    if (!out.length || !vacant.length) continue;
-    const pick = out.sort((x, y) => y.score - x.score).slice(0, vacant.length);
-    const from = m => m.pos ?? { x: f.cx, y: f.cy };
-    const match = minCostAssign(pick.map(m => vacant.map(sl => Math.hypot(sl.x - from(m).x, sl.y - from(m).y))));
-    pick.forEach((m, i) => { const sl = vacant[match[i]]; if (sl) moves.push({ key: m.key, row, x: sl.x, y: sl.y }); });
-  }
-  return moves;
+export function createMemory() {
+  return { planning: 0, phase: null, booted: false, planningAt: 0, units: new Map(), badSlots: new Set() };
 }
 
-export function trackRoster(meta, units, rowOf, round, baseline) {
-  const changed = [];
-  const alive = new Set();
-  for (const u of units) {
-    alive.add(u.id);
-    const row = rowOf(u.stage);
-    const m = meta.get(u.id);
-    if (!m) { meta.set(u.id, { first: baseline ? -1 : round, row, stage: u.stage, moved: false }); continue; }
-    if (m.stage !== u.stage) {
-      m.stage = u.stage;
-      if (row !== m.row) { m.row = row; m.moved = true; changed.push(u); }
+export function observe(mem, snap, now = 0) {
+  const planningNow = snap.phase === 'planning';
+  if (planningNow && mem.phase !== 'planning') {
+    mem.planning++;
+    mem.planningAt = now;
+    for (const r of mem.units.values()) { r.lastPos = null; r.rejects = 0; }
+  }
+  mem.phase = snap.phase;
+  if (snap.ready === false) return [];
+  const seen = new Set(), changed = [];
+  for (const u of snap.units) {
+    seen.add(u.key);
+    let r = mem.units.get(u.key);
+    if (!r) {
+      r = { firstSeen: mem.booted ? mem.planning : -Infinity, row: u.row, stage: u.stage, rowChangedAt: null, conf: null, manualAt: null, lastPos: null, pending: null, rejects: 0, rejectAt: null };
+      mem.units.set(u.key, r);
+    }
+    if (r.row !== u.row) { r.row = u.row; r.conf = null; r.rowChangedAt = mem.planning; changed.push(u); }
+    r.stage = u.stage;
+    if (r.pending && (now - r.pending.t > 3000 || (u.pos && hyp(u.pos.x, u.pos.y, r.pending.x, r.pending.y) <= SAME_POS))) r.pending = null;
+    if (planningNow && u.active && u.pos) {
+      if (r.lastPos && !r.pending && now - mem.planningAt > SETTLE_MS && hyp(u.pos.x, u.pos.y, r.lastPos.x, r.lastPos.y) > SAME_POS) { r.manualAt = mem.planning; r.conf = null; }
+      r.lastPos = { x: u.pos.x, y: u.pos.y };
     }
   }
-  for (const id of [...meta.keys()]) if (!alive.has(id)) meta.delete(id);
+  for (const id of [...mem.units.keys()]) if (!seen.has(id)) mem.units.delete(id);
+  mem.booted = true;
   return changed;
 }
 
-export const heldThisRound = (meta, id, round) => { const m = meta.get(id); return !!m && m.first === round && !m.moved; };
+export function onSent(mem, key, row, target, now = 0) {
+  const r = mem.units.get(key);
+  if (r) { r.pending = { x: target.x, y: target.y, t: now, row, slot: target.slot }; r.lastPos = { x: target.x, y: target.y }; }
+}
+
+export function onAck(mem, key, ok) {
+  const r = mem.units.get(key);
+  if (!r?.pending) return;
+  if (ok) r.conf = r.pending.row;
+  else { mem.badSlots.add(r.pending.slot); r.rejects++; r.rejectAt = mem.planning; r.pending = null; r.lastPos = null; }
+}
+
+export function planMoves(mem, members, ground) {
+  const status = new Map();
+  const f = makeFrame(ground);
+  if (!f) return { moves: [], status, reason: 'ground' };
+  const cur = mem.planning;
+  const eligible = [], fixed = [];
+  for (const m of members) {
+    const r = mem.units.get(m.key) ?? {};
+    if (!m.active) { status.set(m.key, 'down'); continue; }
+    if (!m.pos) { status.set(m.key, 'unknown'); continue; }
+    if (r.pending) { status.set(m.key, 'pending'); fixed.push({ ...m, pos: { x: r.pending.x, y: r.pending.y } }); continue; }
+    if (r.firstSeen === cur && (m.level ?? 1) <= 1 && r.rowChangedAt !== cur) { status.set(m.key, 'new'); fixed.push(m); continue; }
+    if (r.manualAt === cur) { status.set(m.key, 'manual'); fixed.push(m); continue; }
+    if (r.rejects >= 2 && r.rejectAt === cur) { status.set(m.key, 'rejected'); fixed.push(m); continue; }
+    const accept = m.accept ?? [m.row];
+    const hit = accept.find(row => inBand(f, row, m.pos, r.conf === row));
+    if (hit !== undefined) {
+      status.set(m.key, 'ok');
+      if (mem.phase === 'planning' && mem.units.has(m.key)) mem.units.get(m.key).conf = hit;
+      fixed.push(m);
+    } else eligible.push(m);
+  }
+  const moves = [];
+  for (let row = 0; row < ROW_AT.length; row++) {
+    const want = eligible.filter(m => m.row === row).sort((x, y) => y.score - x.score || (x.key < y.key ? -1 : 1));
+    if (!want.length) continue;
+    const slots = rowSlots(f, row).filter(sl => !mem.badSlots.has(sl.id) && ![...fixed, ...eligible].some(u => hyp(u.pos.x, u.pos.y, sl.x, sl.y) < GAP / 2));
+    const n = Math.min(want.length, slots.length);
+    for (const m of want.slice(n)) status.set(m.key, 'full');
+    const take = want.slice(0, n);
+    if (!n) continue;
+    const levels = [...new Set(take.map(m => m.score))].sort((a, b) => a - b);
+    const weight = m => levels.indexOf(m.score) + 1;
+    const match = minCostAssign(take.map(m => slots.map(sl => 1e5 * weight(m) * sl.q + hyp(m.pos.x, m.pos.y, sl.x, sl.y))));
+    take.forEach((m, i) => { const sl = slots[match[i]]; if (!sl) return; status.set(m.key, 'move'); moves.push({ key: m.key, row, x: sl.x, y: sl.y, slot: sl.id, unit: m }); });
+  }
+  const hi0 = BANDS[0][1];
+  const tier = mv => (mv.row !== 0 && f.along(mv.unit.pos) < hi0 ? 0 : mv.row === 0 ? 1 : 2);
+  const exposure = mv => Math.max(0, BANDS[mv.row][0] - f.along(mv.unit.pos));
+  moves.sort((x, y) => tier(x) - tier(y)
+    || (tier(x) === 0 ? y.row - x.row : 0)
+    || (tier(x) === 2 ? exposure(y) - exposure(x) || x.row - y.row : 0)
+    || y.unit.score - x.unit.score || (x.key < y.key ? -1 : 1));
+  return { moves: moves.map(({ unit, ...mv }) => mv), status };
+}

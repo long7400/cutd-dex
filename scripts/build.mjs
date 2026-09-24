@@ -6,6 +6,7 @@ import { createDescriber, TICKS_PER_SECOND } from './lib/describe.mjs';
 import { ROLE_NAMES } from '../tool/skillvalue.js';
 import { analyzeCatalog, overlayFields } from '../tool/analyze.js';
 import { snapshot, reconcile, validOverrides } from './lib/registry.mjs';
+import { buildPositions, POSITION_CLASSES, CLASS_ROW, ACCEPT, T as POSITION_T, POSITION_RULES_VERSION } from './lib/positions.mjs';
 import { buildStrategy } from './lib/strategy.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -16,6 +17,7 @@ export const PATHS = {
   db: join(ROOT, 'src/data/db.json'),
   overlay: join(ROOT, 'public/overlay.json'),
   registry: join(ROOT, 'data/skill-registry.json'),
+  positions: join(ROOT, 'public/positions.json'),
 };
 
 const ELEMENT_ORDER = ['normal', 'fire', 'water', 'grass', 'lightning', 'psychic', 'fighter'];
@@ -280,6 +282,14 @@ export function build({ raw, client, changelog = [], registry = null }) {
     },
     elements, labels, pets, units, abilities, trade, pools, waveSets, roster, research, game, damage,
     roleNames: ROLE_NAMES, strategy: buildStrategy({ units, pets, waveSets, damage }),
+    positions: (() => {
+      const { rows, transitions } = buildPositions({ catalog, units, pets });
+      for (const r of rows) units[r.id].pc = r.cls;
+      return {
+        version: POSITION_RULES_VERSION, thresholds: POSITION_T, classes: POSITION_CLASSES.map(c => ({ c, row: CLASS_ROW[c], accept: ACCEPT[c] })),
+        units: Object.fromEntries(rows.map(r => [r.id, { cls: r.cls, row: r.row, why: r.why }])), transitions,
+      };
+    })(),
     registry: {
       overrides: overridesBySlug, overrideRoots: overrides,
       pending: pending ? { newAbilities: pending.newAbilities.length, changedAbilities: pending.changedAbilities.length, changedLines: pending.changedLines.length } : null,
@@ -303,6 +313,7 @@ export function buildOverlay(db) {
         role: x.role, selfDps: x.selfDps ?? 0,
         traps: Object.fromEntries((x.evo ?? []).filter(e => e.trap).map(e => [e.to, e.trap])),
       }),
+      pc: x.pc ? POSITION_CLASSES.indexOf(x.pc) : undefined,
     };
   }
   return {
@@ -325,6 +336,7 @@ async function main() {
   if (pend && pend.newAbilities + pend.changedAbilities + pend.changedLines) console.warn(`⚠ Sổ định danh kỹ năng: ${pend.newAbilities} kỹ năng mới, ${pend.changedAbilities} kỹ năng đổi, ${pend.changedLines} dòng pet đổi → chạy \`npm run roles\` rồi xem lại.`);
   writeJSON(PATHS.db, db);
   writeJSON(PATHS.overlay, buildOverlay(db));
+  writeJSON(PATHS.positions, db.positions, { pretty: true });
   const m = db.meta.counts;
   console.log(`db.json: ${m.pets} pet · ${m.units} unit · ${m.abilities} skill · ${db.waveSets.reduce((s, w) => s + w.waves.length, 0)} đợt · ${db.research.length} research — ${(performance.now() - t0).toFixed(0)}ms`);
 }

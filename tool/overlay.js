@@ -1,6 +1,6 @@
 import {
   createState, applyMessage, isGameMessage, myUnits, tradeOptions, offersForFamily,
-  bestAttacks, nextWaveForBase, buildGameCatalog, arrangeMoves, formationRow, trackRoster, heldThisRound,
+  bestAttacks, nextWaveForBase, buildGameCatalog, formationRow, acceptRows, createMemory, observe, onSent, onAck, planMoves,
 } from './logic.js';
 import * as web from './web-input.js';
 import { findGame, findEntity, selectEntity, catchWild, evolveCreature, tradePet, moveCreature, groundOf, probe, clientKind, armWebCapture, disarmWebCapture, webCaptured, webTouched, forgetWebCapture } from './game-bridge.js';
@@ -395,35 +395,27 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     }
     return null;
   }
-  function arrangePlan(g) {
-    const ground = groundOf(g);
-    if (!ground) return null;
-    const members = myUnits(state).filter(u => u.active && !heldThisRound(roster, u.id, round)).map(u => {
-      const d = U(u.stage);
-      const row = formationRow(d);
-      const key = `u${u.id}`;
-      return { key, stage: u.stage, row, score: row === 0 ? (d?.hp ?? 0) : (d?.ed ?? d?.dps ?? 0), pos: findEntity(g, key)?.ent?.pos ?? null };
-    });
-    return arrangeMoves(members, ground).map(m => ({ ...m, stage: members.find(x => x.key === m.key).stage }));
-  }
-  const roster = new Map();
-  let round = 0, lastPhase = null, rosterReady = false;
-  function watchRoster() {
-    if (!db || !gameCatReady || !state.haveKeyframe) return;
+  const mem = createMemory();
+  let lastWatch = 0;
+  const snapUnits = g => myUnits(state).map(u => {
+    const d = U(u.stage), key = `u${u.id}`, row = formationRow(d);
+    return { key, stage: u.stage, level: d?.l ?? 1, row, accept: acceptRows(d), score: row === 0 ? (d?.hp ?? 0) : (d?.ed ?? d?.dps ?? 0), active: u.active, pos: g ? findEntity(g, key)?.ent?.pos ?? null : null };
+  });
+  const arrangePlan = g => { const ground = groundOf(g); return ground ? planMoves(mem, snapUnits(g), ground) : null; };
+  function watchRoster(force = false) {
+    if (!db || !gameCatReady) return;
+    const t = performance.now();
     const phase = state.summary?.phase;
-    const rowOf = stage => formationRow(U(stage));
-    const changed = trackRoster(roster, myUnits(state), rowOf, round, !rosterReady);
-    rosterReady = true;
-    if (changed.length) toast = `${changed.map(u => nameOf(u.stage)).join(', ')} đổi vai trò → sang hàng ${ROWS[rowOf(changed[0].stage)][0]} — bấm Xếp đội để dời.`;
-    if (phase && phase !== lastPhase) {
-      const newRound = phase === 'planning' && lastPhase && lastPhase !== 'planning';
-      lastPhase = phase;
-      if (newRound) {
-        round++;
-        const g = findGame();
-        const n = g && !blockReason() ? arrangePlan(g)?.length ?? 0 : 0;
-        if (n) toast = `Round mới: ${n} con cần vào vị trí — bấm Xếp đội (mỗi lần bấm dời 1 con).`;
-      }
+    if (!force && t - lastWatch < 250 && phase === mem.phase) return;
+    lastWatch = t;
+    const ready = !!state.haveKeyframe && (ownBase == null || state.baseId === ownBase);
+    const g = ready ? findGame() : null;
+    const before = mem.planning, booted = mem.booted;
+    const changed = observe(mem, { phase, ready, units: ready ? snapUnits(g) : [] }, t);
+    if (booted && changed.length) toast = `${changed.map(u => nameOf(u.stage)).join(', ')} đổi vai trò → hàng ${ROWS[changed[0].row][0]} — bấm Xếp đội để dời.`;
+    if (mem.planning !== before && g && !blockReason()) {
+      const n = arrangePlan(g)?.moves.length ?? 0;
+      if (n) toast = `Round mới: ${n} con cần vào vị trí — bấm Xếp đội (mỗi lần bấm dời 1 con).`;
     }
   }
   let arranging = false;
@@ -440,20 +432,24 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const g = fail ? null : findGame();
     if (!fail && !g) fail = 'game';
     if (!fail && state.summary?.phase !== 'planning') fail = 'wave';
+    if (!fail) watchRoster(true);
     const plan = fail ? null : arrangePlan(g);
     if (!fail && !plan) fail = 'fn';
-    const m = plan?.[0];
+    const m = plan?.moves[0];
     const found = m ? findEntity(g, m.key) : null;
-    if (!fail && m && (!found || found.ent.contentId !== m.stage)) fail = 'entity';
+    const stage = found ? myUnits(state).find(u => `u${u.id}` === m.key)?.stage : null;
+    if (!fail && m && (!found || found.ent.contentId !== stage)) fail = 'entity';
     if (fail || !m) { toast = fail ? FAIL[fail] : 'Đội đã đúng hàng — không cần dời con nào.'; dirty = true; render(true); return; }
     arranging = true;
     lastAction = performance.now();
+    onSent(mem, m.key, m.row, m, lastAction);
     dirty = true; render(true);
     const r = moveCreature(g, found.ent, m);
     const ack = r.fail ? null : await waitAck(r.seq);
+    onAck(mem, m.key, !!ack?.ok);
     arranging = false;
     toast = r.fail ? FAIL[r.fail] : !ack ? 'Game chưa xác nhận lệnh.' : !ack.ok ? `Game từ chối: ${ack.reason.replace(/_/g, ' ') || 'không rõ'}.`
-      : `Đã dời ${nameOf(m.stage)} → hàng ${ROWS[m.row][0]}.${plan.length > 1 ? ` Còn ${plan.length - 1} con lệch — bấm tiếp.` : ' Đội đã đúng hàng.'}`;
+      : `Đã dời ${nameOf(stage)} → hàng ${ROWS[m.row][0]}.${plan.moves.length > 1 ? ` Còn ${plan.moves.length - 1} con lệch — bấm tiếp.` : ' Đội đã đúng hàng.'}`;
     dirty = true; render(true);
   }
   function arrangeBar() {
@@ -463,18 +459,19 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const blocked = blockReason() ?? (state.summary?.phase !== 'planning' ? 'wave' : null);
     const g = blocked ? null : findGame();
     const plan = g ? arrangePlan(g) : null;
-    const next = plan?.[0];
-    const held = mine.filter(u => heldThisRound(roster, u.id, round)).length;
+    const next = plan?.moves[0];
+    const held = plan ? [...plan.status.values()].filter(v => v === 'new').length : 0;
+    const nextStage = next ? myUnits(state).find(u => `u${u.id}` === next.key)?.stage : null;
     return h('div', { class: 'bar-row' },
       h('button', {
         class: `chip ${next ? 'on' : ''}`, tabindex: '-1', disabled: arranging || !!blocked || !mine.length || (plan && !next),
-        text: arranging ? 'Đang dời…' : next ? `Xếp đội · ${plan.length} con lệch` : plan ? 'Đội đã đúng hàng' : 'Xếp đội',
-        title: blocked ? FAIL[blocked] : next ? `Bấm để dời ${nameOf(next.stage)} sang hàng ${ROWS[next.row][0]}. Mỗi lần bấm dời 1 con; con đã đứng đúng hàng không bị đụng tới.`
+        text: arranging ? 'Đang dời…' : next ? `Xếp đội · ${plan.moves.length} con lệch` : plan ? 'Đội đã đúng hàng' : 'Xếp đội',
+        title: blocked ? FAIL[blocked] : next ? `Bấm để dời ${nameOf(nextStage)} sang hàng ${ROWS[next.row][0]}. Mỗi lần bấm dời 1 con; con đã đứng đúng hàng không bị đụng tới.`
           : 'Hàng từ phía quái vào: TANK → CẬN → XA → HEAL/BUFF sau cùng.',
         onClick: arrange,
       }),
       h('span', { class: 'kit' }, ROWS.map(([t, c, tip], i) => count[i] ? h('b', { class: c, text: `${t} ${count[i]}`, title: tip }) : null)),
-      held ? h('span', { class: 'muted', text: `${held} con mới — xếp từ round sau`, title: 'Pet vừa mua trong round này được để yên; sang round sau mới tính vào Xếp đội (trừ khi nó tiến hóa đổi vai trò).' }) : null);
+      held ? h('span', { class: 'muted', text: `${held} con mới — xếp từ round sau`, title: 'Pet vừa mua trong round này được để yên; sang round sau mới tính vào Xếp đội (trừ khi nó tiến hóa đổi hàng).' }) : null);
   }
 
   const CAM_KEYS = { up: ['KeyW', 'w'], down: ['KeyS', 's'], left: ['KeyA', 'a'], right: ['KeyD', 'd'] };
@@ -986,7 +983,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     if (rawCat && !live) { try { live = analyzeCatalog(rawCat, { overrides: db.ov }); } catch { live = null; } rawCat = null; }
     for (const [id, a] of live ?? []) db.u[id] = { ...(db.u[id] ?? {}), ...a.stats, ...overlayFields(a) };
     for (const [id, g] of gameCat) db.u[id] = { ...(db.u[id] ?? {}), n: g.n, l: g.l, b: g.b, c: g.c, e: g.e };
-    for (const m of roster.values()) m.row = formationRow(U(m.stage));
+    for (const r of mem.units.values()) r.row = formationRow(U(r.stage));
     dirty = true; render(true);
   }
   const wikiBehind = () => !!(db?.v && liveHash && !liveHash.startsWith(db.v));
@@ -1011,7 +1008,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     n: S(x.n), m: ID(x.m), hp: N(x.hp), dps: N(x.dps), a: ID(x.a), at: ID(x.at), ar: N(x.ar), rg: N(x.rg), b: N(x.b), lk: N(x.lk),
     f: ID(x.f), ed: N(x.ed), l: N(x.l), el: ID(x.el), c: N(x.c), k: N(x.k), p: ID(x.p), pw: N(x.pw), st: TIER(x.st), L: N(x.L),
     e: list(x.e, v => tuple(v, [ID, N]), 8), pk: tuple(x.pk, [ID, N, N]), ul: list(x.ul, v => tuple(v, [ID, ID, N])),
-    pg: list(x.pg, ID), kt: list(x.kt, ID), r: list(x.r, ID), ro: ['atk', 'tank', 'buff', 'debuff'].includes(x.ro) ? x.ro : undefined, sd: N(x.sd), s: list(x.s, v => S(v, 60)), tp: dict(x.tp, v => (v === 1 || v === 2 ? v : undefined), 16),
+    pg: list(x.pg, ID), kt: list(x.kt, ID), r: list(x.r, ID), ro: ['atk', 'tank', 'buff', 'debuff'].includes(x.ro) ? x.ro : undefined, sd: N(x.sd), pc: Number.isInteger(x.pc) && x.pc >= 0 && x.pc < 8 ? x.pc : undefined, s: list(x.s, v => S(v, 60)), tp: dict(x.tp, v => (v === 1 || v === 2 ? v : undefined), 16),
   });
   getJSON(`${DATA_URL}overlay.json`, 4 * 1024 * 1024)
     .then(d => {
