@@ -3,7 +3,7 @@ import {
   bestAttacks, nextWaveForBase, buildGameCatalog, formationRow, acceptRows, createMemory, observe, onSent, onAck, planMoves,
 } from './logic.js';
 import * as web from './web-input.js';
-import { findGame, findEntity, selectEntity, catchWild, evolveCreature, tradePet, moveCreature, groundOf, posOf, probe, clientKind, armWebCapture, disarmWebCapture, webCaptured, webTouched, forgetWebCapture } from './game-bridge.js';
+import { findGame, findEntity, selectEntity, catchWild, evolveCreature, tradePet, moveCreature, groundOf, posOf, clientKind, armWebCapture, disarmWebCapture, webCaptured, webTouched, forgetWebCapture } from './game-bridge.js';
 import { realm, gameDoc } from './realm.js';
 import { analyzeCatalog, overlayFields, powerTier } from './analyze.js';
 
@@ -41,7 +41,7 @@ const CSS = `
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:10px 0}.stats span{background:#101c30;border-radius:6px;padding:4px 0;text-align:center;font-weight:800;font-size:11.5px}
 .evo{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}.path{display:flex;align-items:flex-start;gap:1px;flex-wrap:wrap}
 .node{display:flex;flex-direction:column;align-items:center;width:38px;gap:1px}.node .pt{width:32px;height:32px}
-.node.now .pt{border-color:#ffde8f}.node.trap .pt{border-color:#ff9c9c}.node small{font-size:9.5px;color:#8fb7e8;font-weight:700}.node small.gold{color:#ffde8f}
+.node.now .pt{border-color:#ffde8f}.node.ready .pt{border-color:#ffde8f}.node.off{opacity:.38;filter:grayscale(1)}.path.tr .ar{color:#ffde8f;font-size:13px;margin:8px 3px 0 0}.node.trap .pt{border-color:#ff9c9c}.node small{font-size:9.5px;color:#8fb7e8;font-weight:700}.node small.gold{color:#ffde8f}
 .node .tier{font-size:9.5px;padding:0 3px;min-width:0;line-height:13px}.path .ar{color:#4a6fa5;font-size:11px;margin-top:9px}
 .sks{display:grid;gap:7px;margin-bottom:10px}.sk{display:grid;grid-template-columns:26px 1fr;gap:8px;align-items:start}
 .sk img{width:26px;height:26px;border-radius:6px;border:1px solid #33496b}.skn b{color:#9fd6a8;font-size:12px}.skn small{color:#6f8fb8;font-size:10.5px}
@@ -100,7 +100,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .tile.wish{border-color:#b69c62;border-top-color:var(--ro,#33496b);box-shadow:0 0 0 1px #b69c6255,0 0 10px #ffde8f22}
 .tile.sel{outline:2px solid #ffde8f;outline-offset:-1px}
 .pic{position:relative;height:54px;display:grid;place-items:center;background:radial-gradient(circle at 50% 64%,var(--el,#6488b86b) 0,transparent 66%)}
-.pic .pt{width:46px;height:46px;border:0;border-radius:0;background:transparent;object-fit:contain;filter:drop-shadow(0 2px 2px #000a)}
+.pic .pt{width:46px;height:46px;border:0;border-radius:0;background:transparent;object-fit:contain}
 .tile.down .pic .pt{filter:grayscale(1) brightness(.5)}
 .pic .tl{position:absolute;top:3px;left:3px;display:flex;gap:2px;align-items:center}
 .pic .tier{min-width:0;margin:0;padding:0 4px;font-size:10px;line-height:14px;border-radius:4px}
@@ -119,8 +119,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .acts{display:flex;border-top:1px solid #22375a;margin-top:auto}.acts>*+*{border-left:1px solid #22375a}
 .acts .act,.acts .b{all:unset;box-sizing:border-box;flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:1px;height:21px;padding:0 2px;font:800 11px/1 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;white-space:nowrap;overflow:hidden;background:#1b2a44;color:#8fb7e8}
 .acts .act{cursor:pointer}.acts .act:hover{filter:brightness(1.25)}.acts .act:disabled{opacity:.5;cursor:default}
-.acts .act.ok{background:#1d3a2a;color:#9fd6a8}.acts .act.bad,.acts .b.bad{background:#2c1d24;color:#ff9c9c}.acts .act.tr{background:#3a3016;color:#ffde8f}
-.acts .b.warn{background:#2b2616;color:#e8cf8a}.acts .b{font-size:10px}.acts .b.max{background:transparent;color:#4a6fa5}
+.acts .act.ok{background:#1d3a2a;color:#9fd6a8}.acts .act.bad,.acts .b.bad{background:#2c1d24;color:#ff9c9c}
+.acts .b.warn{background:#2b2616;color:#e8cf8a}.acts .b.tr{background:#3a3016;color:#ffde8f;flex:1.4;letter-spacing:.3px}.acts .b{font-size:10px}.acts .b.max{background:transparent;color:#4a6fa5}
 .acts.split .act{font-size:10px;letter-spacing:-.3px}.acts .act .pt{width:13px;height:13px;border:0;border-radius:0;background:transparent}
 .sect{display:flex;align-items:center;gap:6px;padding:8px 10px 1px;font-size:10.5px;font-weight:800;letter-spacing:.6px;color:#c7d8ea}
 .sect i{width:3px;height:12px;border-radius:2px;background:var(--c,#33496b)}
@@ -167,46 +167,16 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 
   const acks = new Map();
   const cmdLog = [];
-  let suspect = new Set();
-  const skillProbe = { fired: 0, selfHit: 0, selfDmg: 0, otherHit: 0, otherDmg: 0, samples: [] };
-  const cut = v => (typeof v === 'number' && Number.isFinite(v) ? v : typeof v === 'string' ? v.slice(0, 48) : undefined);
-  function sampleEffect(e) {
-    if (skillProbe.samples.length >= 40) return;
-    const out = {};
-    for (const field of ['kind', 'content_id', 'tick', 'entity_collection', 'entity_id', 'source_collection', 'source_id', 'target_collection', 'target_id', 'amount']) {
-      const v = cut(e[field]);
-      if (v !== undefined) out[field] = v;
-    }
-    skillProbe.samples.push(out);
-  }
-  function probeEffects(list) {
-    if (!Array.isArray(list) || !suspect.size) return;
-    const fired = new Set();
-    for (const e of list) {
-      if (e?.kind !== 'ability_triggered' || !suspect.has(e.content_id)) continue;
-      skillProbe.fired++;
-      fired.add(`${e.tick}:${e.source_id ?? e.entity_id}`);
-      sampleEffect(e);
-    }
-    if (!fired.size) return;
-    for (const e of list) {
-      if ((e?.kind !== 'unit_damaged' && e?.kind !== 'damage') || !fired.has(`${e.tick}:${e.source_id}`)) continue;
-      const amount = Number.isFinite(e.amount) ? e.amount : 0;
-      if (e.target_id === e.source_id && e.target_collection === e.source_collection) { skillProbe.selfHit++; skillProbe.selfDmg += amount; }
-      else { skillProbe.otherHit++; skillProbe.otherDmg += amount; }
-      sampleEffect(e);
-    }
-  }
   let dead = false;
-  const diag = { start: performance.now(), hello: null, firstMsg: null, keyframe: null, firstWild: null, firstUnit: null, longTaskMs: 0, longTasks: 0 };
-  const now = () => performance.now();
+  const WANTED = new Set(['server_hello', 'command_ack', 'base_keyframe', 'base_delta', 'room_summary']);
+  const HEAD = '{"type":"';
 
   function handle(text) {
     if (typeof text !== 'string' || text.charCodeAt(0) !== 123) return false;
+    if (text.startsWith(HEAD) && !WANTED.has(text.slice(HEAD.length, text.indexOf('"', HEAD.length)))) return false;
     let msg;
     try { msg = JSON.parse(text); } catch { return false; }
     if (msg?.type === 'server_hello') {
-      diag.hello ??= now();
       if (Number.isInteger(msg.base_id)) ownBase = msg.base_id;
       return true;
     }
@@ -218,12 +188,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       return true;
     }
     if (!isGameMessage(msg)) return false;
-    diag.firstMsg ??= now();
-    if (msg.type !== 'room_summary') { try { probeEffects(msg.effects); } catch { } }
-    if (msg.type === 'base_keyframe') { diag.keyframe ??= now(); autoHook(); }
+    if (msg.type === 'base_keyframe') autoHook();
     if (applyMessage(state, msg)) {
-      if (state.wilds.size) diag.firstWild ??= now();
-      if (state.units.size) diag.firstUnit ??= now();
       watchRoster();
       invalidate();
     }
@@ -238,6 +204,12 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const onMessage = e => handle(e.data);
   const onClose = () => { socket?.removeEventListener('message', onMessage); socket = null; patch(); invalidate(); };
 
+  let frozen = false;
+  function freezeTop() {
+    if (frozen || realm.win === window) return;
+    frozen = true;
+    window.requestAnimationFrame = () => 0;
+  }
   function attach(ws) {
     if (socket || dead) return;
     socket = ws;
@@ -245,6 +217,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     ws.addEventListener('message', onMessage);
     ws.addEventListener('close', onClose);
     unpatch();
+    freezeTop();
     invalidate();
   }
   function patch() {
@@ -344,15 +317,19 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 
   let toast = '';
   const cycles = new Map();
-  const cycle = (group, keys) => () => {
-    const i = ((cycles.get(group) ?? -1) + 1) % Math.max(1, keys.length);
-    cycles.set(group, i);
-    return keys[i];
+  const picks = [];
+  const cycle = (group, keys) => {
+    picks.push(`${group}=${keys.join(',')}`);
+    return () => {
+      const i = ((cycles.get(group) ?? -1) + 1) % Math.max(1, keys.length);
+      cycles.set(group, i);
+      return keys[i];
+    };
   };
   const FAIL = {
-    game: 'Không thấy game — vào trận rồi thử lại (xem mục "Kiểm tra nút" ở tab Đo tải).',
+    game: 'Không thấy game — vào trận rồi thử lại.',
     entity: 'Không thấy con này trong game (có thể vừa bị bắt/biến mất).',
-    fn: 'Bản game này không có hàm cho nút đó (xem "Kiểm tra nút" ở tab Đo tải).',
+    fn: 'Bản game này không có hàm cho nút đó.',
     rule: 'Không hợp lệ (sai nhánh / sai slot / con đã đổi / chưa đủ vàng / đang trong đợt) — thử lại sau khi panel cập nhật.',
     data: 'Chưa tải xong dữ liệu của game — đợi 1–2 giây.',
     other: 'Đang xem căn cứ của người khác — về nhà mình để thao tác.',
@@ -721,10 +698,10 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const lead = alive[0] ?? list[0];
     const ids = list.map(x => x.id);
     const evo = u.e ?? [];
-    const trades = alive.length ? (wanted.get(stage) ?? []).slice(0, 1) : [];
+    const ready = alive.length ? (wanted.get(stage) ?? []) : [];
+    const needs = offersForFamily(state, db, stage);
     const moving = !!plan?.moves.some(m => list.some(x => `u${x.id}` === m.key));
     const buttons = [
-      ...trades.map(o => act(`⇄S${o.slot}`, 'trade', `u${lead.id}`, o.slot, { stage, get: o.get }, 'tr', `Trade slot ${o.slot}: đổi lấy ${nameOf(o.get)}`)),
       ...evo.map(([to, cost]) => {
         const trap = u.tp?.[to];
         const drop = `${fmt(u.ed ?? u.dps)} → ${fmt(U(to)?.ed ?? U(to)?.dps)} DPS thật`;
@@ -733,9 +710,10 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
           trap === 2 || cost > state.gold ? 'bad' : 'ok', `Tiến hóa ${list.length > 1 ? '1 con ' : ''}lên ${nameOf(to)}: ${fmt(cost)} vàng${warn}`);
       }),
     ];
-    if (!evo.length) buttons.push(h('span', { class: 'b max', text: 'MAX', title: 'Dạng cuối' }));
+    if (ready.length) buttons.unshift(h('span', { class: 'b tr', text: 'TRADE', title: `${ready.map(o => `S${o.slot}: đổi lấy ${nameOf(o.get)}`).join('\n')}\nBấm Trade ở tab Trade` }));
+    else if (!evo.length) buttons.push(h('span', { class: 'b max', text: 'MAX', title: 'Dạng cuối' }));
     const hp = h('div', { class: 'hps' }, list.map(x => {
-      const pct = x.maxHp ? Math.max(0, Math.min(100, Math.round((x.hp / x.maxHp) * 100))) : 100;
+      const pct = x.maxHp ? Math.max(0, Math.min(100, Math.round((x.hp / x.maxHp) * 10) * 10)) : 100;
       return h('i', { class: !x.active ? 'down' : pct < 35 ? 'low' : pct < 70 ? 'mid' : null, style: x.active ? `--p:${pct}%` : null });
     }));
     const down = list.length - alive.length;
@@ -744,7 +722,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       pic(stage, tip, h('span', { class: 'tl' }, tierPill(stage), harm(stage), moving ? h('b', { class: 'mv', text: '↕', title: 'Xếp đội sẽ dời con này' }) : null),
         starBtn(stage), lvTag(stage), list.length > 1 ? h('span', { class: 'cnt', text: `×${list.length}` }) : null, hp),
       strip(stage),
-      h('div', { class: 'tn', text: u.n ?? stage }),
+      h('div', { class: 'tn', title: needs.length ? needs.map(o => `S${o.slot}: cần ${nameOf(o.give)} → nhận ${nameOf(o.get)}`).join('\n') : null },
+        needs.length ? h('b', { class: 'trf', text: '⇄' }) : null, u.n ?? stage),
       h('div', { class: `acts${buttons.length > 1 ? ' split' : ''}` }, buttons)),
     cycle(`u:${stage}`, list.map(x => `u${x.id}`)), stage, key => Number(key.slice(1)));
   }
@@ -796,6 +775,13 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         title: `${nameOf(id)} · DPS ${fmt(Math.round(d.ed ?? d.dps ?? 0))} · máu ${fmt(d.hp)}${i ? ` · ${fmt(cost)} vàng từ bây giờ` : ' · đang ở đây'}${trap ? '\n⚠ Bẫy: lên dạng này bị tụt' : ''}${d.sd ? '\n⚠ Tự hại (issue #1)' : ''}` },
         img(id, 34), d.st ? h('span', { class: `tier ${TIER_CLASS[d.st]}`, text: d.st }) : null, h('small', { class: i ? 'gold' : '', text: i ? short(cost) : `Lv${d.l ?? '?'}` }));
     };
+    const have = new Set(myUnits(state).filter(x => x.active).map(x => x.stage));
+    const offers = [...state.offers.values()].filter(o => famOf(o.give) === famOf(stage)).sort((a, b) => a.slot - b.slot);
+    const offerNode = o => {
+      const on = have.has(o.give), d = U(o.get) ?? {};
+      return h('div', { class: `node ${on ? 'ready' : 'off'}`, title: `S${o.slot}: đưa ${nameOf(o.give)} → nhận ${nameOf(o.get)}\n${on ? 'Có sẵn — bấm Trade ở tab Trade' : `Chưa có ${nameOf(o.give)}`}` },
+        img(o.get, 34), d.st ? h('span', { class: `tier ${TIER_CLASS[d.st]}`, text: d.st }) : null, h('small', { class: on ? 'gold' : '', text: on ? `S${o.slot}` : levelOf(o.give) }));
+    };
     const seen = new Set(), skills = [];
     for (const list of paths) for (const [id] of list) for (const sk of U(id)?.sk ?? []) {
       const a = db.ab?.[sk];
@@ -817,6 +803,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         h('span', { text: `❤ ${short(u.hp ?? 0)}`, title: 'Máu' }), h('span', { text: `⚔ ${short(Math.round(u.ed ?? u.dps ?? 0))}`, title: 'DPS thật' }),
         h('span', { text: `↔ ${u.rg ?? '?'}`, title: 'Tầm đánh' }), h('span', { text: `⛨ ${u.ar ?? 0}`, title: 'Giáp' })),
       paths.length && paths[0].length > 1 ? h('div', { class: 'evo' }, paths.map(list => h('div', { class: 'path' }, list.map((x, i) => [i ? h('span', { class: 'ar', text: '›' }) : null, node(x, i, list)])))) : null,
+      offers.length ? h('div', { class: 'evo' }, h('div', { class: 'path tr', title: 'Trade được ra: sáng = có sẵn con để đổi, xám = chưa' }, h('span', { class: 'ar', text: '⇄' }), offers.map(offerNode))) : null,
       skills.length ? h('div', { class: 'sks' }, skills.map(([sk, id]) => {
         const a = db.ab[sk];
         return h('div', { class: `sk ${a.x ? 'self' : ''} ${a.off ? 'off' : ''}` },
@@ -853,82 +840,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         [b.name, b.lives, short(b.gold), short(b.lumber), b.creeps].map(v => h('td', { text: String(v) })))));
   }
 
-  const resources = [];
-  const observers = [];
-  function observe(type, fn) {
-    try {
-      const o = new PerformanceObserver(list => list.getEntries().forEach(fn));
-      o.observe({ type, buffered: true });
-      observers.push(o);
-    } catch { }
-  }
-  observe('resource', e => { if (resources.length < 2000) resources.push(e); });
-  observe('longtask', e => { diag.longTaskMs += e.duration; diag.longTasks++; });
-
-  function diagReport() {
-    const base = diag.hello ?? diag.firstMsg;
-    if (!base) return null;
-    const sec = v => (v == null ? null : Math.max(0, (v - base) / 1000));
-    const after = resources.filter(r => r.startTime >= base - 50 && !String(r.name).startsWith(DATA_URL));
-    const netEnd = after.length ? Math.max(...after.map(r => r.responseEnd)) : base;
-    const bytes = after.reduce((n, r) => n + (r.transferSize || 0), 0);
-    const r = {
-      helloSeen: diag.hello != null, keyframe: sec(diag.keyframe), wild: sec(diag.firstWild), unit: sec(diag.firstUnit),
-      net: sec(netEnd), files: after.length, mb: bytes / 1048576, longMs: diag.longTaskMs, longN: diag.longTasks,
-      slow: [...after].sort((a, b) => b.duration - a.duration).slice(0, 6)
-        .map(x => ({ file: String(x.name).split('?')[0].split('/').slice(-2).join('/'), ms: Math.round(x.duration), kb: Math.round((x.transferSize || 0) / 1024) })),
-    };
-    const wild = r.wild ?? Infinity;
-    r.verdict = r.wild == null ? 'Server chưa gửi pet nào — đợi thêm.'
-      : r.keyframe > 5 ? `Server phản hồi chậm: ${fmt(r.keyframe)}s mới gửi ảnh chụp căn cứ.`
-      : wild - r.keyframe > 5 ? 'Pet do server thả muộn (luật/đếm ngược của game), không phải do máy mày.'
-      : r.net > 5 && r.net >= wild * 0.6 ? 'Chậm do TẢI FILE (mạng / file nặng) — xem danh sách file chậm bên dưới.'
-      : r.longMs > 5000 ? 'Chậm do MÁY xử lý (CPU/GPU) lúc dựng trận.'
-      : 'Dữ liệu pet tới nhanh; nếu game vẫn hiện chậm là do game dựng hình 3D — dùng tab Wild để chọn trước.';
-    return r;
-  }
-
-  function viewDiag() {
-    const r = diagReport();
-    const firstWild = state.wilds.values().next().value;
-    const p = probe(firstWild ? `w${firstWild.id}` : null);
-    const probeRows = [
-      h('div', { class: 'sec', text: 'Kiểm tra nút' }),
-      h('div', { class: 'kv' }, h('span', { text: 'Trang / bản game' }), h('b', { text: `${p.host} · ${p.client === 'web' ? 'bản web' : 'Cocos'}` })),
-      h('div', { class: 'kv' }, h('span', { text: 'Dữ liệu' }), h('b', { text: !live ? 'chỉ từ wiki' : wikiBehind() ? 'wiki cũ hơn game → đã tự tính từ /catalog của game' : 'khớp bản game (tính từ /catalog)' })),
-      p.client === 'web' ? h('div', { class: 'kv' }, h('span', { text: 'Móc hàm game' }), h('b', { text: p.webHooked ? 'có (gọi thẳng)' : `chưa — đang chờ: ${p.webArmed.join(', ') || 'không (dán giữa trận → bấm Móc)'}` })) : null,
-      h('div', { class: 'kv' }, h('span', { text: 'Tìm thấy game' }), h('b', { text: p.found ? 'có' : p.hasEngine ? 'không (chưa vào trận?)' : 'không thấy engine' })),
-      p.found ? h('div', { class: 'kv' }, h('span', { text: 'Hàm có sẵn' }), h('b', { text: p.fns.join(', ') || 'không có' })) : null,
-      p.found ? h('div', { class: 'kv' }, h('span', { text: 'Entity trong game' }), h('b', { text: `${p.entities} · ${p.keys.join(' ')}` })) : null,
-      p.found && p.toolWild ? h('div', { class: 'kv' }, h('span', { text: `Pet ${p.toolWild}` }), h('b', { text: p.toolWildFound ? 'khớp' : `không khớp (game: ${p.sampleWild ?? '—'})` })) : null,
-      h('div', { class: 'sec', text: 'Kiểm kỹ năng chí mạng / choáng' }),
-      h('div', { class: 'kv', title: 'Đánh 1 đợt có con Chí mạng / Choáng (Hitmonlee, Charmeleon, Pichu…). Đếm từ sự kiện trận server gửi: mỗi lần kỹ năng kích hoạt, sát thương đi vào chính con pet hay vào quái' },
-        h('span', { text: 'Kích hoạt' }), h('b', { text: skillProbe.fired ? `${fmt(skillProbe.fired)} lần` : 'chưa thấy' })),
-      skillProbe.fired ? h('div', { class: 'kv hl' }, h('span', { text: 'Sát thương cùng lúc' }),
-        h('b', { text: `tự trúng ${fmt(skillProbe.selfHit)} (${short(skillProbe.selfDmg)}) · vào quái ${fmt(skillProbe.otherHit)} (${short(skillProbe.otherDmg)})` })) : null,
-      h('div', { class: 'bar-row' }, h('button', { class: 'chip', text: 'Chép kết quả kiểm tra', onClick: e => {
-        navigator.clipboard?.writeText(JSON.stringify({ v: VERSION, ...p, skillProbe: { ...skillProbe, suspect: suspect.size } }, null, 1)).then(() => { e.target.textContent = 'Đã chép'; }, () => { e.target.textContent = 'Không chép được'; });
-      } })),
-    ];
-    if (!r) return [empty('Bấm bookmark ở SẢNH trước khi vào phòng, tool sẽ đo từ lúc vào trận tới lúc có pet.'), probeRows];
-    const s = v => (v == null ? '—' : `${fmt(v)}s`);
-    const kv = (k, v, cls = '') => h('div', { class: `kv ${cls}` }, h('span', { text: k }), h('b', { text: v }));
-    return [
-      h('p', { class: 'verdict', text: r.verdict }),
-      kv('Vào phòng', r.helloSeen ? '0s' : 'bấm bookmark muộn'),
-      kv('Ảnh chụp căn cứ', s(r.keyframe)), kv('Có pet hoang dã', s(r.wild), 'hl'), kv('Có lính', s(r.unit)),
-      kv('Tải xong file trận', `${s(r.net)} · ${r.files} file · ${fmt(r.mb)}MB`),
-      kv('Máy bị khựng', `${s(r.longMs / 1000)} · ${r.longN} lần`),
-      r.slow.length ? h('div', { class: 'sec', text: 'File tải lâu nhất' }) : null,
-      r.slow.map(x => kv(x.file, `${fmt(x.ms)}ms · ${fmt(x.kb)}KB`, 'file')),
-      probeRows,
-      h('div', { class: 'bar-row' }, h('button', { class: 'chip', text: 'Chép báo cáo', onClick: e => {
-        const text = JSON.stringify({ v: VERSION, ...r }, null, 1);
-        navigator.clipboard?.writeText(text).then(() => { e.target.textContent = 'Đã chép'; }, () => { e.target.textContent = 'Không chép được'; });
-      } })),
-    ];
-  }
-
   const host = h('div', { style: 'position:fixed;top:12px;left:12px;z-index:2147483646;' });
   const root = host.attachShadow({ mode: 'closed' });
   root.append(h('style', { text: CSS }));
@@ -949,7 +860,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   document.documentElement.append(host);
 
   let drag = null;
-  const TABS = [['trade', 'Trade'], ['wild', 'Wild'], ['team', 'Đội'], ['wave', 'Đợt'], ['players', 'Phòng'], ['diag', 'Đo tải']];
+  const TABS = [['trade', 'Trade'], ['wild', 'Wild'], ['team', 'Đội'], ['wave', 'Đợt'], ['players', 'Phòng']];
   let layout = 'v';
   function setLayout(next) {
     layout = next;
@@ -957,7 +868,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     dirty = true; render(true);
   }
 
-  let bodyEl = null;
+  let bodyEl = null, lastBind = '';
   function render(force = false) {
     if (!dirty || panel.hidden) return;
     if (!force && performance.now() - lastRender < 1000) { invalidate(); return; }
@@ -965,6 +876,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     dirty = false;
     const scroll = bodyEl?.scrollTop ?? 0;
     sig.length = 0;
+    picks.length = 0;
     for (const w of state.wilds.values()) {
       if (wishSeen.has(w.id) || !wished(w.stage)) continue;
       wishSeen.add(w.id);
@@ -996,23 +908,31 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       t, count[k] ? h('small', { text: ` ${count[k]}` }) : null)));
     let content;
     try {
-      content = status && tab !== 'diag' ? empty(status) : ({
-        trade: viewTrade, wild: viewWild, team: viewTeam, wave: viewWave, players: viewPlayers, diag: viewDiag,
+      content = status ? empty(status) : ({
+        trade: viewTrade, wild: viewWild, team: viewTeam, wave: viewWave, players: viewPlayers,
       })[tab]();
     } catch (err) {
       content = h('p', { class: 'empty bad', text: `Lỗi hiển thị: ${err?.message ?? err}` });
     }
-    const body = bodyEl = h('div', { class: 'body' }, toast ? h('p', { class: 'toast', text: toast }) : null, content);
+    const body = h('div', { class: 'body' }, toast ? h('p', { class: 'toast', text: toast }) : null, content);
     const shape = `${tab}|${wildSort}|${wildRole}|${teamFilter}|${toast ? 1 : 0}|${status ?? ''}|${sig.join(',')}`;
     if (shape !== lastLayout) { lastLayout = shape; layoutAt = performance.now(); }
+    const bind = `${shape}|${picks.join(';')}`;
     panel.className = `panel ${layout}`;
-    panel.replaceChildren(header, tabs, body);
+    const [oldHead, oldTabs, oldBody] = [0, 1, 2].map(i => panel.children.item(i));
+    if (!oldHead || !oldTabs || !oldBody) { panel.replaceChildren(header, tabs, body); bodyEl = body; }
+    else {
+      if (!oldHead.isEqualNode(header)) oldHead.replaceWith(header);
+      if (!oldTabs.isEqualNode(tabs)) oldTabs.replaceWith(tabs);
+      if (bind !== lastBind || !oldBody.isEqualNode(body)) { oldBody.replaceWith(body); bodyEl = body; body.scrollTop = scroll; }
+    }
+    lastBind = bind;
     wrap.className = `wrap ${layout}`;
     let infoView = [];
     try { infoView = info ? viewInfo() : []; } catch { infoView = []; }
     drawer.hidden = panel.hidden || !infoView.length;
-    drawer.replaceChildren(...infoView);
-    body.scrollTop = scroll;
+    const kids = drawer.children;
+    if (infoView.length !== kids.length || infoView.some((n, i) => !n.isEqualNode(kids.item(i)))) drawer.replaceChildren(...infoView);
   }
 
   const onMove = e => { if (drag) { host.style.bottom = 'auto'; host.style.left = `${Math.max(0, e.clientX - drag.dx)}px`; host.style.top = `${Math.max(0, e.clientY - drag.dy)}px`; } };
@@ -1084,7 +1004,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     socket?.removeEventListener('close', onClose);
     clearTimeout(pending);
     clearTimeout(autoTimer);
-    observers.forEach(o => o.disconnect());
     window.removeEventListener('pointermove', onMove);
     window.removeEventListener('pointerup', onUp);
     window.removeEventListener('pointerdown', outsideClose, true);
@@ -1137,7 +1056,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       .then(t => JSON.parse(t));
   };
 
-  let live = null, liveHash = null, rawCat = null;
+  let live = null, rawCat = null;
   function mergeGameCatalog() {
     if (!db || !gameCatReady) return;
     if (rawCat && !live) { try { live = analyzeCatalog(rawCat, { overrides: db.ov }); } catch { live = null; } rawCat = null; }
@@ -1146,7 +1065,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     for (const r of mem.units.values()) r.row = formationRow(U(r.stage));
     dirty = true; render(true);
   }
-  const wikiBehind = () => !!(db?.v && liveHash && !liveHash.startsWith(db.v));
   const S = (v, max = 80) => (typeof v === 'string' ? v.slice(0, max) : undefined);
   const N = v => (typeof v === 'number' && Number.isFinite(v) ? v : undefined);
   const ID = v => (typeof v === 'string' && v.length <= 64 && SAFE_ID.test(v) ? v : undefined);
@@ -1196,10 +1114,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   getJSON('/catalog', 32 * 1024 * 1024)
     .then(raw => {
       gameCat = buildGameCatalog(raw);
-      suspect = new Set((raw.catalog?.abilities ?? []).filter(a => a?.trigger?.kind === 'on_hit' && a.targeting?.kind === 'self'
-        && (a.effects ?? []).some(e => e?.kind === 'damage' && !e.target && !e.targeting)).map(a => a.id).filter(id => typeof id === 'string'));
       rawCat = raw.catalog;
-      liveHash = typeof raw.catalog_hash === 'string' && /^[0-9a-f]{12,64}$/.test(raw.catalog_hash) ? raw.catalog_hash : null;
       gameCatReady = true; mergeGameCatalog();
     })
     .catch(() => { if (dead) return; toast = 'Không tải được catalog của game — nút Bắt/Tiến hóa/Trade tạm khoá.'; dirty = true; try { render(true); } catch { } });

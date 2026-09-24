@@ -178,6 +178,8 @@ test('bookmarklet: bộ kiểm tra AST chặn các kiểu lách danh sách cho p
     assert.ok(auditSource(files).length > 0 && auditSource(bridgeFiles).length > 0, `không chặn được: ${name}`);
   }
   assert.ok(auditSource([['overlay.js', overlay.replace("getJSON('/catalog'", "getJSON('https://evil/'")], ['game-bridge.js', base], ['logic.js', logic]]).length > 0);
+  const clash = overlay.replace("  const host = h('div'", "  function observe(type) { return type; }\n  const host = h('div'");
+  assert.ok(clash !== overlay && auditSource([['overlay.js', clash], ['game-bridge.js', base], ['logic.js', logic]]).some(e => /observe trùng tên/.test(e)), 'hàm cục bộ trùng tên hàm import (gọi nhầm hàm) phải bị chặn');
   assert.ok(auditSource([['overlay.js', overlay.replace("right: ['KeyD', 'd']", "right: ['Enter', 'Enter']")], ['game-bridge.js', base], ['logic.js', logic]]).length > 0);
 });
 

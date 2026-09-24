@@ -54,6 +54,15 @@ export function auditSource(files) {
     const ast = parse(code, { ecmaVersion: 'latest', sourceType: 'module', locations: true });
     const isBridge = file === BRIDGE, isWeb = file === WEB;
     let dispatches = 0;
+    const imported = new Set(ast.body.filter(n => n.type === 'ImportDeclaration').flatMap(n => n.specifiers.map(sp => sp.local.name)));
+    const names = p => (p?.type === 'Identifier' ? [p] : p?.type === 'AssignmentPattern' ? names(p.left) : p?.type === 'RestElement' ? names(p.argument)
+      : p?.type === 'ArrayPattern' ? p.elements.flatMap(names) : p?.type === 'ObjectPattern' ? p.properties.flatMap(q => names(q.value ?? q.argument)) : []);
+    const shadow = id => { if (imported.has(id.name)) err(file, id, `${id.name} trùng tên hàm import — đổi tên để không gọi nhầm hàm`); };
+    ancestor(ast, {
+      Function(n) { if (n.id) shadow(n.id); n.params.flatMap(names).forEach(shadow); },
+      VariableDeclarator(n) { names(n.id).forEach(shadow); },
+      CatchClause(n) { names(n.param).forEach(shadow); },
+    });
     ancestor(ast, {
       Identifier(n, _s, anc) {
         const parent = anc[anc.length - 2];

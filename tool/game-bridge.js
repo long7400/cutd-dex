@@ -129,20 +129,3 @@ export function groundOf(g) {
 }
 
 export const clientKind = () => (window.cc?.director ? 'cocos' : document.getElementById('GameCanvas') ? 'cocos-loading' : 'web');
-
-export function probe(toolWildKey) {
-  const out = { host: location.host, client: clientKind(), hasEngine: !!window.cc?.director, webHooked: webCaptured(), webArmed: [...armed.keys()], found: false, fns: [], entities: 0, keys: [], sampleWild: null };
-  const g = findGame();
-  if (!g) return out;
-  out.found = true;
-  out.fns = [typeof g.session.catchWild === 'function' && 'catchWild', typeof g.session.evolveCreature === 'function' && 'evolveCreature',
-    typeof g.session.tradePet === 'function' && 'tradePet', typeof g.session.moveCreature === 'function' && 'moveCreature'].filter(Boolean);
-  let i = 0;
-  for (const [id, ent] of g.store.entities) {
-    out.entities++;
-    if (i++ < 6) out.keys.push(`${String(id).slice(0, 12)}:${String(ent?.kind ?? '?').slice(0, 12)}`);
-    if (!out.sampleWild && ent?.kind === 'wild') out.sampleWild = `${String(id).slice(0, 12)} wireId=${Number(ent.wireId)}`;
-  }
-  if (toolWildKey) { out.toolWild = toolWildKey; out.toolWildFound = !!findEntity(g, toolWildKey); }
-  return out;
-}

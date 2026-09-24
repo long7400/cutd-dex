@@ -142,6 +142,18 @@ test('bookmarklet: chỉ đọc, bắt socket rồi trả getter, hiển thị t
   clickTab('Đội');
   assert.ok(root.querySelector('.tile .tier'), 'đội có huy hiệu hạng');
   assert.ok(root.querySelector('.tile .strip i'), 'đội có dải hạng các cấp sau');
+  assert.equal(root.querySelector('.tile .acts .b.tr')?.textContent, 'TRADE', 'con đúng dạng trade → chữ TRADE');
+  assert.equal(root.querySelectorAll('.tile button.do-trade').length, 0, 'trade chỉ bấm ở tab Trade');
+  assert.ok(root.querySelector('.tile .tn .trf'), 'dòng pet có trade → ⇄ trước tên');
+  const body = root.querySelector('.body');
+  emit(summary);
+  await tick(1100);
+  assert.equal(root.querySelector('.body'), body, 'không có gì đổi → không vẽ lại panel');
+  root.querySelector('.tile .pic').click();
+  assert.equal(root.querySelector('.drawer .path.tr .node.ready small')?.textContent, 'S1', 'khung thông tin: trade được ngay → sáng, ghi slot');
+  emit({ type: 'base_delta', tick: 102, base: { base_id: 7, lives: 30, gold: 5000, lumber: 120, alive: true, research: [] }, unit_ids_removed: [1] });
+  await tick(1100);
+  assert.ok(root.querySelector('.drawer .path.tr .node.off'), 'chưa có con để đổi → xám');
   clickTab('Đợt');
   assert.match(text(), /×3/);
   assert.doesNotMatch(text(), /×9/, 'không hiện quái của nhà khác');
@@ -194,7 +206,7 @@ test('bookmarklet: không chạy ngoài trang game', t => {
   assert.ok(!tool.code.includes('__CUTD_DATA_URL__'));
 });
 
-test('bookmarklet: bấm ở sảnh → bỏ qua socket sảnh, bám đúng socket trận; ngang/dọc; tab Đo tải', async t => {
+test('bookmarklet: bấm ở sảnh → bỏ qua socket sảnh, bám đúng socket trận; ngang/dọc; không còn tab Đo tải', async t => {
   const { w, log, code, FakeWS } = setupDom();
   t.after(() => w.close());
   const original = Object.getOwnPropertyDescriptor(w.MessageEvent.prototype, 'data');
@@ -218,9 +230,8 @@ test('bookmarklet: bấm ở sảnh → bỏ qua socket sảnh, bám đúng sock
 
   const root = log.roots[0];
   const btn = title => [...root.querySelectorAll('button')].find(b => b.title === title || b.textContent.startsWith(title));
-  btn('Đo tải').click();
-  assert.match(root.querySelector('.panel').textContent, /Có pet hoang dã/);
-  assert.ok(root.querySelector('.verdict'));
+  assert.ok(!btn('Đo tải'), 'bỏ tab Đo tải');
+  assert.equal([...root.querySelectorAll('.tab')].length, 5);
 
   btn('Chuyển sang ngang').click();
   assert.ok(root.querySelector('.panel').classList.contains('h'));
@@ -604,31 +615,94 @@ test('bookmarklet: Xếp đội — mỗi lần bấm dời đúng 1 con lệch 
   w.__cutdHelper.destroy();
 });
 
-test('bookmarklet: Kiểm kỹ năng — đếm sát thương khi Chí mạng kích hoạt vào chính con pet hay vào quái (chỉ đọc)', async t => {
-  const { w, log, code, FakeWS } = setupDom();
+test('bookmarklet: Xếp đội nhớ đội hình — pet Lv1 vừa mua để yên round đó, sang round sau mới tính', async t => {
+  const { w, log, code, FakeWS } = setupDom('https://m.cutd.site/?room=805A6070');
   t.after(() => w.close());
-  const crit = readJSON(PATHS.catalog).catalog.abilities.find(a => a.trigger?.kind === 'on_hit' && a.targeting?.kind === 'self' && a.effects.some(e => e.kind === 'damage')).id;
+  w.document.getElementById('GameCanvas').remove();
   w.eval(code);
+  const tank = Object.keys(overlay.u).find(id => overlay.u[id].l && formationRow(overlay.u[id]) === 0);
+  const fresh = Object.keys(overlay.u).find(id => overlay.u[id].l === 1 && formationRow(overlay.u[id]) === 1);
+  w.eval(`
+    window.Session = class { constructor(store) { this.nextSequence = 1; this.store = store; }
+      dispatch() { const s = this.nextSequence; this.nextSequence += 1; return s; }
+      moveCreature(e, to) { return this.dispatch(); } catchWild() {} evolveCreature() {} tradePet() {} }
+    window.Interaction = class { constructor() { this._selectedEntityId = null; } selectEntity() {} tapGround() {} clearSelection() {} }
+    const at = (x, y) => ({ x: 1376 + x, y });
+    window.__unit = (n, stage, x, y) => [\`u\${n}\`, { id: \`u\${n}\`, kind: 'creature', wireId: n, contentId: stage, fromPos: at(x, y), toPos: at(x, y) }];
+    window.__entities = new Map([window.__unit(1, ${JSON.stringify(tank)}, 700, 500)]);
+    window.__session = new Session({ entities: window.__entities, ground: { arena: { originX: 1376 + 192, originY: 96, width: 832, height: 1120 }, path: [at(96, 656), at(1120, 656)] } });
+    window.__interaction = new Interaction();
+  `);
   const ws = new FakeWS();
   ws.addEventListener('message', e => e.data);
   const emit = m => ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
+  const base = { base_id: 7, lives: 30, gold: 5000, lumber: 0, alive: true, research: [] };
   emit(summary);
   await tick(0);
-  emit(keyframe([{ id: 1, stage_id: scenario.c, owner_id: 11, health: 5, max_health: 10, active: true }]));
-  await tick(300);
-  emit({ type: 'base_delta', tick: 120, from_tick: 100, base: { base_id: 7, lives: 30, gold: 1, lumber: 0 }, unit_ids_removed: [], creep_ids_removed: [], wild_ids_removed: [], effects: [
-    { kind: 'ability_triggered', content_id: crit, tick: 120, source_collection: 'unit', source_id: 1, target_collection: 'creep', target_id: 9 },
-    { kind: 'unit_damaged', tick: 120, source_collection: 'unit', source_id: 1, target_collection: 'unit', target_id: 1, amount: 400 },
-    { kind: 'damage', tick: 120, source_collection: 'unit', source_id: 1, target_collection: 'creep', target_id: 9, amount: 100 },
-    { kind: 'damage', tick: 121, source_collection: 'unit', source_id: 2, target_collection: 'creep', target_id: 9, amount: 999 },
-  ] });
+  emit(keyframe([{ id: 1, stage_id: tank, owner_id: 11, health: 10, max_health: 10, active: true }]));
   await tick(1200);
   const root = log.roots[0];
-  [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith('Đo tải')).click();
-  const text = root.querySelector('.panel').textContent;
-  assert.match(text, /Kích hoạt1 lần/);
-  assert.match(text, /tự trúng 1 \(400\) · vào quái 1 \(100\)/);
+  [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith('Đội')).click();
+  const btn = () => [...root.querySelectorAll('.bar-row button')].find(b => /Xếp đội|Đúng hàng/.test(b.textContent));
+  assert.match(btn().textContent, /↕1/);
+  w.eval(`window.__entities.set(...window.__unit(4, ${JSON.stringify(fresh)}, 300, 900))`);
+  emit({ type: 'base_delta', tick: 110, base, units_upserted: [{ id: 4, stage_id: fresh, owner_id: 11, health: 10, max_health: 10, active: true }] });
+  await tick(1200);
+  assert.match(btn().textContent, /↕1/, 'pet Lv1 vừa mua trong round → chưa xếp');
+  assert.match(root.querySelector('.bar-row').textContent, /\+1 mới/);
+  emit({ ...summary, phase: 'wave', tick: 200 });
+  await tick(300);
+  emit({ ...summary, phase: 'planning', tick: 400 });
+  await tick(1200);
+  assert.match(btn().textContent, /↕2/, 'sang round sau → tính cả con mới');
+  assert.match(root.querySelector('.toast')?.textContent ?? '', /Round mới: 2 con/);
   assert.equal(log.sent, 0);
+  w.__cutdHelper.destroy();
+});
+
+test('bookmarklet: bản web chạy trong khung → dừng vòng vẽ của game gốc phía sau (đỡ tốn CPU/GPU gấp đôi)', async t => {
+  const { ResourceLoader } = await import('jsdom');
+  class Pages extends ResourceLoader { fetch(url, opts) { return opts?.element?.localName === 'iframe' ? Promise.resolve(Buffer.from('<!doctype html><html><body></body></html>')) : null; } }
+  const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'https://m.cutd.site/?room=805A6070', runScripts: 'outside-only', pretendToBeVisual: true, resources: new Pages(), virtualConsole: new VirtualConsole() });
+  const w = dom.window;
+  t.after(() => w.close());
+  w.fetch = async u => ({ ok: true, text: async () => JSON.stringify(u.endsWith('.site/catalog') ? readJSON(PATHS.catalog) : overlay) });
+  class TopWS extends w.EventTarget {}
+  w.WebSocket = TopWS;
+  const topRaf = w.requestAnimationFrame;
+  w.eval(tool.code);
+  const top = new TopWS();
+  top.addEventListener('message', e => e.data);
+  top.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(summary) }));
+  await tick(0);
+  top.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(keyframe([])) }));
+  await tick(50);
+  assert.equal(w.requestAnimationFrame, topRaf, 'không có khung → không đụng vòng vẽ của game');
+  let ran = 0;
+  w.requestAnimationFrame(() => { ran++; });
+  await tick(100);
+  assert.equal(ran, 1, 'chưa vào khung → game gốc vẫn vẽ bình thường');
+  await tick(2600);
+  const frame = w.document.querySelector('iframe');
+  assert.ok(frame, 'dán giữa trận → tự mở khung');
+  for (let i = 0; i < 60 && frame.contentWindow?.location.href === 'about:blank'; i++) await tick(50);
+  const inner = frame.contentWindow;
+  assert.notEqual(inner.location.href, 'about:blank');
+  await tick(50);
+  const ws = new inner.WebSocket('ws://127.0.0.1:9');
+  ws.addEventListener('error', () => {});
+  ws.addEventListener('message', e => e.data);
+  ws.dispatchEvent(new inner.MessageEvent('message', { data: JSON.stringify(summary) }));
+  await tick(20);
+  assert.notEqual(w.requestAnimationFrame, topRaf, 'khung đã chạy trận → khoá vòng vẽ của game gốc');
+  w.requestAnimationFrame(() => { ran++; });
+  await tick(100);
+  assert.equal(ran, 1, 'game gốc phía sau không vẽ nữa');
+  let innerRan = 0;
+  inner.requestAnimationFrame(() => { innerRan++; });
+  await tick(100);
+  assert.equal(innerRan, 1, 'game trong khung vẫn vẽ bình thường');
+  w.__cutdHelper.destroy();
 });
 
 test('bookmarklet: bản web — tắt tool trước khi vào trận thì gỡ bẫy', t => {
@@ -736,8 +810,6 @@ test('bookmarklet: wiki cũ hơn game → tool tự tính DPS thật / vai trò 
   const tier = root.querySelector('.tier');
   assert.ok(tier, 'vẫn có hạng dù overlay thiếu số liệu');
   assert.match(tier.title, /Đỉnh dòng: |dạng mạnh nhất/);
-  [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith('Đo tải')).click();
-  assert.match(root.querySelector('.panel').textContent, /wiki cũ hơn game/);
 });
 
 test('bookmarklet: nhãn vai trò (ATK/TANK/BUFF…) + lọc theo vai trò ở tab Wild', async t => {
