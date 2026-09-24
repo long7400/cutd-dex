@@ -593,12 +593,18 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     ];
   }
 
+  const teamSlot = new Map();
+  let teamSeq = 0;
+  const byPower = (a, b) => powerOf(b.stage) - powerOf(a.stage) || (U(b.stage)?.ed ?? 0) - (U(a.stage)?.ed ?? 0) || a.id - b.id;
   function viewTeam() {
     const mine = myUnits(state);
     if (!mine.length) return empty('Chưa có lính (hoặc đang chờ dữ liệu).');
     const wanted = new Map();
     for (const o of state.offers.values()) wanted.set(o.give, [...(wanted.get(o.give) ?? []), o]);
-    return [arrangeBar(), legend(), ...mine.sort((a, b) => powerOf(b.stage) - powerOf(a.stage) || (U(b.stage)?.ed ?? 0) - (U(a.stage)?.ed ?? 0)).map(u => {
+    for (const u of [...mine].sort(byPower)) if (!teamSlot.has(u.id)) teamSlot.set(u.id, teamSeq++);
+    return [arrangeBar(), h('div', { class: 'bar-row' }, legend(),
+      h('button', { class: 'chip sm', text: '↻ Sắp theo hạng', tabindex: '-1', title: 'Thứ tự giữ cố định để khỏi nhảy khi tiến hóa; bấm để sắp lại theo hạng hiện tại', onClick: () => { teamSlot.clear(); teamSeq = 0; dirty = true; render(true); } })),
+      ...mine.sort((a, b) => teamSlot.get(a.id) - teamSlot.get(b.id)).map(u => {
       const evo = U(u.stage)?.e ?? [];
       const trades = wanted.get(u.stage) ?? [];
       return pickable(row(u.stage,
