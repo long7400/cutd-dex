@@ -412,7 +412,7 @@ test('bookmarklet: nhãn + đích của nút lấy từ catalog GAME, overlay gi
   assert.equal(calls.length, n);
 });
 
-test('bookmarklet: bản m.cutd.site dán giữa trận — nút khoá vài giây rồi tự Móc (mở lại trận trong khung)', async t => {
+test('bookmarklet: bản m.cutd.site dán giữa trận — xem được số liệu, nút khoá, KHÔNG tự mở thêm 1 bản game (tốn RAM); chỉ Móc khi người bấm', async t => {
   const { w, log, code, FakeWS } = setupDom('https://m.cutd.site/?room=805A6070');
   t.after(() => w.close());
   w.document.getElementById('GameCanvas').remove();
@@ -432,8 +432,12 @@ test('bookmarklet: bản m.cutd.site dán giữa trận — nút khoá vài giâ
   assert.match(root.querySelector('.toast')?.textContent ?? '', /Móc/);
   assert.equal(w.document.querySelectorAll('iframe').length, 0, 'chưa đủ vài giây → chưa tự móc');
   await tick(1500);
+  assert.equal(w.document.querySelectorAll('iframe').length, 0, 'không tự mở thêm bản game');
+  await tick(1200);
+  assert.match(root.querySelector('.toast.info')?.textContent ?? '', /bấm Móc.*RAM/, 'giải thích: muốn dùng nút thì bấm Móc (tốn RAM), lần sau bấm ở sảnh');
+  trustedClick(w, [...root.querySelectorAll('.top button')].find(b => b.textContent === 'Móc'));
   const frames = w.document.querySelectorAll('iframe');
-  assert.equal(frames.length, 1, 'dán giữa trận → tự móc, không cần bấm');
+  assert.equal(frames.length, 1, 'người bấm Móc → mới mở lại trận trong khung');
   assert.equal(frames[0].src, 'https://m.cutd.site/?room=805A6070');
   assert.equal(log.sent, 0);
   w.__cutdHelper.destroy();
@@ -660,12 +664,17 @@ test('bookmarklet: Xếp đội nhớ đội hình — pet Lv1 vừa mua để y
   w.__cutdHelper.destroy();
 });
 
-test('bookmarklet: bản web chạy trong khung → dừng vòng vẽ của game gốc phía sau (đỡ tốn CPU/GPU gấp đôi)', async t => {
+test('bookmarklet: bản web chạy trong khung → game gốc phía sau bị cắt đồ hoạ (trả RAM/GPU) + chỉ còn 1 khung/giây', async t => {
   const { ResourceLoader } = await import('jsdom');
   class Pages extends ResourceLoader { fetch(url, opts) { return opts?.element?.localName === 'iframe' ? Promise.resolve(Buffer.from('<!doctype html><html><body></body></html>')) : null; } }
-  const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'https://m.cutd.site/?room=805A6070', runScripts: 'outside-only', pretendToBeVisual: true, resources: new Pages(), virtualConsole: new VirtualConsole() });
+  const dom = new JSDOM('<!doctype html><html><body><canvas id="world"></canvas></body></html>', { url: 'https://m.cutd.site/?room=805A6070', runScripts: 'outside-only', pretendToBeVisual: true, resources: new Pages(), virtualConsole: new VirtualConsole() });
   const w = dom.window;
   t.after(() => w.close());
+  let lost = 0;
+  w.HTMLCanvasElement.prototype.getContext = function (kind) { return kind === 'webgl2' && this.id === 'world' ? { getExtension: name => (name === 'WEBGL_lose_context' ? { loseContext() { lost++; } } : null) } : null; };
+  const roots = [];
+  const attachShadow = w.Element.prototype.attachShadow;
+  w.Element.prototype.attachShadow = function (o) { const r = attachShadow.call(this, { ...o, mode: 'open' }); roots.push(r); return r; };
   w.fetch = async u => ({ ok: true, text: async () => JSON.stringify(u.endsWith('.site/catalog') ? readJSON(PATHS.catalog) : overlay) });
   class TopWS extends w.EventTarget {}
   w.WebSocket = TopWS;
@@ -682,9 +691,10 @@ test('bookmarklet: bản web chạy trong khung → dừng vòng vẽ của game
   w.requestAnimationFrame(() => { ran++; });
   await tick(100);
   assert.equal(ran, 1, 'chưa vào khung → game gốc vẫn vẽ bình thường');
-  await tick(2600);
+  await tick(1200);
+  trustedClick(w, [...roots[0].querySelectorAll('.top button')].find(b => b.textContent === 'Móc'));
   const frame = w.document.querySelector('iframe');
-  assert.ok(frame, 'dán giữa trận → tự mở khung');
+  assert.ok(frame, 'bấm Móc → mở khung');
   for (let i = 0; i < 60 && frame.contentWindow?.location.href === 'about:blank'; i++) await tick(50);
   const inner = frame.contentWindow;
   assert.notEqual(inner.location.href, 'about:blank');
@@ -695,6 +705,7 @@ test('bookmarklet: bản web chạy trong khung → dừng vòng vẽ của game
   ws.dispatchEvent(new inner.MessageEvent('message', { data: JSON.stringify(summary) }));
   await tick(20);
   assert.notEqual(w.requestAnimationFrame, topRaf, 'khung đã chạy trận → giảm vòng vẽ của game gốc');
+  assert.equal(lost, 1, 'cắt ngữ cảnh đồ hoạ của game gốc → trình duyệt trả lại bộ nhớ GPU / RAM');
   w.requestAnimationFrame(() => { ran++; });
   await tick(100);
   assert.equal(ran, 1, 'game gốc phía sau không vẽ mỗi khung nữa');
@@ -760,22 +771,25 @@ test('bookmarklet: tab Chiến — mỗi con 1 dòng: DPS đo thật (đạn tí
   assert.match(rowOf('Chansey').querySelector('.dst').textContent, /✚100/, 'Chansey hồi đồng đội 100 (ký hiệu ✚)');
   assert.match(rowOf('Venusaur').querySelector('.dst').textContent, /♥︎1\.8k/, 'Venusaur tự hồi (ký hiệu ♥)');
   chip('DPS').click();
+  assert.deepEqual(val().slice(0, 3), ['600', '300', '200'], 'con DPS đo cao nhất lên đầu');
   assert.ok([...root.querySelectorAll('.drow .dval small')].every(x => /≈/.test(x.textContent)), 'kèm DPS tính theo công thức');
   assert.ok([...root.querySelectorAll('.drow')].some(r => /kỹ năng 500/.test(r.title)), 'tách sát thương kỹ năng / đòn thường');
   emit({ ...summary, phase: 'planning', tick: 1200 });
   emit({ type: 'base_delta', tick: 1300, base, effects: [{ kind: 'damage', tick: 1300, entity_id: 53, source_collection: 'unit', source_id: 1, amount: 99999 }] });
   await tick(1100);
-  assert.ok(val().includes('600'), 'hết đợt → giữ số đo của đợt vừa rồi, không cộng sát thương ngoài đợt');
-  assert.deepEqual(val().slice(0, 3), ['600', '300', '200'], 'con DPS đo cao nhất lên đầu');
+  assert.match(root.querySelector('.dsum').textContent, /Chưa đo/, 'hết đợt → xoá sạch số liệu, không giữ lại');
+  assert.ok(val().every(v => v === '—'), 'không cộng sát thương ngoài đợt');
   assert.doesNotMatch(root.querySelector('.panel').textContent, /CÁC ĐỢT GẦN ĐÂY/, 'không có thống kê các đợt trước');
   for (let n = 0; n < 12; n++) {
     emit({ ...summary, phase: 'wave', wave_index: 5 + n, tick: 2000 + n * 100 });
     emit({ type: 'base_delta', tick: 2050 + n * 100, base, effects: [{ kind: 'damage', tick: 2040 + n * 100, entity_id: 60, source_collection: 'unit', source_id: 1, amount: 100 }] });
     emit({ ...summary, phase: 'planning', tick: 2090 + n * 100 });
   }
+  emit({ ...summary, phase: 'wave', wave_index: 30, tick: 5000 });
+  emit({ type: 'base_delta', tick: 5050, base, effects: [{ kind: 'damage', tick: 5040, entity_id: 60, source_collection: 'unit', source_id: 1, amount: 100 }] });
   await tick(1100);
-  assert.match(root.querySelector('.dsum').textContent, /Đợt 16/, 'chỉ hiện đợt mới nhất');
-  assert.ok(val().includes('40'), 'số từng con là của đợt mới nhất (100 sát thương / 2,5s), không cộng dồn các đợt trước');
+  assert.match(root.querySelector('.dsum').textContent, /Đợt 30/, 'chỉ đợt đang đánh');
+  assert.ok(val().includes('40'), 'số từng con chỉ của đợt đang đánh (100 sát thương / 2,5s), không cộng dồn các đợt trước');
   assert.equal(log.sent, 0);
 });
 

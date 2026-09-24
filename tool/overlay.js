@@ -229,7 +229,9 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       meter.dmg.clear(); meter.skill.clear(); meter.taken.clear(); meter.healSelf.clear(); meter.healAlly.clear(); meter.shots.clear();
     } else if (now !== 'wave' && was === 'wave' && !meter.done) {
       meter.done = true;
-      meter.shots.clear();
+      meter.wave = null;
+      meter.start = meter.last = meter.total = 0;
+      meter.dmg.clear(); meter.skill.clear(); meter.taken.clear(); meter.healSelf.clear(); meter.healAlly.clear(); meter.shots.clear();
     }
   }
   function meterHits(msg) {
@@ -284,6 +286,11 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     slowed = true;
     window.requestAnimationFrame = fn => setTimeout(() => fn(performance.now()), 1000);
     window.cancelAnimationFrame = id => clearTimeout(id);
+    try {
+      const canvas = document.getElementById('world');
+      const gl = canvas?.getContext?.('webgl2') ?? canvas?.getContext?.('webgl');
+      gl?.getExtension?.('WEBGL_lose_context')?.loseContext();
+    } catch { }
     notice('Tool đã mở lại trận trong khung để móc hàm game (bấm bookmark khi đang trong trận). Bản game cũ phía sau được giảm còn 1 khung/giây cho đỡ nặng máy. Lần sau bấm bookmark ở sảnh trước khi vào trận thì không cần khung.');
   }
   function attach(ws) {
@@ -1128,7 +1135,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   let autoTimer = 0;
   function autoHook() {
     if (autoTimer || !isWeb() || realm.win !== window) return;
-    autoTimer = setTimeout(() => { if (!webTouched()) openFrame(); }, 2500);
+    autoTimer = setTimeout(() => { if (!webTouched() && !frame) notice('Đang xem được mọi số liệu. Muốn dùng nút Bắt / Tiến hóa / Trade / Xếp đội thì bấm Móc: tool mở lại trận trong khung (thêm 1 bản game, tốn RAM). Lần sau bấm bookmark ở sảnh trước khi vào trận thì không cần khung.'); }, 2500);
   }
   function hookViaFrame(e) { if (realClick(e)) openFrame(); }
   function openFrame() {
@@ -1227,6 +1234,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     if (!db || !gameCatReady) return;
     if (rawCat && !live) { try { live = analyzeCatalog(rawCat, { overrides: db.ov }); } catch { live = null; } rawCat = null; }
     for (const [id, a] of live ?? []) db.u[id] = { ...(db.u[id] ?? {}), ...a.stats, ...overlayFields(a) };
+    live = null;
     for (const [id, g] of gameCat) db.u[id] = { ...(db.u[id] ?? {}), n: g.n, l: g.l, b: g.b, c: g.c, e: g.e };
     for (const r of mem.units.values()) r.row = formationRow(U(r.stage));
     dirty = true; render(true);
