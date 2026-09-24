@@ -210,6 +210,38 @@ function frame(ground, margin) {
   return { a, dx, dy, cx, cy, inside, along: q => (q.x - cx) * dx + (q.y - cy) * dy };
 }
 
+const put = (arr, i, val) => arr.fill(val, i, i + 1);
+
+export function minCostAssign(cost) {
+  const n = cost.length, m = n ? cost[0].length : 0;
+  if (!n || m < n) return [];
+  const INF = 1e18, pu = new Array(n + 1).fill(0), pv = new Array(m + 1).fill(0), owner = new Array(m + 1).fill(0), back = new Array(m + 1).fill(0);
+  for (let i = 1; i <= n; i++) {
+    put(owner, 0, i);
+    let j0 = 0;
+    const best = new Array(m + 1).fill(INF), done = new Array(m + 1).fill(false);
+    do {
+      put(done, j0, true);
+      const i0 = owner[j0];
+      let delta = INF, j1 = 0;
+      for (let j = 1; j <= m; j++) {
+        if (done[j]) continue;
+        const cur = cost[i0 - 1][j - 1] - pu[i0] - pv[j];
+        if (cur < best[j]) { put(best, j, cur); put(back, j, j0); }
+        if (best[j] < delta) { delta = best[j]; j1 = j; }
+      }
+      for (let j = 0; j <= m; j++) {
+        if (done[j]) { put(pu, owner[j], pu[owner[j]] + delta); put(pv, j, pv[j] - delta); } else put(best, j, best[j] - delta);
+      }
+      j0 = j1;
+    } while (owner[j0] !== 0);
+    do { const j1 = back[j0]; put(owner, j0, owner[j1]); j0 = j1; } while (j0);
+  }
+  const result = new Array(n).fill(-1);
+  for (let j = 1; j <= m; j++) if (owner[j]) put(result, owner[j] - 1, j - 1);
+  return result;
+}
+
 export function arrangeMoves(members, ground, { gap = 80, lineGap = 60, margin = 48 } = {}) {
   const f = frame(ground, margin);
   if (!f) return [];
@@ -232,16 +264,34 @@ export function arrangeMoves(members, ground, { gap = 80, lineGap = 60, margin =
     const near = free.filter(sl => sl.row === m.row && !sl.taken && Math.hypot(m.pos.x - sl.x, m.pos.y - sl.y) < gap);
     if (near.length) near.reduce((b, sl) => (Math.hypot(m.pos.x - sl.x, m.pos.y - sl.y) < Math.hypot(m.pos.x - b.x, m.pos.y - b.y) ? sl : b)).taken = true;
   }
-  const order = members.filter(m => !inRow(m)).sort((x, y) => x.row - y.row || y.score - x.score);
   const moves = [];
-  for (const m of order) {
-    const options = free.filter(sl => sl.row === m.row && !sl.taken);
-    if (!options.length) continue;
-    const from = m.pos ?? { x: f.cx, y: f.cy };
-    const best = options.reduce((b, sl) => (Math.hypot(sl.x - from.x, sl.y - from.y) < Math.hypot(b.x - from.x, b.y - from.y) ? sl : b));
-    best.taken = true;
-    moves.push({ key: m.key, row: m.row, x: best.x, y: best.y });
+  for (const row of [...new Set(members.map(m => m.row))].sort((a, b) => a - b)) {
+    const out = members.filter(m => m.row === row && !inRow(m));
+    const vacant = free.filter(sl => sl.row === row && !sl.taken);
+    if (!out.length || !vacant.length) continue;
+    const pick = out.sort((x, y) => y.score - x.score).slice(0, vacant.length);
+    const from = m => m.pos ?? { x: f.cx, y: f.cy };
+    const match = minCostAssign(pick.map(m => vacant.map(sl => Math.hypot(sl.x - from(m).x, sl.y - from(m).y))));
+    pick.forEach((m, i) => { const sl = vacant[match[i]]; if (sl) moves.push({ key: m.key, row, x: sl.x, y: sl.y }); });
   }
   return moves;
 }
 
+export function trackRoster(meta, units, rowOf, round, baseline) {
+  const changed = [];
+  const alive = new Set();
+  for (const u of units) {
+    alive.add(u.id);
+    const row = rowOf(u.stage);
+    const m = meta.get(u.id);
+    if (!m) { meta.set(u.id, { first: baseline ? -1 : round, row, stage: u.stage, moved: false }); continue; }
+    if (m.stage !== u.stage) {
+      m.stage = u.stage;
+      if (row !== m.row) { m.row = row; m.moved = true; changed.push(u); }
+    }
+  }
+  for (const id of [...meta.keys()]) if (!alive.has(id)) meta.delete(id);
+  return changed;
+}
+
+export const heldThisRound = (meta, id, round) => { const m = meta.get(id); return !!m && m.first === round && !m.moved; };

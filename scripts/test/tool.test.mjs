@@ -1,7 +1,7 @@
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM, VirtualConsole } from 'jsdom';
-import { createState, applyMessage, tradeOptions, evolvePath, nextWaveForBase, myUnits, formation, formationRow, arrangeMoves } from '../../tool/logic.js';
+import { createState, applyMessage, tradeOptions, evolvePath, nextWaveForBase, myUnits, formation, formationRow, arrangeMoves, minCostAssign, trackRoster, heldThisRound } from '../../tool/logic.js';
 import { buildTool } from '../build-tool.mjs';
 import { build, buildOverlay, PATHS } from '../build.mjs';
 import { readJSON } from '../lib/fsx.mjs';
@@ -64,6 +64,25 @@ test('logic: dữ liệu rác không làm vỡ', () => {
   for (const m of [null, 1, 'x', [], { type: 'base_keyframe' }, { type: 'base_keyframe', base: 5 }, { type: 'room_summary', bases: 'x' }]) {
     assert.doesNotThrow(() => applyMessage(s, m));
   }
+});
+
+test('logic: pet mới mua để yên round đó, sang round sau mới xếp; tiến hóa đổi vai trò thì xếp ngay; ghép ô tối ưu', () => {
+  const meta = new Map();
+  const rows = { a: 1, b: 1, c: 3 };
+  const rowOf = st => rows[st];
+  trackRoster(meta, [{ id: 1, stage: 'a' }], rowOf, 0, true);
+  assert.equal(heldThisRound(meta, 1, 0), false, 'con có sẵn lúc bật tool không bị giữ');
+  trackRoster(meta, [{ id: 1, stage: 'a' }, { id: 2, stage: 'a' }], rowOf, 0, false);
+  assert.equal(heldThisRound(meta, 2, 0), true, 'vừa mua trong round 0 → để yên');
+  assert.equal(heldThisRound(meta, 2, 1), false, 'sang round 1 → được xếp');
+  assert.deepEqual(trackRoster(meta, [{ id: 1, stage: 'b' }, { id: 2, stage: 'a' }], rowOf, 0, false), [], 'tiến hóa cùng hàng → không coi là đổi vai trò');
+  const changed = trackRoster(meta, [{ id: 1, stage: 'b' }, { id: 2, stage: 'c' }], rowOf, 0, false);
+  assert.deepEqual(changed.map(u => u.id), [2], 'tiến hóa đổi hàng → báo đổi vai trò');
+  assert.equal(heldThisRound(meta, 2, 0), false, 'đổi vai trò → xếp ngay dù mới mua');
+  trackRoster(meta, [{ id: 1, stage: 'b' }], rowOf, 0, false);
+  assert.ok(!meta.has(2), 'con đã bán / chết khỏi danh sách');
+  assert.deepEqual(minCostAssign([[5, 1, 9], [1, 5, 9]]), [1, 0], 'ghép chéo tối ưu, không tham lam');
+  assert.deepEqual(minCostAssign([[1, 2], [1, 100]]), [1, 0], 'nhường ô gần cho con mà chỉ ô đó mới gần');
 });
 
 test('logic: xếp đội — TANK gần phía quái nhất, XA rồi HEAL/BUFF ở sau cùng, mạnh nhất ở giữa, luôn trong sân', () => {
