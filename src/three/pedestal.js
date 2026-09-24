@@ -13,6 +13,7 @@ export function mountPedestal(canvas, { monster }) {
   const controls = new OrbitControls(camera, canvas);
   controls.target.set(0, 1.3, 0);
   Object.assign(controls, { enableZoom: false, enablePan: false, enableDamping: true, minPolarAngle: 1.2, maxPolarAngle: 1.45, rotateSpeed: 0.7 });
+  canvas.style.touchAction = 'pan-y';
 
   scene.add(new THREE.HemisphereLight('#f4f1ff', '#2a2233', 1.4));
   const key = new THREE.DirectionalLight('#fff1d8', 2.6);

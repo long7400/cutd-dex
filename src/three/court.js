@@ -18,6 +18,7 @@ export async function mountCourt(canvas, { court, monster, team, creeps, view })
   const controls = new OrbitControls(camera, canvas);
   controls.target.set(...view.target);
   Object.assign(controls, { enableDamping: true, enableZoom: false, enablePan: false, minPolarAngle: 0.9, maxPolarAngle: 1.45, rotateSpeed: 0.6 });
+  canvas.style.touchAction = 'pan-y';
 
   scene.add(new THREE.AmbientLight('#dfe6ff', 1.15));
   const sun = new THREE.DirectionalLight('#ffe9c7', 2.1);
