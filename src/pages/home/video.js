@@ -38,7 +38,7 @@ function tradeExample() {
 export const videoMarkup = (cta = '') => html`<div class="h-video">
   <div class="vstage">
     <div class="vboard" style="background-image:url(art/top.webp)">
-      <div class="vlane" style="top:20%" data-row="0">TANK</div><div class="vlane" style="top:39%" data-row="1">CẬN</div><div class="vlane" style="top:58%" data-row="2">BUFF</div><div class="vlane" style="top:77%" data-row="3">XA</div>
+      <div class="vlane" style="top:20%" data-row="0">TANK</div><div class="vlane" style="top:39%" data-row="1">CẬN</div><div class="vlane" style="top:58%" data-row="2">XA</div><div class="vlane" style="top:77%" data-row="3">HEAL</div>
     </div>
     <div class="vpanel">
       <div class="top"><b>CUTD Helper</b><small>m. · móc</small></div>

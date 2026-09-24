@@ -22,7 +22,7 @@ export function mountDemo(root, { img, evo, trade }) {
   const TEAM = [
     { m: 'pet_banjilasi', n: 'Tyranitar', r: 0, t: 'S+' }, { m: 'pet_kuailong', n: 'Dragonite', r: 0, t: 'B' },
     { m: 'download_primeape', n: 'Primeape', r: 1, t: 'S+' }, { ...evo.from, r: 1 }, { ...trade.give, r: 1 },
-    { m: 'pet_michunjie', n: 'Jynx', r: 2, t: 'S+' }, { m: 'pet_hudi', n: 'Alakazam', r: 3, t: 'S+' }, { m: 'pet_s_baolilong', n: 'Mega Gyarados', r: 3, t: 'S+' },
+    { m: 'pet_michunjie', n: 'Jynx', r: 3, t: 'S+' }, { m: 'pet_hudi', n: 'Alakazam', r: 2, t: 'S+' }, { m: 'pet_s_baolilong', n: 'Mega Gyarados', r: 2, t: 'S+' },
   ];
   const rowY = [27, 46, 65, 84];
   const HOME = TEAM.map(p => { const same = TEAM.filter(x => x.r === p.r); const k = same.indexOf(p); return [46 + (k - (same.length - 1) / 2) * 13, rowY[p.r]]; });
@@ -57,7 +57,7 @@ export function mountDemo(root, { img, evo, trade }) {
   };
 
   const CH = [
-    { k: 'xep', tab: 'team', len: 8.6, cap: 'Đội đứng lộn xộn → một chạm Xếp đội: TANK chặn đầu, tay dài đứng cuối, mỗi lệnh chờ game xác nhận ✓', toast: [6.6, 8.3, 'Đội hình xong · 8/8 ✓'], click: 1.4 },
+    { k: 'xep', tab: 'team', len: 8.6, cap: 'Đội đứng lộn xộn → một chạm Xếp đội: TANK chặn đầu, tay dài và hồi máu đứng sau, mỗi lệnh chờ game xác nhận ✓', toast: [6.6, 8.3, 'Đội hình xong · 8/8 ✓'], click: 1.4 },
     { k: 'nang', tab: 'team', len: 7.2, cap: 'Hạng hiện tại nằm cạnh nút ↑ — biết ngay lên cấp có đáng không', toast: [2.9, 6.8, `${evo.from.n} → ${evo.to.n} · hạng ${evo.from.t} → ${evo.to.t} · DPS ${fmt(evo.from.dps)} → ${fmt(evo.to.dps)}`], click: 1.3 },
     { k: 'trade', tab: 'trade', len: 7.2, cap: `Slot trade đổi được ngay sẽ sáng lên — con hạng ${trade.give.t} đổi lấy con hạng ${trade.get.t} chỉ một chạm`, toast: [2.8, 6.8, `${trade.give.n} (${trade.give.t}) ⇄ ${trade.get.n} (${trade.get.t})`], click: 1.3 },
     { k: 'bat', tab: 'wild', len: 7.2, cap: 'Bãi hoang có hạng ngay cạnh nút Bắt — không cần nhớ tên pet', toast: [2.6, 6.8, 'Đã bắt Eevee (S+) · −20 vàng'], click: 1.3 },

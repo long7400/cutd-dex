@@ -159,8 +159,8 @@ export function formationRow(u) {
   if (!u) return 1;
   const far = (u.rg ?? 0) > 300;
   if ((u.ar ?? 0) >= 15 || (u.r ?? []).includes('tank') || (!far && (u.kt ? u.kt[0] === 'tank' : (u.hp ?? 0) / Math.max(1, u.ed ?? u.dps ?? 0) >= 18))) return 0;
-  if ((u.r ?? []).some(r => r === 'aura' || r === 'sustain')) return 2;
-  return far ? 3 : 1;
+  if ((u.r ?? []).some(r => r === 'aura' || r === 'sustain')) return 3;
+  return far ? 2 : 1;
 }
 
 export function formation(members, ground, { gap = 80, lineGap = 60, margin = 48 } = {}) {
@@ -192,3 +192,55 @@ export function formation(members, ground, { gap = 80, lineGap = 60, margin = 48
   }
   return out;
 }
+
+const BAND = 55;
+
+function frame(ground, margin) {
+  const a = ground?.arena;
+  if (!a || !(a.width > 0) || !(a.height > 0)) return null;
+  let dx = 0, dy = 1;
+  const p = ground.path;
+  if (p?.length >= 2) {
+    const len = Math.hypot(p[1].x - p[0].x, p[1].y - p[0].y);
+    if (len > 0) { dx = (p[1].x - p[0].x) / len; dy = (p[1].y - p[0].y) / len; }
+  }
+  const cx = a.originX + a.width / 2, cy = a.originY + a.height / 2;
+  const inside = q => q.x >= a.originX + margin / 2 && q.x <= a.originX + a.width - margin / 2 && q.y >= a.originY + margin / 2 && q.y <= a.originY + a.height - margin / 2;
+  return { a, dx, dy, cx, cy, inside, along: q => (q.x - cx) * dx + (q.y - cy) * dy };
+}
+
+export function arrangeMoves(members, ground, { gap = 80, lineGap = 60, margin = 48 } = {}) {
+  const f = frame(ground, margin);
+  if (!f) return [];
+  const slots = formation(members.map(m => ({ key: m.key, row: m.row, score: m.score })), ground, { gap, lineGap, margin });
+  const lines = new Map();
+  for (const sl of slots) {
+    const at = f.along(sl);
+    const r = lines.get(sl.row) ?? [Infinity, -Infinity];
+    lines.set(sl.row, [Math.min(r[0], at), Math.max(r[1], at)]);
+  }
+  const inRow = m => {
+    const r = lines.get(m.row);
+    if (!r || !m.pos || !f.inside(m.pos)) return false;
+    const at = f.along(m.pos);
+    return at >= r[0] - BAND && at <= r[1] + BAND;
+  };
+  const stay = members.filter(inRow);
+  const free = slots.map(sl => ({ ...sl, taken: false }));
+  for (const m of stay) {
+    const near = free.filter(sl => sl.row === m.row && !sl.taken && Math.hypot(m.pos.x - sl.x, m.pos.y - sl.y) < gap);
+    if (near.length) near.reduce((b, sl) => (Math.hypot(m.pos.x - sl.x, m.pos.y - sl.y) < Math.hypot(m.pos.x - b.x, m.pos.y - b.y) ? sl : b)).taken = true;
+  }
+  const order = members.filter(m => !inRow(m)).sort((x, y) => x.row - y.row || y.score - x.score);
+  const moves = [];
+  for (const m of order) {
+    const options = free.filter(sl => sl.row === m.row && !sl.taken);
+    if (!options.length) continue;
+    const from = m.pos ?? { x: f.cx, y: f.cy };
+    const best = options.reduce((b, sl) => (Math.hypot(sl.x - from.x, sl.y - from.y) < Math.hypot(b.x - from.x, b.y - from.y) ? sl : b));
+    best.taken = true;
+    moves.push({ key: m.key, row: m.row, x: best.x, y: best.y });
+  }
+  return moves;
+}
+

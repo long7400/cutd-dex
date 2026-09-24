@@ -1,6 +1,6 @@
 import {
   createState, applyMessage, isGameMessage, myUnits, tradeOptions, offersForFamily,
-  bestAttacks, nextWaveForBase, buildGameCatalog, formation, formationRow,
+  bestAttacks, nextWaveForBase, buildGameCatalog, arrangeMoves, formationRow,
 } from './logic.js';
 import * as web from './web-input.js';
 import { findGame, findEntity, selectEntity, catchWild, evolveCreature, tradePet, moveCreature, groundOf, probe, clientKind, armWebCapture, disarmWebCapture, webCaptured, webTouched, forgetWebCapture } from './game-bridge.js';
@@ -28,6 +28,7 @@ const CSS = `
 .bar-row{display:flex;align-items:center;gap:5px;padding:6px 10px 4px}
 .chip{all:unset;cursor:pointer;padding:2px 9px;border-radius:99px;border:1px solid #33496b;color:#8fb7e8;font-weight:600;font-size:11.5px}
 .chip.on{background:#ffde8f;color:#0b1526;border-color:transparent}
+.chip.sm{padding:1px 8px;font-size:11px}.chip:disabled{opacity:.35;cursor:default}
 .muted{margin-left:auto;color:#6f8fb8;font-size:11.5px}
 .row{display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:8px;padding:5px 10px}
 .row:hover,.trade:hover{background:#17263f}
@@ -109,7 +110,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 
   const SAFE_ID = /^[a-z0-9_-]+$/i;
   const state = createState();
-  let db = null, socket = null, dirty = true, tab = 'trade', wildSort = 'value', lastRender = 0;
+  let db = null, socket = null, dirty = true, tab = 'trade', wildSort = 'value', lastRender = 0, layoutAt = 0, lastLayout = '';
+  const sig = [];
   let gameCat = new Map(), gameCatReady = false, ownBase = null;
 
   let savedDesc = null, patchedWin = null;
@@ -353,7 +355,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       if (hold > RATE_GAP) { toast = `Game giới hạn 2 lệnh/giây — chờ ${Math.ceil(hold / 1000)} giây rồi bấm tiếp.`; dirty = true; render(true); }
       return;
     }
-    if (downAt > 0 && t - downAt < 1500 && downAt - lastRender < SHIFT_MS) { toast = 'Danh sách vừa đổi chỗ — nhìn lại rồi bấm lần nữa.'; dirty = true; render(true); return; }
+    if (downAt > 0 && t - downAt < 1500 && downAt - layoutAt < SHIFT_MS) { toast = 'Danh sách vừa đổi chỗ — nhìn lại rồi bấm lần nữa.'; dirty = true; render(true); return; }
     lastAction = t;
     e.currentTarget.disabled = true;
     setTimeout(() => { dirty = true; render(true); }, 600);
@@ -373,15 +375,15 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   }
   const act = (text, kind, key, arg, expect, cls = '', tip) => {
     const blocked = blockReason();
+    sig.push(`${kind}:${key}:${arg ?? ''}`);
     return h('button', {
       class: `act ${cls}`, text, tabindex: '-1', disabled: !!blocked, title: blocked ? FAIL[blocked] : tip,
       onClick: e => runAction(e, kind, key, arg, expect),
     });
   };
 
-  const ROWS = [['TANK', 'k-tank', 'Hàng đầu: máu / giáp dày'], ['CẬN', 'k-atk', 'Hàng 2: đấu sĩ cận chiến / phép tầm ngắn'], ['BUFF', 'k-buff', 'Hàng 3: hào quang / hồi máu'], ['XA', 'k-cc', 'Hàng cuối: tay dài (tầm > 300)']];
-  const ACK_WAIT = 1500, ARRANGE_COOLDOWN = 4000, IN_PLACE = 24;
-  let arranging = null, arrangeReady = 0;
+  const ROWS = [['TANK', 'k-tank', 'Hàng đầu: máu / giáp dày'], ['CẬN', 'k-atk', 'Hàng 2: đấu sĩ cận chiến / phép tầm ngắn'], ['XA', 'k-cc', 'Hàng 3: sát thương tay dài (tầm > 300)'], ['HEAL', 'k-heal', 'Hàng cuối: hồi máu / hào quang — đứng sau cùng cho an toàn']];
+  const ACK_WAIT = 1500;
   const wait = ms => new Promise(r => setTimeout(r, ms));
   async function waitAck(seq) {
     for (let t = 0; t < ACK_WAIT; t += 50) {
@@ -396,46 +398,39 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const members = myUnits(state).filter(u => u.active).map(u => {
       const d = U(u.stage);
       const row = formationRow(d);
-      return { key: `u${u.id}`, stage: u.stage, row, score: row === 0 ? (d?.hp ?? 0) : (d?.ed ?? d?.dps ?? 0) };
+      const key = `u${u.id}`;
+      return { key, stage: u.stage, row, score: row === 0 ? (d?.hp ?? 0) : (d?.ed ?? d?.dps ?? 0), pos: findEntity(g, key)?.ent?.pos ?? null };
     });
-    return formation(members, ground).map(m => ({ ...m, stage: members.find(x => x.key === m.key).stage }));
+    return arrangeMoves(members, ground).map(m => ({ ...m, stage: members.find(x => x.key === m.key).stage }));
   }
+  let arranging = false;
   async function arrange(e) {
     e.stopPropagation();
     e.currentTarget.blur();
-    if (!realClick(e)) return;
-    if (arranging) { arranging.stop = true; return; }
-    if (performance.now() < arrangeReady) return;
+    if (!realClick(e) || arranging) return;
+    const hold = rateWait();
+    if (hold > 0) {
+      if (hold > RATE_GAP) { toast = `Game giới hạn 2 lệnh/giây — chờ ${Math.ceil(hold / 1000)} giây rồi bấm tiếp.`; dirty = true; render(true); }
+      return;
+    }
     let fail = blockReason();
     const g = fail ? null : findGame();
     if (!fail && !g) fail = 'game';
     if (!fail && state.summary?.phase !== 'planning') fail = 'wave';
     const plan = fail ? null : arrangePlan(g);
     if (!fail && !plan) fail = 'fn';
-    toast = fail ? FAIL[fail] : '';
-    if (fail) { dirty = true; render(true); return; }
-    const run = arranging = { done: 0, n: plan.length, stop: false };
+    const m = plan?.[0];
+    const found = m ? findEntity(g, m.key) : null;
+    if (!fail && m && (!found || found.ent.contentId !== m.stage)) fail = 'entity';
+    if (fail || !m) { toast = fail ? FAIL[fail] : 'Đội đã đúng hàng — không cần dời con nào.'; dirty = true; render(true); return; }
+    arranging = true;
+    lastAction = performance.now();
     dirty = true; render(true);
-    for (const m of plan) {
-      if (run.stop || dead || state.summary?.phase !== 'planning' || findGame() !== g) break;
-      const found = findEntity(g, m.key);
-      if (!found || found.ent.contentId !== m.stage) { run.n--; continue; }
-      const pos = found.ent.pos;
-      if (pos && Math.hypot(pos.x - m.x, pos.y - m.y) <= IN_PLACE) { run.n--; continue; }
-      for (let hold = rateWait(); hold > 0 && !run.stop && !dead; hold = rateWait()) await wait(Math.min(hold, 400));
-      if (run.stop || dead) break;
-      lastAction = performance.now();
-      const r = moveCreature(g, found.ent, m);
-      if (r.fail) { toast = FAIL[r.fail]; break; }
-      const ack = await waitAck(r.seq);
-      if (!ack) { toast = 'Game chưa xác nhận lệnh — dừng xếp để tránh spam.'; break; }
-      if (!ack.ok) { toast = `Game từ chối: ${ack.reason.replace(/_/g, ' ') || 'không rõ'} — đã dừng.`; break; }
-      run.done++;
-      dirty = true; render(true);
-    }
-    arranging = null;
-    arrangeReady = performance.now() + ARRANGE_COOLDOWN;
-    setTimeout(() => { dirty = true; render(true); }, ARRANGE_COOLDOWN + 50);
+    const r = moveCreature(g, found.ent, m);
+    const ack = r.fail ? null : await waitAck(r.seq);
+    arranging = false;
+    toast = r.fail ? FAIL[r.fail] : !ack ? 'Game chưa xác nhận lệnh.' : !ack.ok ? `Game từ chối: ${ack.reason.replace(/_/g, ' ') || 'không rõ'}.`
+      : `Đã dời ${nameOf(m.stage)} → hàng ${ROWS[m.row][0]}.${plan.length > 1 ? ` Còn ${plan.length - 1} con lệch — bấm tiếp.` : ' Đội đã đúng hàng.'}`;
     dirty = true; render(true);
   }
   function arrangeBar() {
@@ -443,12 +438,15 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const count = [0, 0, 0, 0];
     for (const u of mine) count[formationRow(U(u.stage))]++;
     const blocked = blockReason() ?? (state.summary?.phase !== 'planning' ? 'wave' : null);
-    const cooling = !arranging && performance.now() < arrangeReady;
+    const g = blocked ? null : findGame();
+    const plan = g ? arrangePlan(g) : null;
+    const next = plan?.[0];
     return h('div', { class: 'bar-row' },
       h('button', {
-        class: `chip ${arranging ? 'on' : ''}`, tabindex: '-1', disabled: !arranging && (!!blocked || cooling || !mine.length),
-        text: arranging ? `Dừng ${arranging.done}/${arranging.n}` : 'Xếp đội',
-        title: arranging ? 'Bấm để dừng' : blocked ? FAIL[blocked] : cooling ? 'Chờ vài giây rồi xếp lại' : 'Dàn đội từ phía quái vào: TANK → CẬN → BUFF → XA. Gửi từng lệnh một, chờ game xác nhận, con đã đúng chỗ thì bỏ qua.',
+        class: `chip ${next ? 'on' : ''}`, tabindex: '-1', disabled: arranging || !!blocked || !mine.length || (plan && !next),
+        text: arranging ? 'Đang dời…' : next ? `Xếp đội · ${plan.length} con lệch` : plan ? 'Đội đã đúng hàng' : 'Xếp đội',
+        title: blocked ? FAIL[blocked] : next ? `Bấm để dời ${nameOf(next.stage)} sang hàng ${ROWS[next.row][0]}. Mỗi lần bấm dời 1 con; con đã đứng đúng hàng không bị đụng tới.`
+          : 'Hàng từ phía quái vào: TANK → CẬN → XA → HEAL/BUFF sau cùng.',
         onClick: arrange,
       }),
       h('span', { class: 'kit' }, ROWS.map(([t, c, tip], i) => count[i] ? h('b', { class: c, text: `${t} ${count[i]}`, title: tip }) : null)));
@@ -614,18 +612,28 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     ];
   }
 
-  const teamSlot = new Map();
-  let teamSeq = 0;
-  const byPower = (a, b) => powerOf(b.stage) - powerOf(a.stage) || (U(b.stage)?.ed ?? 0) - (U(a.stage)?.ed ?? 0) || a.id - b.id;
+  let teamFilter = 'all';
+  const TEAM_FILTER = {
+    all: ['Tất cả', () => true],
+    atk: ['ATK', u => kitOf(u.stage)[0] === 'atk'],
+    tank: ['TANK', u => kitOf(u.stage)[0] === 'tank'],
+    heal: ['HEAL', u => kitOf(u.stage).some(k => k === 'heal' || k === 'buff')],
+    trade: ['Trade', (u, wanted) => wanted.has(u.stage)],
+  };
   function viewTeam() {
     const mine = myUnits(state);
     if (!mine.length) return empty('Chưa có lính (hoặc đang chờ dữ liệu).');
     const wanted = new Map();
     for (const o of state.offers.values()) wanted.set(o.give, [...(wanted.get(o.give) ?? []), o]);
-    for (const u of [...mine].sort(byPower)) if (!teamSlot.has(u.id)) teamSlot.set(u.id, teamSeq++);
-    return [arrangeBar(), h('div', { class: 'bar-row' }, legend(),
-      h('button', { class: 'chip sm', text: '↻ Sắp theo hạng', tabindex: '-1', title: 'Thứ tự giữ cố định để khỏi nhảy khi tiến hóa; bấm để sắp lại theo hạng hiện tại', onClick: () => { teamSlot.clear(); teamSeq = 0; dirty = true; render(true); } })),
-      ...mine.sort((a, b) => teamSlot.get(a.id) - teamSlot.get(b.id)).map(u => {
+    const shown = mine.filter(u => TEAM_FILTER[teamFilter][1](u, wanted)).sort((a, b) => a.id - b.id);
+    return [arrangeBar(),
+      h('div', { class: 'bar-row' }, Object.entries(TEAM_FILTER).map(([k, [text, test]]) => {
+        const n = k === 'all' ? mine.length : mine.filter(u => test(u, wanted)).length;
+        return h('button', { class: `chip sm ${teamFilter === k ? 'on' : ''}`, tabindex: '-1', disabled: k !== 'all' && !n, text: k === 'all' ? text : `${text} ${n}`,
+          title: k === 'heal' ? 'Hồi máu / hào quang buff đội' : k === 'trade' ? 'Con đang có offer trade cần' : null, onClick: () => { teamFilter = k; dirty = true; render(true); } });
+      })),
+      shown.length ? null : empty('Không có con nào thuộc nhóm này.'),
+      ...shown.map(u => {
       const evo = U(u.stage)?.e ?? [];
       const trades = wanted.get(u.stage) ?? [];
       return pickable(row(u.stage,
@@ -767,6 +775,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     lastRender = performance.now();
     dirty = false;
     const scroll = bodyEl?.scrollTop ?? 0;
+    sig.length = 0;
     const status = !db ? 'Đang tải dữ liệu wiki…'
       : !socket && !state.messages ? 'Đang chờ dữ liệu trận… (vào phòng chơi)'
       : !state.haveKeyframe ? 'Đã kết nối — chờ ảnh chụp đầy đủ của căn cứ…' : null;
@@ -799,6 +808,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       content = h('p', { class: 'empty bad', text: `Lỗi hiển thị: ${err?.message ?? err}` });
     }
     const body = bodyEl = h('div', { class: 'body' }, toast ? h('p', { class: 'toast', text: toast }) : null, content);
+    const shape = `${tab}|${wildSort}|${wildRole}|${teamFilter}|${toast ? 1 : 0}|${status ?? ''}|${sig.join(',')}`;
+    if (shape !== lastLayout) { lastLayout = shape; layoutAt = performance.now(); }
     panel.className = `panel ${layout}`;
     panel.replaceChildren(header, tabs, body);
     body.scrollTop = scroll;
