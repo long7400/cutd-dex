@@ -157,6 +157,7 @@ const LINE_OFF = [[0, -60, -120], [0, -35, 35], [0, -35, 35], [0, 60, 120]];
 const HYST = 15, SAME_POS = 24, SETTLE_MS = 1000, GAP = 80, MARGIN = 48, CLUMP = GAP / 2;
 export const LAT_MAX = [220, 220, 380, 380];
 const LAT_HYST = 20, DEPTH_W = 0.5, Q_W = 3;
+export const GRID = { top: -525, row: 101.6, col: 147.5, cols: 'ABCDEFG', rows: 8 };
 export const POS_ROW = [0, 0, 1, 1, 1, 1, 2, 3];
 export const POS_ACCEPT = [[0], [0], [1], [1], [1], [1, 0], [2, 3], [3, 2]];
 
@@ -196,7 +197,7 @@ export function makeFrame(ground) {
       if (i > 0) t = Math.max(0, t);
       if (i < lastSeg) t = Math.min(g.len, t);
       const fx = g.A.x + g.dx * t, fy = g.A.y + g.dy * t, d = hyp(q.x, q.y, fx, fy);
-      if (!found || d < found.d - 1e-9) found = { d, s: g.s0 + t };
+      if (!found || d < found.d - 1e-9) found = { d, s: g.s0 + t, side: (q.x - fx) * g.nx + (q.y - fy) * g.ny };
     });
     return found;
   };
@@ -209,7 +210,12 @@ export function makeFrame(ground) {
     return { x: g.A.x + g.dx * t + g.nx * lat, y: g.A.y + g.dy * t + g.ny * lat };
   };
   const inside = (q, m = MARGIN / 2) => q.x >= a.originX + m && q.x <= a.originX + a.width - m && q.y >= a.originY + m && q.y <= a.originY + a.height - m;
-  return { a, cx, cy, pointAt, inside, along: q => project(q).s - sRef, lat: q => project(q).d };
+  const cell = q => {
+    const p = project(q);
+    const r = Math.floor((p.s - sRef - GRID.top) / GRID.row) + 1, c = 3 - Math.round(p.side / GRID.col);
+    return `${GRID.cols[Math.max(0, Math.min(6, c))]}${Math.max(0, Math.min(GRID.rows + 1, r))}`;
+  };
+  return { a, cx, cy, pointAt, inside, cell, along: q => project(q).s - sRef, lat: q => project(q).d };
 }
 
 export function inBand(f, row, pos, confirmed) {
@@ -319,7 +325,8 @@ export function onAck(mem, key, ok) {
 export function planMoves(mem, members, ground) {
   const status = new Map();
   const f = makeFrame(ground);
-  if (!f) return { moves: [], status, reason: 'ground' };
+  if (!f) return { moves: [], status, cells: new Map(), reason: 'ground' };
+  const cells = new Map(members.filter(m => m.pos).map(m => [m.key, f.cell(m.pos)]));
   const cur = mem.planning;
   const eligible = [], fixed = [], placed = [], sleeping = [];
   for (const m of members) {
@@ -357,7 +364,7 @@ export function planMoves(mem, members, ground) {
     const levels = [...new Set(take.map(m => m.score))].sort((a, b) => a - b);
     const weight = m => levels.indexOf(m.score) + 1;
     const match = minCostAssign(take.map(m => slots.map(sl => Q_W * weight(m) * sl.q + hyp(m.pos.x, m.pos.y, sl.x, sl.y))));
-    take.forEach((m, i) => { const sl = slots[match[i]]; if (!sl) return; status.set(m.key, 'move'); moves.push({ key: m.key, row, x: sl.x, y: sl.y, slot: sl.id, unit: m }); });
+    take.forEach((m, i) => { const sl = slots[match[i]]; if (!sl) return; status.set(m.key, 'move'); moves.push({ key: m.key, row, x: sl.x, y: sl.y, slot: sl.id, from: cells.get(m.key), to: f.cell(sl), unit: m }); });
   }
   const hi0 = BANDS[0][1];
   const tier = mv => (mv.row !== 0 && f.along(mv.unit.pos) < hi0 ? 0 : mv.row === 0 ? 1 : 2);
@@ -366,5 +373,5 @@ export function planMoves(mem, members, ground) {
     || (tier(x) === 0 ? y.row - x.row : 0)
     || (tier(x) === 2 ? exposure(y) - exposure(x) || x.row - y.row : 0)
     || y.unit.score - x.unit.score || (x.key < y.key ? -1 : 1));
-  return { moves: moves.map(({ unit, ...mv }) => mv), status };
+  return { moves: moves.map(({ unit, ...mv }) => mv), status, cells };
 }

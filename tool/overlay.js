@@ -570,7 +570,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       const ack = r.fail ? null : await waitAck(r.seq);
       onAck(mem, m.key, !!ack?.ok);
       if (!ack?.ok) { why = r.fail ? FAIL[r.fail] : !ack ? 'Game chưa xác nhận lệnh.' : `Game từ chối: ${ack.reason.replace(/_/g, ' ') || 'không rõ'}.`; break; }
-      done.push(`${nameOf(stage)} → ${ROWS[m.row][0]}`);
+      done.push(`${nameOf(stage)} ${m.from} → ${m.to} (${ROWS[m.row][0]})`);
     }
     arranging = false;
     const left = plan.moves.length - done.length;
@@ -586,8 +586,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       h('button', {
         class: `chip sm ${next ? 'on' : ''}`, tabindex: '-1', disabled: arranging || !!blocked || !mine.some(u => u.active) || (plan && !next),
         text: arranging ? 'Đang dời…' : next ? `Xếp đội ↕${plan.moves.length}` : lost ? 'Xếp đội ?' : plan ? '✓ Đúng hàng' : 'Xếp đội',
-        title: blocked ? FAIL[blocked] : !next && lost ? `Chưa đọc được vị trí ${lost} con trong game — đợi 1–2 giây rồi xem lại.` : next ? `Bấm để dời ${nameOf(nextStage)} sang hàng ${ROWS[next.row][0]}${plan.moves.length > 1 ? ' và 1 con nữa' : ''}. Mỗi lần bấm dời tối đa ${PER_CLICK} con (ô có dấu ↕); con đứng đúng hàng không bị đụng tới, con đứng chồng lên con khác thì được tách ra.`
-          : 'Hàng từ phía quái vào: TANK → CẬN → XA → HỖ TRỢ sau cùng.',
+        title: blocked ? FAIL[blocked] : !next && lost ? `Chưa đọc được vị trí ${lost} con trong game — đợi 1–2 giây rồi xem lại.` : next ? `Bấm để dời ${nameOf(nextStage)} ${next.from} → ${next.to} (hàng ${ROWS[next.row][0]})${plan.moves.length > 1 ? ' và 1 con nữa' : ''}. Mỗi lần bấm dời tối đa ${PER_CLICK} con (ô có dấu ↕); con đứng đúng hàng không bị đụng tới, con đứng chồng lên con khác thì được tách ra.\nÔ theo lưới hiện trên sân lúc chuẩn bị: cột A–G từ trái sang, hàng 1–8 từ phía quái vào.`
+          : 'Hàng từ phía quái vào: TANK → CẬN → XA → HỖ TRỢ sau cùng. Ô theo lưới hiện trên sân lúc chuẩn bị: cột A–G từ trái sang, hàng 1–8 từ phía quái vào.',
         onClick: arrange,
       }),
       held ? h('span', { class: 'pill mute', text: `+${held} mới`, title: 'Pet vừa mua trong round này được để yên; sang round sau mới tính vào Xếp đội (trừ khi nó tiến hóa đổi hàng).' }) : null,
@@ -798,7 +798,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const evo = u.e ?? [];
     const ready = alive.length ? (wanted.get(stage) ?? []) : [];
     const needs = offersForFamily(state, db, stage);
-    const moving = !!plan?.moves.some(m => list.some(x => `u${x.id}` === m.key));
+    const going = plan?.moves.filter(m => list.some(x => `u${x.id}` === m.key)) ?? [];
+    const cells = list.map(x => plan?.cells.get(`u${x.id}`)).filter(Boolean);
     const buttons = [
       ...evo.map(([to, cost]) => {
         const trap = u.tp?.[to];
@@ -815,9 +816,9 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       return h('i', { class: !x.active ? 'down' : pct < 35 ? 'low' : pct < 70 ? 'mid' : null, style: x.active ? `--p:${pct}%` : null });
     }));
     const down = list.length - alive.length;
-    const tip = `${statsTip(stage)}${down ? `\n${down} con gục — trở lại đợt sau` : ''}${list.length > 1 ? `\n${list.length} con — bấm tiếp để chọn con khác` : ''}`;
+    const tip = `${statsTip(stage)}${cells.length ? `\nĐứng ô ${cells.join(' · ')}` : ''}${down ? `\n${down} con gục — trở lại đợt sau` : ''}${list.length > 1 ? `\n${list.length} con — bấm tiếp để chọn con khác` : ''}`;
     return openable(h('div', { class: `tile${wished(stage) ? ' wish' : ''}${alive.length ? '' : ' down'}${isOpen(stage, ids) ? ' sel' : ''}`, style: `--ro:${roleColor(stage)}` },
-      pic(stage, tip, h('span', { class: 'tl' }, tierPill(stage), harm(stage), moving ? h('b', { class: 'mv', text: '↕', title: 'Xếp đội sẽ dời con này' }) : null),
+      pic(stage, tip, h('span', { class: 'tl' }, tierPill(stage), harm(stage), going.length ? h('b', { class: 'mv', text: '↕', title: `Xếp đội sẽ dời ${going.map(m => `${m.from} → ${m.to}`).join(', ')}` }) : null),
         starBtn(stage), lvTag(stage), list.length > 1 ? h('span', { class: 'cnt', text: `×${list.length}` }) : null, hp),
       strip(stage),
       h('div', { class: 'tn', title: needs.length ? needs.map(o => `S${o.slot}: cần ${nameOf(o.give)} → nhận ${nameOf(o.get)}`).join('\n') : null },

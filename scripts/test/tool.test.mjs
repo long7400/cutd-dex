@@ -563,6 +563,8 @@ test('bookmarklet: Xếp đội — mỗi lần bấm dời tối đa 2 con lệ
   assert.ok(btn() && !btn().disabled);
   assert.match(btn().textContent, /↕2/, 'tank và con BUFF đứng sai hàng; con cận chiến đã đúng hàng');
   assert.equal(root.querySelectorAll('.tile .mv').length, 2, 'ô cần dời có dấu ↕');
+  assert.ok([...root.querySelectorAll('.tile .mv')].every(m => /^Xếp đội sẽ dời [A-G]\d → [A-G]\d$/.test(m.title)), 'dấu ↕ ghi ô đang đứng → ô sẽ tới');
+  assert.ok([...root.querySelectorAll('.tile .pic')].every(p => /Đứng ô [A-G]\d/.test(p.title)), 'mỗi ô pet ghi ô lưới đang đứng');
   assert.match([...root.querySelectorAll('.sect')].map(x => x.textContent).join(' '), /TANK1.*CẬN1.*HỖ TRỢ1/);
   btn().click();
   await tick(50);
@@ -583,7 +585,7 @@ test('bookmarklet: Xếp đội — mỗi lần bấm dời tối đa 2 con lệ
   assert.deepEqual([...w.__moves[1]], ['move', 'u2', 1376 + 368, 656], 'tank lên hàng đầu, giữa đường quái; con cận chiến không bị dời');
   emit({ type: 'command_ack', sequence: 2, accepted: false, reason: 'orders_closed', tick: 102 });
   await tick(200);
-  assert.match(root.querySelector('.toast').textContent, /Đã dời .+ → HỖ TRỢ\. Game từ chối: orders closed/);
+  assert.match(root.querySelector('.toast').textContent, /Đã dời .+ [A-G]\d → [A-G]\d \(HỖ TRỢ\)\. Game từ chối: orders closed/);
   trustedClick(w, btn());
   await tick(50);
   assert.equal(w.__moves.length, 2, 'không còn con lệch → bấm không gửi gì');

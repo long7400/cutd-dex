@@ -190,6 +190,24 @@ test('T21 bought pets pile up on the spawn spot inside the XA band → next roun
   assert.deepEqual(r.moves.map(m => m.key), ['r4'], 'next round only the newcomer leaves the spot');
 });
 
+test('T22 cells follow the in-game placement grid: columns A–G from the left, rows 1–8 from the spawn side (0 = strip before the grid, 9 = behind it); arena centre = D6', () => {
+  const f = makeFrame(down);
+  const at = (x, y) => f.cell({ x: 1000 + x, y: 2000 + y });
+  assert.equal(at(608, 1040), 'D6', 'centre of the arena, where bought pets appear');
+  assert.equal(at(608, 800), 'D3', 'tank row');
+  assert.equal(at(528, 800), 'C3');
+  assert.equal(at(688, 800), 'E3');
+  assert.equal(at(104, 520), 'A1');
+  assert.equal(at(1120, 1320), 'G8');
+  assert.equal(at(608, 450), 'D0');
+  assert.equal(at(608, 1500), 'D9');
+  assert.equal(at(0, 1040), 'A6', 'beyond the grid edge → nearest column');
+  const units = [U('t', 0, 1608, 3300)];
+  const r = planning(freshMem(units), units);
+  assert.deepEqual(r.moves.map(m => [m.from, m.to]), [['D8', 'D3']]);
+  assert.equal(r.cells.get('t'), 'D8');
+});
+
 test('T14 unknown / broken ground → no moves', () => {
   const mem = freshMem([]);
   assert.deepEqual(plan(mem, [U('a', 0, 1, 1)], null).moves, []);
