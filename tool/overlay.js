@@ -502,7 +502,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   };
 
   const ROWS = [['TANK', '#7fd4ff', 'Hàng đầu: máu / giáp dày'], ['CẬN', '#ff8f8f', 'Hàng 2: đấu sĩ cận chiến / phép tầm ngắn'], ['XA', '#9fd6a8', 'Hàng 3: sát thương tay dài (tầm > 300)'], ['HỖ TRỢ', '#ffd36b', 'Hàng cuối: hồi máu / hào quang — đứng sau cùng cho an toàn']];
-  const ACK_WAIT = 1500;
+  const ACK_WAIT = 1500, PER_CLICK = 2, PAIR_GAP = 500;
   const wait = ms => new Promise(r => setTimeout(r, ms));
   async function waitAck(seq) {
     for (let t = 0; t < ACK_WAIT; t += 50) {
@@ -531,7 +531,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     if (booted && changed.length) toast = `${changed.map(u => nameOf(u.stage)).join(', ')} đổi vai trò → hàng ${ROWS[changed[0].row][0]} — bấm Xếp đội để dời.`;
     if (mem.planning !== before && g && !blockReason()) {
       const n = arrangePlan(g)?.moves.length ?? 0;
-      if (n) toast = `Round mới: ${n} con cần vào vị trí — bấm Xếp đội (mỗi lần bấm dời 1 con).`;
+      if (n) toast = `Round mới: ${n} con cần vào vị trí — bấm Xếp đội (mỗi lần bấm dời ${PER_CLICK} con).`;
     }
   }
   let arranging = false;
@@ -551,21 +551,30 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     if (!fail) watchRoster(true);
     const plan = fail ? null : arrangePlan(g);
     if (!fail && !plan) fail = 'fn';
-    const m = plan?.moves[0];
-    const found = m ? findEntity(g, m.key) : null;
-    const stage = found ? myUnits(state).find(u => `u${u.id}` === m.key)?.stage : null;
-    if (!fail && m && (!found || found.ent.contentId !== stage)) fail = 'entity';
-    if (fail || !m) { toast = fail ? FAIL[fail] : 'Đội đã đúng hàng — không cần dời con nào.'; dirty = true; render(true); return; }
+    if (fail || !plan.moves.length) { toast = fail ? FAIL[fail] : 'Đội đã đúng hàng — không cần dời con nào.'; dirty = true; render(true); return; }
     arranging = true;
-    lastAction = performance.now();
-    onSent(mem, m.key, m.row, m, lastAction);
-    dirty = true; render(true);
-    const r = moveCreature(g, found.ent, m);
-    const ack = r.fail ? null : await waitAck(r.seq);
-    onAck(mem, m.key, !!ack?.ok);
+    const done = [];
+    let why = '';
+    for (const m of plan.moves.slice(0, PER_CLICK)) {
+      if (done.length) {
+        await wait(Math.max(0, lastAction + PAIR_GAP - performance.now()));
+        if (dead || state.summary?.phase !== 'planning' || recentCmds() >= RATE_MAX) break;
+      }
+      const found = findEntity(g, m.key);
+      const stage = myUnits(state).find(u => `u${u.id}` === m.key)?.stage;
+      if (!found || found.ent.contentId !== stage) { why = FAIL.entity; break; }
+      lastAction = performance.now();
+      onSent(mem, m.key, m.row, m, lastAction);
+      dirty = true; render(true);
+      const r = moveCreature(g, found.ent, m);
+      const ack = r.fail ? null : await waitAck(r.seq);
+      onAck(mem, m.key, !!ack?.ok);
+      if (!ack?.ok) { why = r.fail ? FAIL[r.fail] : !ack ? 'Game chưa xác nhận lệnh.' : `Game từ chối: ${ack.reason.replace(/_/g, ' ') || 'không rõ'}.`; break; }
+      done.push(`${nameOf(stage)} → ${ROWS[m.row][0]}`);
+    }
     arranging = false;
-    toast = r.fail ? FAIL[r.fail] : !ack ? 'Game chưa xác nhận lệnh.' : !ack.ok ? `Game từ chối: ${ack.reason.replace(/_/g, ' ') || 'không rõ'}.`
-      : `Đã dời ${nameOf(stage)} → hàng ${ROWS[m.row][0]}.${plan.moves.length > 1 ? ` Còn ${plan.moves.length - 1} con lệch — bấm tiếp.` : ' Đội đã đúng hàng.'}`;
+    const left = plan.moves.length - done.length;
+    toast = [done.length ? `Đã dời ${done.join(', ')}.` : '', why, done.length && !why ? (left > 0 ? `Còn ${left} con lệch — bấm tiếp.` : 'Đội đã đúng hàng.') : ''].filter(Boolean).join(' ');
     dirty = true; render(true);
   }
   function teamBar(mine, plan, blocked) {
@@ -577,7 +586,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       h('button', {
         class: `chip sm ${next ? 'on' : ''}`, tabindex: '-1', disabled: arranging || !!blocked || !mine.some(u => u.active) || (plan && !next),
         text: arranging ? 'Đang dời…' : next ? `Xếp đội ↕${plan.moves.length}` : lost ? 'Xếp đội ?' : plan ? '✓ Đúng hàng' : 'Xếp đội',
-        title: blocked ? FAIL[blocked] : !next && lost ? `Chưa đọc được vị trí ${lost} con trong game — đợi 1–2 giây rồi xem lại.` : next ? `Bấm để dời ${nameOf(nextStage)} sang hàng ${ROWS[next.row][0]}. Mỗi lần bấm dời 1 con (ô có dấu ↕); con đã đứng đúng hàng không bị đụng tới.`
+        title: blocked ? FAIL[blocked] : !next && lost ? `Chưa đọc được vị trí ${lost} con trong game — đợi 1–2 giây rồi xem lại.` : next ? `Bấm để dời ${nameOf(nextStage)} sang hàng ${ROWS[next.row][0]}${plan.moves.length > 1 ? ' và 1 con nữa' : ''}. Mỗi lần bấm dời tối đa ${PER_CLICK} con (ô có dấu ↕); con đứng đúng hàng không bị đụng tới, con đứng chồng lên con khác thì được tách ra.`
           : 'Hàng từ phía quái vào: TANK → CẬN → XA → HỖ TRỢ sau cùng.',
         onClick: arrange,
       }),

@@ -154,7 +154,7 @@ export function nextWaveForBase(s) {
 export const ROW_AT = [-240, -120, 0, 140];
 export const BANDS = [[-400, -180], [-180, -60], [-60, 70], [70, 300]];
 const LINE_OFF = [[0, -60, -120], [0, -35, 35], [0, -35, 35], [0, 60, 120]];
-const HYST = 15, SAME_POS = 24, SETTLE_MS = 1000, GAP = 80, MARGIN = 48;
+const HYST = 15, SAME_POS = 24, SETTLE_MS = 1000, GAP = 80, MARGIN = 48, CLUMP = GAP / 2;
 export const LAT_MAX = [220, 220, 380, 380];
 const LAT_HYST = 20, DEPTH_W = 0.5, Q_W = 3;
 export const POS_ROW = [0, 0, 1, 1, 1, 1, 2, 3];
@@ -287,7 +287,7 @@ export function observe(mem, snap, now = 0) {
     seen.add(u.key);
     let r = mem.units.get(u.key);
     if (!r) {
-      r = { firstSeen: mem.booted ? mem.planning : -Infinity, row: u.row, stage: u.stage, rowChangedAt: null, conf: null, manualAt: null, lastPos: null, pending: null, rejects: 0, rejectAt: null };
+      r = { firstSeen: mem.booted ? mem.planning : -Infinity, row: u.row, stage: u.stage, rowChangedAt: null, conf: null, manualAt: null, lastPos: null, pending: null, rejects: 0, rejectAt: null, at: null, since: 0 };
       mem.units.set(u.key, r);
     }
     if (r.row !== u.row) { r.row = u.row; r.conf = null; r.rowChangedAt = mem.planning; changed.push(u); }
@@ -296,6 +296,7 @@ export function observe(mem, snap, now = 0) {
     if (planningNow && u.active && u.pos) {
       if (r.lastPos && !r.pending && now - mem.planningAt > SETTLE_MS && hyp(u.pos.x, u.pos.y, r.lastPos.x, r.lastPos.y) > SAME_POS) { r.manualAt = mem.planning; r.conf = null; }
       r.lastPos = { x: u.pos.x, y: u.pos.y };
+      if (!r.at || hyp(u.pos.x, u.pos.y, r.at.x, r.at.y) > SAME_POS) { r.at = { x: u.pos.x, y: u.pos.y }; r.since = now; }
     }
   }
   for (const id of [...mem.units.keys()]) if (!seen.has(id)) mem.units.delete(id);
@@ -320,10 +321,10 @@ export function planMoves(mem, members, ground) {
   const f = makeFrame(ground);
   if (!f) return { moves: [], status, reason: 'ground' };
   const cur = mem.planning;
-  const eligible = [], fixed = [];
+  const eligible = [], fixed = [], placed = [], sleeping = [];
   for (const m of members) {
     const r = mem.units.get(m.key) ?? {};
-    if (!m.active) { status.set(m.key, 'down'); continue; }
+    if (!m.active) { status.set(m.key, 'down'); if (m.pos) sleeping.push(m); continue; }
     if (!m.pos) { status.set(m.key, 'unknown'); continue; }
     if (r.pending) { status.set(m.key, 'pending'); fixed.push({ ...m, pos: { x: r.pending.x, y: r.pending.y } }); continue; }
     if (r.firstSeen === cur && (m.level ?? 1) <= 1 && r.rowChangedAt !== cur) { status.set(m.key, 'new'); fixed.push(m); continue; }
@@ -331,17 +332,24 @@ export function planMoves(mem, members, ground) {
     if (r.rejects >= 2 && r.rejectAt === cur) { status.set(m.key, 'rejected'); fixed.push(m); continue; }
     const accept = m.accept ?? [m.row];
     const hit = accept.find(row => inBand(f, row, m.pos, r.conf === row));
-    if (hit !== undefined) {
-      status.set(m.key, 'ok');
-      if (mem.phase === 'planning' && mem.units.has(m.key)) mem.units.get(m.key).conf = hit;
-      fixed.push(m);
-    } else eligible.push(m);
+    if (hit !== undefined) placed.push({ m, hit, since: r.since ?? 0 });
+    else eligible.push(m);
+  }
+  const heading = fixed.filter(m => status.get(m.key) === 'pending');
+  placed.sort((x, y) => x.since - y.since || y.m.score - x.m.score || (x.m.key < y.m.key ? -1 : 1));
+  const kept = [];
+  for (const { m, hit } of placed) {
+    if ([...heading, ...kept].some(u => hyp(u.pos.x, u.pos.y, m.pos.x, m.pos.y) < CLUMP)) { status.set(m.key, 'stack'); eligible.push(m); continue; }
+    kept.push(m);
+    status.set(m.key, 'ok');
+    if (mem.phase === 'planning' && mem.units.has(m.key)) mem.units.get(m.key).conf = hit;
+    fixed.push(m);
   }
   const moves = [];
   for (let row = 0; row < ROW_AT.length; row++) {
     const want = eligible.filter(m => m.row === row).sort((x, y) => y.score - x.score || (x.key < y.key ? -1 : 1));
     if (!want.length) continue;
-    const slots = rowSlots(f, row).filter(sl => !mem.badSlots.has(sl.id) && ![...fixed, ...eligible].some(u => hyp(u.pos.x, u.pos.y, sl.x, sl.y) < GAP / 2));
+    const slots = rowSlots(f, row).filter(sl => !mem.badSlots.has(sl.id) && ![...fixed, ...eligible, ...sleeping].some(u => hyp(u.pos.x, u.pos.y, sl.x, sl.y) < CLUMP));
     const n = Math.min(want.length, slots.length);
     for (const m of want.slice(n)) status.set(m.key, 'full');
     const take = want.slice(0, n);

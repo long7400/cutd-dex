@@ -8,6 +8,9 @@ const REPO = 'https://github.com/long7400/cutd-dex';
 const SOURCE = `${REPO}/tree/main/tool`;
 const bookmarklet = () => `javascript:${encodeURIComponent(tool.code)}`;
 const MAX_PASTE = 400_000;
+const WARN = html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 4.2 2.6 17.6A2 2 0 0 0 4.3 20.6h15.4a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0z"/><path d="M12 9.5v4.6M12 17.2v.1"/></svg>`;
+const ONE = html`<svg viewBox="0 0 72 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="12" y="5" width="48" height="30" rx="4" fill="currentColor" fill-opacity=".12"/><path d="M28 43h16M36 35v8M28 20l6 6 11-12"/></svg>`;
+const TWO = html`<svg viewBox="0 0 72 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="44" height="28" rx="4" stroke-dasharray="4 4" fill="currentColor" fill-opacity=".06"/><rect x="22" y="14" width="46" height="29" rx="4" fill="currentColor" fill-opacity=".16"/><path d="M38 23l10 10M48 23 38 33"/></svg>`;
 
 export function normalizePasted(text) {
   let s = String(text ?? '').trim();
@@ -34,14 +37,30 @@ export default {
         <a class="h-btn primary bm" href="${bookmarklet()}" title="Kéo nút này lên thanh bookmark">${DOWN}CUTD Helper</a>
         <ol class="steps">
           <li><b>Kéo</b> nút vàng lên thanh bookmark <span class="mono">Ctrl/⌘ + Shift + B để hiện thanh</span></li>
-          <li><b>Vào trận</b> trên m.cutd.site hoặc cutd.site</li>
-          <li><b>Bấm</b> bookmark. Bấm lần nữa để ẩn. Trên m.cutd.site nên bấm ở sảnh trước khi vào trận: bấm giữa trận tool phải mở lại trận trong khung, nặng máy hơn</li>
+          <li><b>Ở sảnh, bấm</b> bookmark (m.cutd.site hoặc cutd.site). Bấm lần nữa để ẩn</li>
+          <li><b>Vào trận</b> là dùng được ngay</li>
         </ol>
         <div class="alt">
           <div><b>Điện thoại</b><span>Chép link → tạo bookmark bất kỳ → dán vào ô URL, đặt tên CUTD Helper.</span><button type="button" class="h-btn" data-copy>${COPY}Chép link</button></div>
           <div><b>Dia, Arc…</b><span>Chép code → tab game mở Console (⌘⌥J / Ctrl⇧J) → dán → Enter. Lần đầu gõ <code>allow pasting</code>.</span><button type="button" class="h-btn" data-copy-console>${COPY}Chép code</button></div>
         </div>
         <p class="mono copied" data-copied></p>
+      </section>
+
+      <section class="lobby" aria-labelledby="lobby-h">
+        <div class="lb-head">
+          <span class="lb-icon">${WARN}</span>
+          <div>
+            <p class="mono lb-kick">Quan trọng · m.cutd.site</p>
+            <h2 id="lobby-h">Bấm bookmark <em>ở sảnh</em><span>trước khi vào trận</span></h2>
+            <p class="lb-lead">Chỉ có <b>một bản game</b> chạy: nhẹ RAM, không giật, mọi nút của tool dùng được ngay khi trận bắt đầu.</p>
+          </div>
+        </div>
+        <div class="lb-cmp">
+          <div class="lb-card ok">${ONE}<div><b>Ở sảnh</b><strong>1 bản game</strong><span>Tool móc thẳng vào game. Bắt, Tiến hóa, Trade, Xếp đội dùng được ngay.</span></div></div>
+          <div class="lb-card bad">${TWO}<div><b>Giữa trận</b><strong>2 bản game</strong><span>Muốn dùng nút, tool phải mở lại trận trong khung. Bản cũ vẫn nằm phía sau, RAM gần gấp đôi.</span></div></div>
+        </div>
+        <p class="lb-foot">Lỡ bấm giữa trận: xem số liệu vẫn được. Chỉ bấm <b>Móc</b> khi thật sự cần nút, trận sau nhớ bấm ở sảnh.</p>
       </section>
 
       <section class="verify">
@@ -69,7 +88,7 @@ node scripts/build-tool.mjs --out</code></pre>
       <section class="safe">
         <h2>An <em>toàn</em></h2>
         <ul>
-          <li><b>Chỉ làm khi mày bấm.</b> 1 cú bấm = 1 lệnh của chính game (Bắt / Tiến hóa / Trade / Xếp đội). Không tự mua, không đọc cookie hay phiên đăng nhập. Bộ nhớ trình duyệt: chỉ đọc 5 cài đặt đồ hoạ của game ở tab ⚡ và chỉ ghi khi mày bấm "Bật đồ hoạ nhẹ" / "Khôi phục".</li>
+          <li><b>Chỉ làm khi mày bấm.</b> 1 cú bấm = 1 lệnh của chính game (Bắt / Tiến hóa / Trade); riêng Xếp đội 1 cú bấm dời tối đa 2 con, con thứ 2 chỉ đi sau khi game xác nhận con đầu. Không tự mua, không đọc cookie hay phiên đăng nhập. Bộ nhớ trình duyệt: chỉ đọc 5 cài đặt đồ hoạ của game ở tab ⚙︎ và chỉ ghi khi mày bấm "Bật đồ hoạ nhẹ" / "Khôi phục".</li>
           <li><b>Code nằm trọn trong bookmark.</b> Không nạp script từ đâu khác; file dữ liệu wiki chỉ được đọc như chữ.</li>
         </ul>
         <p class="mono hash">v${tool.version} · SHA-256 <span data-sha>${tool.sha256}</span>${tool.commit ? html` · build từ commit <a class="rootlink" href="${`${REPO}/tree/${tool.commit}/tool`}" target="_blank" rel="noopener noreferrer">${tool.commit.slice(0, 7)}</a>` : html` · <a class="rootlink" href="${SOURCE}" target="_blank" rel="noopener noreferrer">mã nguồn</a>`}</p>

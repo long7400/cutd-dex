@@ -523,7 +523,7 @@ test('bookmarklet: bản web — dán từ sảnh → móc session/interaction l
   assert.equal(log.sent, 0);
 });
 
-test('bookmarklet: Xếp đội — mỗi lần bấm dời đúng 1 con lệch hàng, con đúng hàng không đụng, chờ game xác nhận, chỉ lúc chuẩn bị', async t => {
+test('bookmarklet: Xếp đội — mỗi lần bấm dời tối đa 2 con lệch hàng (con thứ 2 chỉ đi sau khi game xác nhận con đầu, cách ≥ 0,5 giây), con đúng hàng không đụng, chỉ lúc chuẩn bị', async t => {
   const { w, log, code, FakeWS } = setupDom('https://m.cutd.site/?room=805A6070');
   t.after(() => w.close());
   w.document.getElementById('GameCanvas').remove();
@@ -569,24 +569,24 @@ test('bookmarklet: Xếp đội — mỗi lần bấm dời đúng 1 con lệch 
   assert.equal(w.__moves.length, 0, 'click do script → bỏ qua');
   trustedClick(w, btn());
   await tick(50);
-  assert.equal(w.__moves.length, 1, '1 cú bấm = 1 lệnh');
+  assert.equal(w.__moves.length, 1, 'lệnh đầu đi ngay');
   assert.deepEqual([...w.__moves[0]], ['move', 'u1', 1376 + 748, 656], 'con hồi máu / hào quang đang đứng đầu đường quái → dời ra sau trước tiên');
   assert.ok(btn().disabled && /Đang dời/.test(btn().textContent), 'chờ game xác nhận');
   trustedClick(w, btn());
-  await tick(500);
-  assert.equal(w.__moves.length, 1, 'đang chờ xác nhận → bấm thêm không gửi');
+  await tick(400);
+  assert.equal(w.__moves.length, 1, 'chưa có xác nhận → chưa gửi con thứ 2; bấm thêm lúc đang dời cũng không gửi');
   emit({ type: 'command_ack', sequence: 1, accepted: true, tick: 101 });
-  await tick(100);
-  assert.match(root.querySelector('.toast').textContent, /Còn 1 con lệch/);
-  assert.equal(w.__moves.length, 1, 'không tự dời con tiếp theo');
-  await tick(800);
-  trustedClick(w, btn());
-  await tick(50);
-  assert.equal(w.__moves.length, 2);
+  await tick(20);
+  assert.equal(w.__moves.length, 1, 'vừa xác nhận nhưng chưa đủ 0,5 giây từ lệnh đầu');
+  await tick(400);
+  assert.equal(w.__moves.length, 2, '1 cú bấm = tối đa 2 lệnh');
   assert.deepEqual([...w.__moves[1]], ['move', 'u2', 1376 + 368, 656], 'tank lên hàng đầu, giữa đường quái; con cận chiến không bị dời');
   emit({ type: 'command_ack', sequence: 2, accepted: false, reason: 'orders_closed', tick: 102 });
   await tick(200);
-  assert.match(root.querySelector('.toast').textContent, /orders closed/);
+  assert.match(root.querySelector('.toast').textContent, /Đã dời .+ → HỖ TRỢ\. Game từ chối: orders closed/);
+  trustedClick(w, btn());
+  await tick(50);
+  assert.equal(w.__moves.length, 2, 'không còn con lệch → bấm không gửi gì');
   assert.ok(btn().disabled && /Đúng hàng/.test(btn().textContent), 'hết con lệch → nút tắt');
   assert.equal(log.sent, 0, 'tool không tự gửi socket');
   const drawer = () => root.querySelector('.drawer');

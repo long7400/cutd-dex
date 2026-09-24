@@ -161,6 +161,35 @@ test('T20 a unit already in its row but far from the creep path (hypotenuse too 
   assert.ok(Math.abs(r.moves[0].x - 1608) <= 200 && r.moves[0].x > 1608, 'pulled in on its own side');
 });
 
+test('T21 bought pets pile up on the spawn spot inside the XA band → next round the first to arrive keeps the spot, the rest spread to their own slots; a later buy on top of it is moved, not the old one', () => {
+  const P = [1608, 3040];
+  const mem = freshMem([]);
+  let units = [];
+  [['r1', 2, 1000], ['r2', 2, 2000], ['r3', 2, 3000], ['t1', 0, 4000]].forEach(([key, row, t]) => {
+    units = [...units, U(key, row, ...P, { level: 1, score: key === 'r3' ? 999 : 100 })];
+    observe(mem, { phase: 'planning', units }, t);
+  });
+  assert.deepEqual(plan(mem, units, down).moves, [], 'round they were bought → left alone');
+  observe(mem, { phase: 'wave', units }, 20000);
+  let r = planning(mem, units, 40000);
+  assert.deepEqual(r.status, { r1: 'ok', r2: 'move', r3: 'move', t1: 'move' }, 'r1 arrived first → keeps the spot even though r3 is stronger');
+  assert.equal(new Set(r.moves.map(m => `${m.x},${m.y}`)).size, 3);
+  assert.ok(r.moves.every(m => Math.hypot(m.x - P[0], m.y - P[1]) >= 40), 'nobody is sent back onto the pile');
+  const go = (list, moves) => list.map(u => { const m = moves.find(x => x.key === u.key); return m ? { ...u, pos: { x: m.x, y: m.y } } : u; });
+  for (const m of r.moves) { onSent(mem, m.key, m.row, m, 41000); onAck(mem, m.key, true); }
+  units = go(units, r.moves);
+  observe(mem, { phase: 'planning', units }, 42000);
+  assert.deepEqual(plan(mem, units, down).moves, [], 'spread → plan empty');
+  observe(mem, { phase: 'wave', units }, 60000);
+  observe(mem, { phase: 'planning', units }, 80000);
+  units = [...units, U('r4', 2, ...P, { level: 1, score: 5000 })];
+  observe(mem, { phase: 'planning', units }, 81000);
+  assert.deepEqual(plan(mem, units, down).moves, [], 'new buy lands on r1 → held this round, r1 not touched');
+  observe(mem, { phase: 'wave', units }, 100000);
+  r = planning(mem, units, 120000);
+  assert.deepEqual(r.moves.map(m => m.key), ['r4'], 'next round only the newcomer leaves the spot');
+});
+
 test('T14 unknown / broken ground → no moves', () => {
   const mem = freshMem([]);
   assert.deepEqual(plan(mem, [U('a', 0, 1, 1)], null).moves, []);
@@ -226,7 +255,7 @@ test('T18 room_summary before keyframe / watching another base (ready=false) nev
   assert.equal(plan(mem, units, down).status.a, 'move', 'record kept, not re-marked as new');
 });
 
-test('T19 fuzz with events over 6 rounds (buy Lv1, evolve w/ row change, sell, go down, reject, manual drag): a unit is re-moved only after an event touched it', () => {
+test('T19 fuzz with events over 6 rounds (buy Lv1 — half of them onto one spawn spot, evolve w/ row change, sell, go down, reject, manual drag): a unit is re-moved only after an event touched it', () => {
   let seed = 99;
   const rnd = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648);
   for (let trial = 0; trial < 150; trial++) {
@@ -239,7 +268,7 @@ test('T19 fuzz with events over 6 rounds (buy Lv1, evolve w/ row change, sell, g
       for (let click = 0; click < 25; click++) {
         t += 900;
         const ev = rnd();
-        if (ev < 0.05) { units.push(U(`u${next++}`, Math.floor(rnd() * 4), 1030 + rnd() * 1156, 2414 + rnd() * 1252, { level: 1 })); }
+        if (ev < 0.05) { const spawn = rnd() < 0.5; units.push(U(`u${next++}`, Math.floor(rnd() * 4), spawn ? 1608 : 1030 + rnd() * 1156, spawn ? 3040 : 2414 + rnd() * 1252, { level: 1 })); }
         else if (ev < 0.08 && units.length) { const i = Math.floor(rnd() * units.length); units[i] = { ...units[i], row: (units[i].row + 1) % 4, stage: units[i].stage + '+' }; touched.add(units[i].key); }
         else if (ev < 0.10 && units.length > 1) { units.splice(Math.floor(rnd() * units.length), 1); }
         else if (ev < 0.12 && units.length) { const i = Math.floor(rnd() * units.length); units[i] = { ...units[i], pos: { x: 1030 + rnd() * 1156, y: 2414 + rnd() * 1252 } }; touched.add(units[i].key); }
