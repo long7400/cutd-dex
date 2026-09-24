@@ -127,13 +127,13 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .sect i{width:3px;height:12px;border-radius:2px;background:var(--c,#33496b)}
 .sect .n{margin-left:auto;font-size:10.5px;font-weight:700;color:#6f8fb8}
 .dsum b{color:#ffde8f;font-weight:800}.dsum .dv{font-size:11px;font-weight:800;color:#8fb7e8}.dsum .dv.real{color:#ffde8f}
-.drow{display:grid;grid-template-columns:28px minmax(0,1fr) 54px;align-items:center;gap:8px;padding:4px 10px}
+.drow{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:8px;padding:4px 10px}
 .drow .pt{width:28px;height:28px}.drow.down .pt{filter:grayscale(1) brightness(.6)}
 .dnm{display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden}.dnm b{font-size:11.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis}.dnm small{font-size:10.5px;color:#6f8fb8}
 .dnm .role{font-size:9px;padding:0 4px;line-height:13px}
 .dbar{position:relative;height:6px;margin-top:3px;border-radius:3px;background:#0b1526;overflow:hidden}
 .dbar i{position:absolute;left:0;top:0;bottom:0;border-radius:3px}.dbar .calc{background:#2b4a6e}.dbar .real{background:#ffde8f;top:1px;bottom:1px}
-.dval{text-align:right;line-height:1.15}.dval b{display:block;font-size:12px;font-weight:800;color:#ffde8f}.dval small{font-size:10px;color:#6f8fb8}
+.dval{text-align:right;line-height:1.15;min-width:54px}.dval b{display:block;font-size:12px;font-weight:800;color:#ffde8f}.dval small{font-size:10px;color:#6f8fb8;white-space:nowrap}
 .tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;padding:6px 10px}
 .tcard{display:flex;flex-direction:column;background:#132238;border:1px solid #22375a;border-radius:10px;overflow:hidden}
 .tcard.is-ok{border-color:#2f5c40}.tcard.wish{border-color:#b69c62}
@@ -202,7 +202,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     if (msg.type === 'base_keyframe') autoHook();
     const was = state.summary?.phase;
     if (applyMessage(state, msg)) {
-      if (msg.type === 'room_summary') meterPhase(was, msg);
+      if (msg.type === 'room_summary') meterPhase(was);
       else if (Array.isArray(msg.effects) && (ownBase == null || state.baseId === ownBase)) meterHits(msg);
       watchRoster();
       invalidate();
@@ -210,22 +210,30 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     return true;
   }
   let tps = TICKS_PER_SECOND;
-  const meter = { wave: null, start: 0, last: 0, done: false, dmg: new Map(), shots: new Map() };
-  function meterPhase(was, msg) {
+  const ROUNDS = 10, SHOTS = 1024;
+  const meter = { wave: null, start: 0, last: 0, done: true, total: 0, dmg: new Map(), skill: new Map(), shots: new Map(), rounds: [] };
+  const meterSecs = () => (meter.start && meter.last > meter.start ? (meter.last - meter.start) / tps : 0);
+  function meterPhase(was) {
     const now = state.summary?.phase;
     if (now === 'wave' && was !== 'wave') {
       meter.wave = state.summary.wave;
       meter.start = meter.last = state.summary.tick;
       meter.done = false;
-      meter.dmg = new Map();
-    } else if (now !== 'wave' && was === 'wave') meter.done = true;
+      meter.total = 0;
+      meter.dmg.clear(); meter.skill.clear(); meter.shots.clear();
+    } else if (now !== 'wave' && was === 'wave' && !meter.done) {
+      meter.done = true;
+      meter.shots.clear();
+      meter.rounds.unshift({ wave: meter.wave, total: meter.total, secs: meterSecs() });
+      meter.rounds.splice(ROUNDS);
+    }
   }
   function meterHits(msg) {
-    if (!meter.start || meter.done) return;
+    if (meter.done) return;
     for (const e of msg.effects) {
       if (e?.kind === 'projectile_fired' && e.source_collection === 'unit' && Number.isInteger(e.entity_id) && Number.isInteger(e.source_id)) {
         meter.shots.set(e.entity_id, e.source_id);
-        if (meter.shots.size > 1024) meter.shots.delete(meter.shots.keys().next().value);
+        if (meter.shots.size > SHOTS) meter.shots.delete(meter.shots.keys().next().value);
         continue;
       }
       if (e?.kind !== 'damage' || !(Number.isFinite(e.amount) && e.amount > 0)) continue;
@@ -233,6 +241,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       const from = e.source_collection === 'projectile' ? meter.shots.get(e.source_id) : e.source_collection === 'unit' || e.source_collection == null ? e.source_id : null;
       if (!Number.isInteger(from) || !state.units.has(from)) continue;
       meter.dmg.set(from, (meter.dmg.get(from) ?? 0) + e.amount);
+      if (e.content_id) meter.skill.set(from, (meter.skill.get(from) ?? 0) + e.amount);
+      meter.total += e.amount;
     }
     if (Number.isFinite(msg.tick) && msg.tick > meter.last) meter.last = msg.tick;
   }
@@ -245,11 +255,13 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const onMessage = e => handle(e.data);
   const onClose = () => { socket?.removeEventListener('message', onMessage); socket = null; patch(); invalidate(); };
 
-  let frozen = false;
-  function freezeTop() {
-    if (frozen || realm.win === window) return;
-    frozen = true;
-    window.requestAnimationFrame = () => 0;
+  let slowed = false;
+  function slowTop() {
+    if (slowed || realm.win === window) return;
+    slowed = true;
+    window.requestAnimationFrame = fn => setTimeout(() => fn(performance.now()), 1000);
+    window.cancelAnimationFrame = id => clearTimeout(id);
+    toast = 'Đang chạy trận trong khung (bản game cũ phía sau đã giảm còn 1 khung/giây). Lần sau bấm bookmark ở sảnh trước khi vào trận để nhẹ máy hơn.';
   }
   function attach(ws) {
     if (socket || dead) return;
@@ -258,7 +270,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     ws.addEventListener('message', onMessage);
     ws.addEventListener('close', onClose);
     unpatch();
-    freezeTop();
+    slowTop();
     invalidate();
   }
   function patch() {
@@ -862,26 +874,30 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   function viewDps() {
     const mine = myUnits(state);
     if (!mine.length) return empty('Chưa có lính (hoặc đang chờ dữ liệu).');
-    const secs = meter.start && meter.last > meter.start ? (meter.last - meter.start) / tps : 0;
+    const secs = meterSecs();
     const scale = tps / TICKS_PER_SECOND;
-    const rows = mine.map(u => ({ u, calc: (U(u.stage)?.ed ?? U(u.stage)?.dps ?? 0) * scale, real: secs ? (meter.dmg.get(u.id) ?? 0) / secs : null }))
+    const rows = mine.map(u => ({ u, calc: (U(u.stage)?.ed ?? U(u.stage)?.dps ?? 0) * scale, dmg: meter.dmg.get(u.id) ?? 0, skill: meter.skill.get(u.id) ?? 0 }))
       .sort((a, b) => b.calc - a.calc || a.u.id - b.u.id);
-    const most = Math.max(1, ...rows.map(r => Math.max(r.calc, r.real ?? 0)));
-    const sum = key => rows.reduce((n, r) => n + (r[key] ?? 0), 0);
+    const real = r => (secs ? r.dmg / secs : null);
+    const most = Math.max(1, ...rows.map(r => Math.max(r.calc, real(r) ?? 0)));
     const pct = v => `width:${Math.max(0, Math.min(100, Math.round((v / most) * 100)))}%`;
+    const calcSum = rows.reduce((n, r) => n + r.calc, 0);
+    const head = meter.wave == null ? 'Chưa đo — đợt tới bắt đầu đo' : `Đợt ${meter.wave} · ${Math.round(secs)}s${meter.done ? '' : ' · đang đo'}`;
     return [
-      h('div', { class: 'bar-row dsum', title: `Đo = sát thương thật ${meter.done ? 'của đợt vừa rồi' : 'từ đầu đợt này'} (không tính quái tự chết, không tính đòn dội vào chính pet). Tính = công thức: đòn thường × tốc đánh + chí mạng / proc + kỹ năng + độc + lan (giả định ${AOE_TARGETS} quái đứng gần), chưa tính buff đồng đội.` },
-        h('b', { text: meter.wave != null ? `Đợt ${meter.wave}` : 'Chưa đo' }), secs ? h('span', { class: 'muted', text: `${Math.round(secs)}s${meter.done ? '' : ' · đang đo'}` }) : null,
-        h('span', { class: 'grow' }), h('span', { class: 'dv real', text: secs ? `Đo ${short(sum('real'))}` : 'Đo —' }), h('span', { class: 'dv', text: `Tính ${short(sum('calc'))}` })),
-      rows.map(({ u, calc, real }) => {
-        const d = U(u.stage) ?? {};
-        return h('div', { class: `drow${u.active ? '' : ' down'}`, title: `${nameOf(u.stage)}\nTính ${fmt(Math.round(calc))}/s${real != null ? ` · đo ${fmt(Math.round(real))}/s` : ''}` },
-          img(u.stage, 28),
+      h('div', { class: 'bar-row dsum', title: `Đo = sát thương thật lên quái trong đợt (không tính đòn dội vào chính pet). Tính = công thức: đòn thường × tốc đánh + chí mạng / proc + kỹ năng + độc + lan (giả định ${AOE_TARGETS} quái đứng gần), chưa tính buff đồng đội.` },
+        h('b', { text: head }), h('span', { class: 'grow' }),
+        h('span', { class: 'dv real', text: secs ? `${short(meter.total)} · ${short(meter.total / secs)}/s` : '—' }), h('span', { class: 'dv', text: `≈${short(calcSum)}/s` })),
+      rows.map(r => {
+        const d = U(r.u.stage) ?? {}, v = real(r);
+        return h('div', { class: `drow${r.u.active ? '' : ' down'}`, title: `${nameOf(r.u.stage)}\nSát thương đợt này: ${fmt(Math.round(r.dmg))}${r.dmg ? ` (đòn thường ${fmt(Math.round(r.dmg - r.skill))} · kỹ năng ${fmt(Math.round(r.skill))})` : ''}\nTính theo công thức: ${fmt(Math.round(r.calc))}/s` },
+          img(r.u.stage, 28),
           h('div', { class: 'dmid' },
-            h('div', { class: 'dnm' }, h('b', { text: d.n ?? u.stage }), d.l ? h('small', { text: ` Lv${d.l}` }) : null, d.ro ? h('span', { class: `k-${d.ro} role`, text: ROLE_NAME[d.ro] }) : null),
-            h('div', { class: 'dbar' }, h('i', { class: 'calc', style: pct(calc) }), real != null ? h('i', { class: 'real', style: pct(real) }) : null)),
-          h('div', { class: 'dval' }, h('b', { text: real != null ? short(real) : '—' }), h('small', { text: `≈${short(calc)}` })));
+            h('div', { class: 'dnm' }, h('b', { text: d.n ?? r.u.stage }), d.l ? h('small', { text: ` Lv${d.l}` }) : null, d.ro ? h('span', { class: `k-${d.ro} role`, text: ROLE_NAME[d.ro] }) : null),
+            h('div', { class: 'dbar' }, h('i', { class: 'calc', style: pct(r.calc) }), v != null ? h('i', { class: 'real', style: pct(v) }) : null)),
+          h('div', { class: 'dval' }, h('b', { text: v != null ? short(v) : '—' }), h('small', { text: `${r.dmg ? `${short(r.dmg)} · ` : ''}≈${short(r.calc)}` })));
       }),
+      meter.rounds.length ? h('div', { class: 'sect', style: '--c:#ffde8f' }, h('i'), 'CÁC ĐỢT GẦN ĐÂY', h('span', { class: 'n', text: 'tổng sát thương · /giây' })) : null,
+      meter.rounds.map(x => h('div', { class: 'kv' }, h('span', { text: `Đợt ${x.wave}${x.secs ? ` · ${Math.round(x.secs)}s` : ''}` }), h('b', { text: `${fmt(Math.round(x.total))}${x.secs ? ` · ${short(x.total / x.secs)}/s` : ''}` }))),
     ];
   }
 
@@ -939,13 +955,14 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 
   let bodyEl = null, lastBind = '';
   function render(force = false) {
-    if (!dirty || panel.hidden) return;
+    if (dead || !dirty || panel.hidden) return;
     if (!force && performance.now() - lastRender < 1000) { invalidate(); return; }
     lastRender = performance.now();
     dirty = false;
     const scroll = bodyEl?.scrollTop ?? 0;
     sig.length = 0;
     picks.length = 0;
+    for (const id of wishSeen) if (!state.wilds.has(id)) wishSeen.delete(id);
     for (const w of state.wilds.values()) {
       if (wishSeen.has(w.id) || !wished(w.stage)) continue;
       wishSeen.add(w.id);
@@ -1054,7 +1071,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         if (!win || win.location.href === 'about:blank' || win.document.readyState === 'uninitialized') win = null;
       } catch { win = null; }
       if (win) { switchRealm(win); return; }
-      if (++tries < 20000) setTimeout(arm, 0);
+      if (++tries < 4000) setTimeout(arm, 0);
     };
     arm();
     dirty = true; render(true);

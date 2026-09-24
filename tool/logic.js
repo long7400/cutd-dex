@@ -7,7 +7,7 @@ export function createState() {
   return {
     tick: 0, baseId: null, haveKeyframe: false,
     lives: 0, gold: 0, lumber: 0, alive: true,
-    research: new Map(), units: new Map(), creeps: new Map(), wilds: new Map(), offers: new Map(),
+    research: new Map(), units: new Map(), wilds: new Map(), offers: new Map(),
     summary: null, messages: 0,
   };
 }
@@ -16,7 +16,6 @@ const unitOf = u => ({
   id: num(u.id), stage: str(u.stage_id), owner: u.owner_id ?? null,
   hp: num(u.health), maxHp: num(u.max_health), active: u.active !== false, book: num(u.book_value),
 });
-const creepOf = c => ({ id: num(c.id), stage: str(c.stage_id), hp: num(c.health), maxHp: num(c.max_health) });
 const wildOf = w => ({ id: num(w.id), stage: str(w.stage_id) });
 const offerOf = o => ({ slot: num(o.slot), get: str(o.offered_stage_id), give: str(o.required_stage_id) });
 
@@ -36,8 +35,8 @@ export function applyMessage(s, msg) {
       if (!isObj(msg.base)) return false;
       s.tick = num(msg.tick); s.baseId = msg.base.base_id ?? null; s.haveKeyframe = true;
       applyBase(s, msg.base);
-      s.units = new Map(); s.creeps = new Map(); s.wilds = new Map(); s.offers = new Map();
-      fill(s.units, msg.units, unitOf); fill(s.creeps, msg.creeps, creepOf);
+      s.units = new Map(); s.wilds = new Map(); s.offers = new Map();
+      fill(s.units, msg.units, unitOf);
       fill(s.wilds, msg.wilds, wildOf); fill(s.offers, msg.trade_offers, offerOf);
       return true;
     }
@@ -47,10 +46,9 @@ export function applyMessage(s, msg) {
       if (!s.haveKeyframe) s.baseId = msg.base.base_id ?? null;
       s.tick = num(msg.tick);
       applyBase(s, msg.base);
-      fill(s.units, msg.units_upserted, unitOf); fill(s.creeps, msg.creeps_upserted, creepOf);
+      fill(s.units, msg.units_upserted, unitOf);
       fill(s.wilds, msg.wilds_upserted, wildOf); fill(s.offers, msg.trade_offers, offerOf);
       for (const id of arr(msg.unit_ids_removed)) s.units.delete(id);
-      for (const id of arr(msg.creep_ids_removed)) s.creeps.delete(id);
       for (const id of arr(msg.wild_ids_removed)) s.wilds.delete(id);
       return true;
     }

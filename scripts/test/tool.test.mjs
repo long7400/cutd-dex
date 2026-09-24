@@ -694,10 +694,12 @@ test('bookmarklet: bản web chạy trong khung → dừng vòng vẽ của game
   ws.addEventListener('message', e => e.data);
   ws.dispatchEvent(new inner.MessageEvent('message', { data: JSON.stringify(summary) }));
   await tick(20);
-  assert.notEqual(w.requestAnimationFrame, topRaf, 'khung đã chạy trận → khoá vòng vẽ của game gốc');
+  assert.notEqual(w.requestAnimationFrame, topRaf, 'khung đã chạy trận → giảm vòng vẽ của game gốc');
   w.requestAnimationFrame(() => { ran++; });
   await tick(100);
-  assert.equal(ran, 1, 'game gốc phía sau không vẽ nữa');
+  assert.equal(ran, 1, 'game gốc phía sau không vẽ mỗi khung nữa');
+  await tick(1000);
+  assert.equal(ran, 2, 'vẫn vẽ 1 khung/giây để game gốc dọn hàng đợi sự kiện (không phình bộ nhớ)');
   let innerRan = 0;
   inner.requestAnimationFrame(() => { innerRan++; });
   await tick(100);
@@ -732,18 +734,93 @@ test('bookmarklet: tab DPS — mỗi con 1 dòng, đo sát thương thật trong
     { kind: 'damage', tick: 1080, target_collection: 'unit', target_id: 2, source_collection: 'unit', source_id: 2, amount: 999 },
     { kind: 'damage', tick: 1090, entity_id: 52, source_collection: 'unit', source_id: 77, amount: 5000 },
   ] });
+  emit({ type: 'base_delta', tick: 1100, base, effects: [{ kind: 'damage', tick: 1095, entity_id: 54, source_collection: 'unit', source_id: 3, content_id: 'ability_x', amount: 500 }] });
   await tick(1100);
-  const val = name => [...root.querySelectorAll('.drow')].map(r => r.querySelector('.dval b').textContent);
+  const val = () => [...root.querySelectorAll('.drow')].map(r => r.querySelector('.dval b').textContent);
   const vals = val();
-  assert.ok(vals.includes('600') && vals.includes('200'), `5 giây: 3000 → 600/s (đạn của con 1), 1000 → 200/s (con 2), không cộng 999 tự dội; có: ${vals}`);
-  assert.match(root.querySelector('.dsum').textContent, /Đợt 4/);
-  assert.match(root.querySelector('.dsum').textContent, /Đo 800/, 'tổng đội chỉ tính quái, không tính con không phải của mình');
-  assert.ok([...root.querySelectorAll('.drow .dval small')].every(s => /^≈/.test(s.textContent)), 'kèm DPS tính theo công thức');
+  assert.ok(vals.includes('600') && vals.includes('200') && vals.includes('100'), `5 giây: 3000 → 600/s (đạn của con 1), 1000 → 200/s (con 2), kỹ năng 500 → 100/s (con 3), không cộng 999 tự dội; có: ${vals}`);
+  assert.match(root.querySelector('.dsum').textContent, /Đợt 4 · 5s · đang đo/);
+  assert.match(root.querySelector('.dsum').textContent, /4\.5k · 900\/s/, 'tổng sát thương cả đội trong đợt + DPS đội, không tính con không phải của mình');
+  assert.ok([...root.querySelectorAll('.drow .dval small')].every(x => /≈/.test(x.textContent)), 'kèm DPS tính theo công thức');
+  assert.ok([...root.querySelectorAll('.drow')].some(r => /kỹ năng 500/.test(r.title)), 'tách sát thương kỹ năng / đòn thường');
   emit({ ...summary, phase: 'planning', tick: 1200 });
   emit({ type: 'base_delta', tick: 1300, base, effects: [{ kind: 'damage', tick: 1300, entity_id: 53, source_collection: 'unit', source_id: 1, amount: 99999 }] });
   await tick(1100);
-  assert.ok(val().includes('600'), 'hết đợt → giữ số đo của đợt vừa rồi');
+  assert.ok(val().includes('600'), 'hết đợt → giữ số đo của đợt vừa rồi, không cộng sát thương ngoài đợt');
+  assert.match(root.querySelector('.panel').textContent, /CÁC ĐỢT GẦN ĐÂY/);
+  assert.equal(root.querySelectorAll('.body > .kv').length, 1, 'lịch sử: 1 đợt');
+  for (let n = 0; n < 12; n++) {
+    emit({ ...summary, phase: 'wave', wave_index: 5 + n, tick: 2000 + n * 100 });
+    emit({ type: 'base_delta', tick: 2050 + n * 100, base, effects: [{ kind: 'damage', tick: 2040 + n * 100, entity_id: 60, source_collection: 'unit', source_id: 1, amount: 100 }] });
+    emit({ ...summary, phase: 'planning', tick: 2090 + n * 100 });
+  }
+  await tick(1100);
+  assert.equal(root.querySelectorAll('.body > .kv').length, 10, 'chỉ giữ 10 đợt gần nhất, không tích luỹ qua nhiều round');
+  assert.match(root.querySelector('.body > .kv').textContent, /Đợt 16/, 'đợt mới nhất lên đầu');
+  assert.ok(val().includes('40'), 'số từng con là của đợt mới nhất (100 sát thương / 2,5s), không cộng dồn các đợt trước');
   assert.equal(log.sent, 0);
+});
+
+test('bookmarklet: chạy lâu (hàng trăm đợt) không phình bộ nhớ, không dồn listener / DOM', async t => {
+  const v8 = await import('node:v8');
+  const vm = await import('node:vm');
+  v8.setFlagsFromString('--expose_gc');
+  const gc = vm.runInNewContext('gc');
+  const { w, log, code, FakeWS } = setupDom();
+  t.after(() => w.close());
+  let live = 0;
+  const add = w.EventTarget.prototype.addEventListener, del = w.EventTarget.prototype.removeEventListener;
+  w.EventTarget.prototype.addEventListener = function (...a) { if (this === w) live++; return add.apply(this, a); };
+  w.EventTarget.prototype.removeEventListener = function (...a) { if (this === w) live--; return del.apply(this, a); };
+  w.eval(code);
+  const ws = new FakeWS();
+  ws.addEventListener('message', e => e.data);
+  const emit = m => ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
+  const stages = Object.keys(overlay.u).filter(id => overlay.u[id].l).slice(0, 60);
+  const base = { base_id: 7, lives: 30, gold: 5000, lumber: 0, alive: true, research: [] };
+  emit({ type: 'server_hello', base_id: 7, simulation_ticks_per_second: 20 });
+  let tickNo = 100, wildId = 1, shot = 1, unitId = 1;
+  const units = () => Array.from({ length: 40 }, (_, i) => ({ id: unitId + i, stage_id: stages[(unitId + i) % stages.length], owner_id: 11, health: 50, max_health: 100, active: true }));
+  emit(summary);
+  await tick(0);
+  emit(keyframe(units()));
+  await tick(1200);
+  const root = log.roots[0];
+  const tabs = ['Đội', 'Wild', 'DPS', 'Trade'];
+  const round = async r => {
+    emit({ ...summary, phase: 'planning', tick: tickNo += 10, wave_index: r });
+    if (r % 5 === 0) { unitId += 3; emit({ ...keyframe(units()), tick: tickNo += 1 }); }
+    emit({ ...summary, phase: 'wave', tick: tickNo += 10, wave_index: r });
+    for (let d = 0; d < 20; d++) {
+      const effects = [];
+      for (let k = 0; k < 20; k++) {
+        effects.push({ kind: 'projectile_fired', tick: tickNo, entity_collection: 'projectile', entity_id: shot, source_collection: 'unit', source_id: unitId + (k % 40) });
+        effects.push({ kind: 'damage', tick: tickNo, entity_id: 9000 + k, source_collection: 'projectile', source_id: shot++, amount: 100 });
+        effects.push({ kind: 'damage', tick: tickNo, entity_id: 9000 + k, source_collection: 'unit', source_id: unitId + k, amount: 50, content_id: 'a' });
+      }
+      emit({ type: 'base_delta', tick: tickNo += 1, base, effects,
+        units_upserted: [{ id: unitId + (d % 40), stage_id: stages[(unitId + d) % stages.length], owner_id: 11, health: d, max_health: 100, active: true }],
+        wilds_upserted: [{ id: wildId++, stage_id: stages[d % stages.length] }], wild_ids_removed: [wildId - 30] });
+    }
+    [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith(tabs[r % tabs.length])).click();
+    if (r % 7 === 0) root.querySelector('.tile .star')?.click();
+    if (r % 3 === 0) root.querySelector('.tile .pic')?.click();
+  };
+  const heap = () => { gc(); gc(); return process.memoryUsage().heapUsed / 1048576; };
+  for (let r = 1; r <= 40; r++) await round(r);
+  const midLive = live, marks = [];
+  for (let r = 41; r <= 280; r++) {
+    await round(r);
+    if (r % 60 === 0) { await tick(20); marks.push(heap()); }
+  }
+  const floorRise = Math.min(...marks.slice(-2)) - marks[0];
+  t.diagnostic(`heap MB ở đợt 60..240: ${marks.map(m => m.toFixed(1)).join(' → ')} · listener ${midLive}→${live}`);
+  assert.ok(floorRise < 1.5, `bộ nhớ không tăng dần theo số đợt (mức thấp nhất nhích ${floorRise.toFixed(2)}MB qua 180 đợt)`);
+  assert.equal(live, midLive, 'không dồn listener trên window');
+  assert.ok(root.querySelectorAll('.body > .kv').length <= 10, 'lịch sử đợt tối đa 10');
+  assert.equal(log.sent, 0);
+  w.__cutdHelper.destroy();
+  assert.equal(live, 0, 'tắt tool → gỡ hết listener');
 });
 
 test('bookmarklet: bản web — tắt tool trước khi vào trận thì gỡ bẫy', t => {
