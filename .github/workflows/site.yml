@@ -47,8 +47,8 @@ jobs:
       - id: pack
         run: |
           if [ -z "$(git status --porcelain -- data public/portraits public/research public/skills)" ]; then echo "changed=false" >> "$GITHUB_OUTPUT"; exit 0; fi
-          mkdir -p "$RUNNER_TEMP/out/public"
-          cp -R data "$RUNNER_TEMP/out/data"
+          mkdir -p "$RUNNER_TEMP/out/public" "$RUNNER_TEMP/out/data"
+          for f in catalog client changelog state art-state; do [ ! -f "data/$f.json" ] || cp "data/$f.json" "$RUNNER_TEMP/out/data/"; done
           cp -R public/portraits public/research public/skills "$RUNNER_TEMP/out/public/"
           echo "changed=true" >> "$GITHUB_OUTPUT"
       - if: steps.pack.outputs.changed == 'true'
