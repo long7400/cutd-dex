@@ -747,16 +747,15 @@ test('bookmarklet: tab DPS — mỗi con 1 dòng, đo sát thương thật trong
   emit({ type: 'base_delta', tick: 1300, base, effects: [{ kind: 'damage', tick: 1300, entity_id: 53, source_collection: 'unit', source_id: 1, amount: 99999 }] });
   await tick(1100);
   assert.ok(val().includes('600'), 'hết đợt → giữ số đo của đợt vừa rồi, không cộng sát thương ngoài đợt');
-  assert.match(root.querySelector('.panel').textContent, /CÁC ĐỢT GẦN ĐÂY/);
-  assert.equal(root.querySelectorAll('.body > .kv').length, 1, 'lịch sử: 1 đợt');
+  assert.deepEqual(val().slice(0, 3), ['600', '200', '100'], 'con DPS đo cao nhất lên đầu');
+  assert.doesNotMatch(root.querySelector('.panel').textContent, /CÁC ĐỢT GẦN ĐÂY/, 'không có thống kê các đợt trước');
   for (let n = 0; n < 12; n++) {
     emit({ ...summary, phase: 'wave', wave_index: 5 + n, tick: 2000 + n * 100 });
     emit({ type: 'base_delta', tick: 2050 + n * 100, base, effects: [{ kind: 'damage', tick: 2040 + n * 100, entity_id: 60, source_collection: 'unit', source_id: 1, amount: 100 }] });
     emit({ ...summary, phase: 'planning', tick: 2090 + n * 100 });
   }
   await tick(1100);
-  assert.equal(root.querySelectorAll('.body > .kv').length, 10, 'chỉ giữ 10 đợt gần nhất, không tích luỹ qua nhiều round');
-  assert.match(root.querySelector('.body > .kv').textContent, /Đợt 16/, 'đợt mới nhất lên đầu');
+  assert.match(root.querySelector('.dsum').textContent, /Đợt 16/, 'chỉ hiện đợt mới nhất');
   assert.ok(val().includes('40'), 'số từng con là của đợt mới nhất (100 sát thương / 2,5s), không cộng dồn các đợt trước');
   assert.equal(log.sent, 0);
 });
@@ -817,7 +816,6 @@ test('bookmarklet: chạy lâu (hàng trăm đợt) không phình bộ nhớ, kh
   t.diagnostic(`heap MB ở đợt 60..240: ${marks.map(m => m.toFixed(1)).join(' → ')} · listener ${midLive}→${live}`);
   assert.ok(floorRise < 1.5, `bộ nhớ không tăng dần theo số đợt (mức thấp nhất nhích ${floorRise.toFixed(2)}MB qua 180 đợt)`);
   assert.equal(live, midLive, 'không dồn listener trên window');
-  assert.ok(root.querySelectorAll('.body > .kv').length <= 10, 'lịch sử đợt tối đa 10');
   assert.equal(log.sent, 0);
   w.__cutdHelper.destroy();
   assert.equal(live, 0, 'tắt tool → gỡ hết listener');

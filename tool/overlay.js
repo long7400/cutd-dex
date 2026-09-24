@@ -131,7 +131,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .drow{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:8px;padding:4px 10px}
 .drow .pt{width:28px;height:28px}.drow.down .pt{filter:grayscale(1) brightness(.6)}
 .dnm{display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden}.dnm b{font-size:11.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis}.dnm small{font-size:10.5px;color:#6f8fb8}
-.dnm .role{font-size:9px;padding:0 4px;line-height:13px}
+.dnm .role{font-size:9px;padding:0 4px;line-height:13px}.dnm .tier{margin:0;min-width:0;font-size:9.5px;line-height:13px;padding:0 4px}
 .dbar{position:relative;height:6px;margin-top:3px;border-radius:3px;background:#0b1526;overflow:hidden}
 .dbar i{position:absolute;left:0;top:0;bottom:0;border-radius:3px}.dbar .calc{background:#2b4a6e}.dbar .real{background:#ffde8f;top:1px;bottom:1px}
 .dval{text-align:right;line-height:1.15;min-width:54px}.dval b{display:block;font-size:12px;font-weight:800;color:#ffde8f}.dval small{font-size:10px;color:#6f8fb8;white-space:nowrap}
@@ -212,8 +212,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     return true;
   }
   let tps = TICKS_PER_SECOND;
-  const ROUNDS = 10, SHOTS = 1024;
-  const meter = { wave: null, start: 0, last: 0, done: true, total: 0, dmg: new Map(), skill: new Map(), shots: new Map(), rounds: [] };
+  const SHOTS = 1024;
+  const meter = { wave: null, start: 0, last: 0, done: true, total: 0, dmg: new Map(), skill: new Map(), shots: new Map() };
   const meterSecs = () => (meter.start && meter.last > meter.start ? (meter.last - meter.start) / tps : 0);
   function meterPhase(was) {
     const now = state.summary?.phase;
@@ -226,8 +226,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     } else if (now !== 'wave' && was === 'wave' && !meter.done) {
       meter.done = true;
       meter.shots.clear();
-      meter.rounds.unshift({ wave: meter.wave, total: meter.total, secs: meterSecs() });
-      meter.rounds.splice(ROUNDS);
     }
   }
   function meterHits(msg) {
@@ -884,9 +882,9 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     if (!mine.length) return empty('Chưa có lính (hoặc đang chờ dữ liệu).');
     const secs = meterSecs();
     const scale = tps / TICKS_PER_SECOND;
-    const rows = mine.map(u => ({ u, calc: (U(u.stage)?.ed ?? U(u.stage)?.dps ?? 0) * scale, dmg: meter.dmg.get(u.id) ?? 0, skill: meter.skill.get(u.id) ?? 0 }))
-      .sort((a, b) => b.calc - a.calc || a.u.id - b.u.id);
     const real = r => (secs ? r.dmg / secs : null);
+    const rows = mine.map(u => ({ u, calc: (U(u.stage)?.ed ?? U(u.stage)?.dps ?? 0) * scale, dmg: meter.dmg.get(u.id) ?? 0, skill: meter.skill.get(u.id) ?? 0 }))
+      .sort((a, b) => (real(b) ?? b.calc) - (real(a) ?? a.calc) || b.calc - a.calc || a.u.id - b.u.id);
     const most = Math.max(1, ...rows.map(r => Math.max(r.calc, real(r) ?? 0)));
     const pct = v => `width:${Math.max(0, Math.min(100, Math.round((v / most) * 100)))}%`;
     const calcSum = rows.reduce((n, r) => n + r.calc, 0);
@@ -900,12 +898,10 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         return h('div', { class: `drow${r.u.active ? '' : ' down'}`, title: `${nameOf(r.u.stage)}\nSát thương đợt này: ${fmt(Math.round(r.dmg))}${r.dmg ? ` (đòn thường ${fmt(Math.round(r.dmg - r.skill))} · kỹ năng ${fmt(Math.round(r.skill))})` : ''}\nTính theo công thức: ${fmt(Math.round(r.calc))}/s` },
           img(r.u.stage, 28),
           h('div', { class: 'dmid' },
-            h('div', { class: 'dnm' }, h('b', { text: d.n ?? r.u.stage }), d.l ? h('small', { text: ` Lv${d.l}` }) : null, d.ro ? h('span', { class: `k-${d.ro} role`, text: ROLE_NAME[d.ro] }) : null),
+            h('div', { class: 'dnm' }, h('b', { text: d.n ?? r.u.stage }), d.l ? h('small', { text: ` Lv${d.l}` }) : null, tierPill(r.u.stage, true), d.ro ? h('span', { class: `k-${d.ro} role`, text: ROLE_NAME[d.ro] }) : null),
             h('div', { class: 'dbar' }, h('i', { class: 'calc', style: pct(r.calc) }), v != null ? h('i', { class: 'real', style: pct(v) }) : null)),
           h('div', { class: 'dval' }, h('b', { text: v != null ? short(v) : '—' }), h('small', { text: `${r.dmg ? `${short(r.dmg)} · ` : ''}≈${short(r.calc)}` })));
       }),
-      meter.rounds.length ? h('div', { class: 'sect', style: '--c:#ffde8f' }, h('i'), 'CÁC ĐỢT GẦN ĐÂY', h('span', { class: 'n', text: 'tổng sát thương · /giây' })) : null,
-      meter.rounds.map(x => h('div', { class: 'kv' }, h('span', { text: `Đợt ${x.wave}${x.secs ? ` · ${Math.round(x.secs)}s` : ''}` }), h('b', { text: `${fmt(Math.round(x.total))}${x.secs ? ` · ${short(x.total / x.secs)}/s` : ''}` }))),
     ];
   }
 
