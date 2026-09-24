@@ -179,6 +179,14 @@ test('bookmarklet: bộ kiểm tra AST chặn các kiểu lách danh sách cho p
   }
   assert.ok(auditSource([['overlay.js', overlay.replace("getJSON('/catalog'", "getJSON('https://evil/'")], ['game-bridge.js', base], ['logic.js', logic]]).length > 0);
   const clash = overlay.replace("  const host = h('div'", "  function observe(type) { return type; }\n  const host = h('div'");
+  const lite = readFileSync(join(ROOT, 'tool', 'lite.js'), 'utf8');
+  const withLite = (liteCode, over = overlay) => auditSource([['overlay.js', over], ['game-bridge.js', base], ['logic.js', logic], ['lite.js', liteCode]]);
+  assert.deepEqual(withLite(lite), [], 'lite.js hiện tại qua kiểm tra');
+  assert.ok(withLite(lite.replace("'cutd.bloom', 'false'", "'session_token', 'x'")).length > 0, 'không ghi khoá lạ ngoài 5 khoá đồ hoạ');
+  assert.ok(withLite(lite.replace("win.localStorage.setItem('cutd.quality', 'low')", "win.localStorage.setItem('cutd.quality', String(win.name))")).length > 0, 'giá trị ghi phải viết cứng');
+  assert.ok(withLite(lite.replace("win.localStorage.removeItem('cutd.bloom')", "win.localStorage.clear()")).length > 0, 'không xoá sạch bộ nhớ trang');
+  assert.ok(withLite(lite, overlay.replace("  const host = h('div'", "  realm.win.localStorage.setItem('cutd.quality', 'low');\n  const host = h('div'")).length > 0, 'ngoài lite.js không được đụng localStorage');
+  assert.ok(withLite(lite.replace("win.localStorage.getItem('cutd.quality')", "win.sessionStorage.getItem('cutd.quality')")).length > 0, 'không đụng sessionStorage');
   assert.ok(clash !== overlay && auditSource([['overlay.js', clash], ['game-bridge.js', base], ['logic.js', logic]]).some(e => /observe trùng tên/.test(e)), 'hàm cục bộ trùng tên hàm import (gọi nhầm hàm) phải bị chặn');
   assert.ok(auditSource([['overlay.js', overlay.replace("right: ['KeyD', 'd']", "right: ['Enter', 'Enter']")], ['game-bridge.js', base], ['logic.js', logic]]).length > 0);
 });

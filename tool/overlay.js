@@ -7,6 +7,7 @@ import { findGame, findEntity, selectEntity, catchWild, evolveCreature, tradePet
 import { realm, gameDoc } from './realm.js';
 import { analyzeCatalog, overlayFields, powerTier } from './analyze.js';
 import { TICKS_PER_SECOND, AOE_TARGETS } from './skillvalue.js';
+import { FPS_CAPS, capFrames, readLite, writeLite } from './lite.js';
 
 const DATA_URL = __CUTD_DATA_URL__;
 const VERSION = '__CUTD_VERSION__';
@@ -134,6 +135,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .dbar{position:relative;height:6px;margin-top:3px;border-radius:3px;background:#0b1526;overflow:hidden}
 .dbar i{position:absolute;left:0;top:0;bottom:0;border-radius:3px}.dbar .calc{background:#2b4a6e}.dbar .real{background:#ffde8f;top:1px;bottom:1px}
 .dval{text-align:right;line-height:1.15;min-width:54px}.dval b{display:block;font-size:12px;font-weight:800;color:#ffde8f}.dval small{font-size:10px;color:#6f8fb8;white-space:nowrap}
+.hint{padding:2px 10px 6px;color:#6f8fb8;font-size:11px;line-height:1.45}.hint.now{color:#dbe8f7;font-size:11.5px}.hint b{font-size:11.5px;font-weight:800;color:#ffde8f}
 .tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;padding:6px 10px}
 .tcard{display:flex;flex-direction:column;background:#132238;border:1px solid #22375a;border-radius:10px;overflow:hidden}
 .tcard.is-ok{border-color:#2f5c40}.tcard.wish{border-color:#b69c62}
@@ -901,6 +903,40 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     ];
   }
 
+  let fpsCap = 0, rafSaved = {};
+  function setCap(fps) {
+    if (rafSaved.win && rafSaved.win !== realm.win) { capFrames(rafSaved.win, 0, rafSaved); rafSaved = {}; }
+    fpsCap = fps;
+    capFrames(realm.win, fps, rafSaved);
+  }
+  function liteClick(e, on) {
+    if (!realClick(e)) return;
+    toast = !writeLite(realm.win, on) ? 'Trình duyệt chặn ghi cài đặt của game.'
+      : on ? 'Đã lưu đồ hoạ nhẹ vào cài đặt của game — nhấn F5 để áp dụng (trận tự vào lại), rồi bấm lại bookmark.'
+      : 'Đã trả đồ hoạ về mặc định — nhấn F5 để áp dụng.';
+    dirty = true; render(true);
+  }
+  const QUALITY = { auto: 'Tự động', low: 'Thấp', medium: 'Vừa', high: 'Cao' };
+  function viewLite() {
+    const cur = readLite(realm.win);
+    return [
+      h('div', { class: 'sect', style: '--c:#9fd6a8' }, h('i'), 'KHUNG HÌNH', h('span', { class: 'n', text: 'áp dụng ngay' })),
+      h('div', { class: 'bar-row' }, FPS_CAPS.map(fps => h('button', {
+        class: `chip sm ${fpsCap === fps ? 'on' : ''}`, tabindex: '-1', text: fps ? `${fps} FPS` : 'Không giới hạn',
+        onClick: e => { if (!realClick(e)) return; setCap(fps); dirty = true; render(true); },
+      }))),
+      h('p', { class: 'hint', text: 'Giới hạn số khung hình game vẽ mỗi giây. 20–30 vẫn đủ mượt cho game thủ thành; càng thấp máy càng mát. Tắt tool là bỏ giới hạn.' }),
+      h('div', { class: 'sect', style: '--c:#ffde8f' }, h('i'), 'ĐỒ HOẠ CỦA GAME', h('span', { class: 'n', text: 'nhấn F5 để áp dụng' })),
+      cur ? h('p', { class: 'hint now' }, h('b', { text: 'Đang dùng: ' }),
+        `${QUALITY[cur.quality] ?? cur.quality} · ${cur.fps} FPS · VFX ${cur.vfx ? 'tối ưu' : 'đủ'} · trang trí ${cur.greenery ? 'bật' : 'tắt'} · quầng sáng ${cur.bloom ? 'bật' : 'tắt'}`)
+        : empty('Trình duyệt chặn đọc cài đặt của game.'),
+      h('div', { class: 'bar-row' },
+        h('button', { class: 'chip sm on', tabindex: '-1', text: 'Bật đồ hoạ nhẹ', onClick: e => liteClick(e, true) }),
+        h('button', { class: 'chip sm', tabindex: '-1', text: 'Khôi phục', onClick: e => liteClick(e, false) })),
+      h('p', { class: 'hint', text: 'Nhẹ = chất lượng Thấp (vẽ 0,75× độ phân giải, tắt bóng và khử răng cưa) · 30 FPS · tối ưu VFX · tắt trang trí sân · tắt quầng sáng. Ghi vào đúng cài đặt của game (như chỉnh trong menu Đồ họa), game tự nhớ cho các lần sau.' }),
+    ];
+  }
+
   function viewWave() {
     const groups = nextWaveForBase(state);
     const mine = myUnits(state);
@@ -945,7 +981,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   document.documentElement.append(host);
 
   let drag = null;
-  const TABS = [['trade', 'Trade'], ['wild', 'Wild'], ['team', 'Đội'], ['dps', 'DPS'], ['wave', 'Đợt'], ['players', 'Phòng']];
+  const TABS = [['trade', 'Trade'], ['wild', 'Wild'], ['team', 'Đội'], ['dps', 'DPS'], ['wave', 'Đợt'], ['players', 'Phòng'], ['lite', '⚡']];
   let layout = 'v';
   function setLayout(next) {
     layout = next;
@@ -994,8 +1030,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       t, count[k] ? h('small', { text: ` ${count[k]}` }) : null)));
     let content;
     try {
-      content = status ? empty(status) : ({
-        trade: viewTrade, wild: viewWild, team: viewTeam, dps: viewDps, wave: viewWave, players: viewPlayers,
+      content = status && tab !== 'lite' ? empty(status) : ({
+        trade: viewTrade, wild: viewWild, team: viewTeam, dps: viewDps, wave: viewWave, players: viewPlayers, lite: viewLite,
       })[tab]();
     } catch (err) {
       content = h('p', { class: 'empty bad', text: `Lỗi hiển thị: ${err?.message ?? err}` });
@@ -1041,6 +1077,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     socket = null;
     endPan();
     realm.win = win;
+    if (fpsCap) setCap(fpsCap);
     forgetWebCapture();
     armWebCapture(win);
     patch();
@@ -1085,6 +1122,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   function destroy() {
     dead = true;
     const quiet = fn => { try { fn(); } catch { } };
+    quiet(() => { if (rafSaved.win) capFrames(rafSaved.win, 0, rafSaved); });
     quiet(unpatch);
     socket?.removeEventListener('message', onMessage);
     socket?.removeEventListener('close', onClose);

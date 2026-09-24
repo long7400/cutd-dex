@@ -11,6 +11,9 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const BRIDGE = 'game-bridge.js';
 const WEB = 'web-input.js';
 const CAM_FILE = 'overlay.js';
+const LITE_FILE = 'lite.js';
+const LITE_KEYS = new Set(['cutd.quality', 'cutd.frame-rate', 'cutd.vfx-optimization', 'cutd.arena-greenery', 'cutd.bloom']);
+const STORE_FNS = new Set(['getItem', 'setItem', 'removeItem']);
 const CAM_CODES = ['KeyW', 'KeyA', 'KeyS', 'KeyD'];
 const PRIMARY_SELECTOR = 'button.authored-node[data-node="Primary"]';
 const GAME_OBJECTS = new Set(['session', 'interaction', 'store', 'cc']);
@@ -80,7 +83,8 @@ export function auditSource(files) {
       MemberExpression(n, _s, anc) {
         const name = propName(n);
         const parent = anc[anc.length - 2];
- if (BANNED_IDENTIFIERS.has(name) && (!WINDOW_ALIASES.has(name) || GLOBALISH.test(src(code, n.object)))) err(file, n, `cấm dùng .${name}`);
+ const liteStore = file === LITE_FILE && name === 'localStorage' && !n.computed && src(code, n.object) === 'win' && parent?.type === 'MemberExpression' && parent.object === n && STORE_FNS.has(propName(parent));
+ if (BANNED_IDENTIFIERS.has(name) && !liteStore && (!WINDOW_ALIASES.has(name) || GLOBALISH.test(src(code, n.object)))) err(file, n, `cấm dùng .${name}`);
         if (name === 'fetch') counts.fetch++;
         if (n.computed && typeof name === 'string' && GLOBALISH.test(src(code, n.object))) err(file, n, `cấm truy cập ${src(code, n.object)}[…]`);
         if (n.computed && n.property.type !== 'Literal' && GLOBALISH.test(src(code, n.object)) && !(file === CAM_FILE && src(code, n) === 'window[NS]')) err(file, n, `cấm truy cập ${src(code, n.object)}[khoá biến]`);
@@ -175,6 +179,13 @@ export function auditSource(files) {
       ImportExpression(n) { err(file, n, 'cấm import() động'); },
       CallExpression(n, _s, anc) {
         const timer = n.callee.type === 'MemberExpression' ? propName(n.callee) : n.callee.name;
+        if (n.callee.type === 'MemberExpression' && STORE_FNS.has(propName(n.callee))) {
+          const [k, v] = n.arguments;
+          const storeOk = file === LITE_FILE && src(code, n.callee.object) === 'win.localStorage' && k?.type === 'Literal' && LITE_KEYS.has(k.value)
+            && (propName(n.callee) === 'getItem' || propName(n.callee) === 'removeItem' || (propName(n.callee) === 'setItem' && v?.type === 'Literal' && typeof v.value === 'string'));
+          if (!storeOk) err(file, n, `.${propName(n.callee)}() chỉ được dùng trong ${LITE_FILE} cho khoá đồ hoạ của game (${[...LITE_KEYS].join(', ')})`);
+        }
+        if (n.callee.type === 'MemberExpression' && ['clear', 'key'].includes(propName(n.callee)) && /Storage$/i.test(src(code, n.callee.object))) err(file, n, `cấm .${propName(n.callee)}() trên Storage`);
         if (['setTimeout', 'setInterval'].includes(timer)) {
           const a = n.arguments[0];
           if (!(['ArrowFunctionExpression', 'FunctionExpression'].includes(a?.type) || (a?.type === 'Identifier' && TIMER_FNS.has(a.name)))) err(file, n, `${timer} chỉ nhận hàm viết thẳng`);
@@ -245,11 +256,14 @@ export async function buildTool() {
   const version = `${pkg.version}-${createHash('sha256').update(code).digest('hex').slice(0, 7)}`;
   code = code.replace(/__CUTD_VERSION__/g, version);
   const banned = [/\beval\s*\(/, /new Function\s*\(/, /\.innerHTML\b/, /\.outerHTML\b/, /insertAdjacentHTML/, /document\.write/,
-    /\.send\s*\(/, /sendBeacon/, /createElement\(\s*["'`]script/i, /importScripts/, /\bimport\s*\(/, /localStorage/, /document\.cookie/,
+    /\.send\s*\(/, /sendBeacon/, /createElement\(\s*["'`]script/i, /importScripts/, /\bimport\s*\(/, /document\.cookie/,
     /XMLHttpRequest/, /\.dispatch\s*\(/, /\bnew Image\b/, /\.open\s*\(/, /setTimeout\(\s*["'`]/, /getPrototypeOf/, /sellCreature|dismissWild|sendChat/,
     /sessionStorage|indexedDB|cookieStore|WebTransport|fetchLater|DOMParser|createContextualFragment|setHTMLUnsafe|parseHTMLUnsafe|srcdoc|WebAssembly/];
   const hit = banned.filter(re => re.test(code));
   if (hit.length) throw new Error(`Bookmarklet chứa API bị cấm: ${hit.join(', ')}`);
+  const storeUses = code.match(/localStorage/g)?.length ?? 0;
+  const liteUses = [...code.matchAll(/\.localStorage\.(getItem|removeItem|setItem)\("([a-z.-]+)"(?:,"[a-z0-9]+")?\)/g)].filter(m => LITE_KEYS.has(m[2])).length;
+  if (storeUses !== liteUses) throw new Error('Bookmarklet chỉ được đụng localStorage cho khoá đồ hoạ của game');
   if (!code.includes(JSON.stringify(url))) throw new Error('Địa chỉ dữ liệu chưa được khoá vào code');
   if (/%[0-9a-f]{2}/i.test(code)) throw new Error('Code chứa chuỗi %XX — bộ "Kiểm tra bookmark" trên wiki sẽ so sai');
   const commit = /^[0-9a-f]{40}$/.test(process.env.CUTD_COMMIT ?? '') ? process.env.CUTD_COMMIT : null;

@@ -231,7 +231,7 @@ test('bookmarklet: bấm ở sảnh → bỏ qua socket sảnh, bám đúng sock
   const root = log.roots[0];
   const btn = title => [...root.querySelectorAll('button')].find(b => b.title === title || b.textContent.startsWith(title));
   assert.ok(!btn('Đo tải'), 'bỏ tab Đo tải');
-  assert.deepEqual([...root.querySelectorAll('.tab')].map(b => b.textContent.replace(/\s*\d+$/, '')), ['Trade', 'Wild', 'Đội', 'DPS', 'Đợt', 'Phòng']);
+  assert.deepEqual([...root.querySelectorAll('.tab')].map(b => b.textContent.replace(/\s*\d+$/, '')), ['Trade', 'Wild', 'Đội', 'DPS', 'Đợt', 'Phòng', '⚡']);
 
   btn('Chuyển sang ngang').click();
   assert.ok(root.querySelector('.panel').classList.contains('h'));
@@ -821,6 +821,45 @@ test('bookmarklet: chạy lâu (hàng trăm đợt) không phình bộ nhớ, kh
   assert.equal(log.sent, 0);
   w.__cutdHelper.destroy();
   assert.equal(live, 0, 'tắt tool → gỡ hết listener');
+});
+
+test('bookmarklet: tab ⚡ — giới hạn khung hình áp dụng ngay (tắt tool là bỏ), đồ hoạ nhẹ chỉ ghi 5 khoá cài đặt của game, chỉ khi người bấm', async t => {
+  const { w, log, code, FakeWS } = setupDom();
+  t.after(() => w.close());
+  const nativeRaf = w.requestAnimationFrame;
+  w.localStorage.setItem('cutd.language', 'vi');
+  w.eval(code);
+  const ws = new FakeWS();
+  ws.addEventListener('message', e => e.data);
+  ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(summary) }));
+  await tick(1200);
+  const root = log.roots[0];
+  [...root.querySelectorAll('.tab')].find(b => b.textContent === '⚡').click();
+  const chip = text => [...root.querySelectorAll('button')].find(b => b.textContent === text);
+  assert.match(root.querySelector('.panel').textContent, /Đang dùng.*Tự động · 60 FPS/);
+  chip('Bật đồ hoạ nhẹ').click();
+  assert.equal(w.localStorage.length, 1, 'click do script → không ghi');
+  trustedClick(w, chip('Bật đồ hoạ nhẹ'));
+  const store = () => Object.fromEntries(Array.from({ length: w.localStorage.length }, (_, i) => [w.localStorage.key(i), w.localStorage.getItem(w.localStorage.key(i))]));
+  assert.deepEqual(store(), { 'cutd.language': 'vi', 'cutd.quality': 'low', 'cutd.frame-rate': '30', 'cutd.vfx-optimization': 'true', 'cutd.arena-greenery': 'false', 'cutd.bloom': 'false' });
+  assert.match(root.querySelector('.toast').textContent, /F5/);
+  assert.match(root.querySelector('.panel').textContent, /Đang dùng.*Thấp · 30 FPS · VFX tối ưu · trang trí tắt · quầng sáng tắt/);
+  trustedClick(w, chip('Khôi phục'));
+  assert.deepEqual(store(), { 'cutd.language': 'vi', 'cutd.quality': 'auto', 'cutd.frame-rate': '60', 'cutd.vfx-optimization': 'false', 'cutd.arena-greenery': 'true' });
+  chip('20 FPS').click();
+  assert.equal(w.requestAnimationFrame, nativeRaf, 'click do script → không đổi');
+  trustedClick(w, chip('20 FPS'));
+  assert.notEqual(w.requestAnimationFrame, nativeRaf);
+  const stamps = [];
+  await new Promise(done => { const step = ts => { stamps.push(ts); if (stamps.length < 4) w.requestAnimationFrame(step); else done(); }; w.requestAnimationFrame(step); });
+  const gaps = stamps.slice(1).map((x, i) => x - stamps[i]);
+  assert.ok(gaps.every(g => g >= 40), `20 FPS → mỗi khung cách ~50ms (${gaps.map(Math.round)})`);
+  trustedClick(w, chip('Không giới hạn'));
+  assert.equal(w.requestAnimationFrame, nativeRaf, 'bỏ giới hạn → trả lại hàm gốc');
+  trustedClick(w, chip('15 FPS'));
+  w.__cutdHelper.destroy();
+  assert.equal(w.requestAnimationFrame, nativeRaf, 'tắt tool → bỏ giới hạn');
+  assert.equal(log.sent, 0);
 });
 
 test('bookmarklet: bản web — tắt tool trước khi vào trận thì gỡ bẫy', t => {

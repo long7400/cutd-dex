@@ -35,7 +35,7 @@ export default {
         <ol class="steps">
           <li><b>Kéo</b> nút vàng lên thanh bookmark <span class="mono">Ctrl/⌘ + Shift + B để hiện thanh</span></li>
           <li><b>Vào trận</b> trên m.cutd.site hoặc cutd.site</li>
-          <li><b>Bấm</b> bookmark. Bấm lần nữa để ẩn</li>
+          <li><b>Bấm</b> bookmark. Bấm lần nữa để ẩn. Trên m.cutd.site nên bấm ở sảnh trước khi vào trận: bấm giữa trận tool phải mở lại trận trong khung, nặng máy hơn</li>
         </ol>
         <div class="alt">
           <div><b>Điện thoại</b><span>Chép link → tạo bookmark bất kỳ → dán vào ô URL, đặt tên CUTD Helper.</span><button type="button" class="h-btn" data-copy>${COPY}Chép link</button></div>
@@ -69,7 +69,7 @@ node scripts/build-tool.mjs --out</code></pre>
       <section class="safe">
         <h2>An <em>toàn</em></h2>
         <ul>
-          <li><b>Chỉ làm khi mày bấm.</b> 1 cú bấm = 1 lệnh của chính game (Bắt / Tiến hóa / Trade / Xếp đội). Không tự mua, không đọc cookie hay bộ nhớ trình duyệt.</li>
+          <li><b>Chỉ làm khi mày bấm.</b> 1 cú bấm = 1 lệnh của chính game (Bắt / Tiến hóa / Trade / Xếp đội). Không tự mua, không đọc cookie hay phiên đăng nhập. Bộ nhớ trình duyệt: chỉ đọc 5 cài đặt đồ hoạ của game ở tab ⚡ và chỉ ghi khi mày bấm "Bật đồ hoạ nhẹ" / "Khôi phục".</li>
           <li><b>Code nằm trọn trong bookmark.</b> Không nạp script từ đâu khác; file dữ liệu wiki chỉ được đọc như chữ.</li>
         </ul>
         <p class="mono hash">v${tool.version} · SHA-256 <span data-sha>${tool.sha256}</span>${tool.commit ? html` · build từ commit <a class="rootlink" href="${`${REPO}/tree/${tool.commit}/tool`}" target="_blank" rel="noopener noreferrer">${tool.commit.slice(0, 7)}</a>` : html` · <a class="rootlink" href="${SOURCE}" target="_blank" rel="noopener noreferrer">mã nguồn</a>`}</p>
