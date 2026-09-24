@@ -25,7 +25,9 @@ const CSS = `
 .tab small{color:#6f8fb8;font-size:10.5px}
 .tab:hover{color:#fff}.tab.on{color:#ffde8f;border-bottom-color:#ffde8f}.tab.on small{color:#ffde8f}
 .body{overflow:auto;padding:4px 0 6px}
-.bar-row{display:flex;align-items:center;gap:5px;padding:6px 10px 4px}
+.bar-row{display:flex;flex-wrap:wrap;align-items:center;gap:5px;padding:6px 10px 4px}
+.sep{width:1px;height:14px;background:#33496b;margin:0 2px}
+.chip{white-space:nowrap}
 .chip{all:unset;cursor:pointer;padding:2px 9px;border-radius:99px;border:1px solid #33496b;color:#8fb7e8;font-weight:600;font-size:11.5px}
 .chip.on{background:#ffde8f;color:#0b1526;border-color:transparent}
 .chip.sm{padding:1px 8px;font-size:11px}.chip:disabled{opacity:.35;cursor:default}
@@ -45,13 +47,11 @@ const CSS = `
 .sk img{width:26px;height:26px;border-radius:6px;border:1px solid #33496b}.skn b{color:#9fd6a8;font-size:12px}.skn small{color:#6f8fb8;font-size:10.5px}
 .skd{color:#c7d8ea;font-size:11px;line-height:1.35}.sk.self img{border-color:#ff9c9c}.sk.self .skn b,.sk.self .skd{color:#ff9c9c}
 .sk.off{opacity:.45}.sk.off img{filter:grayscale(1)}
-.info{all:unset;cursor:pointer;width:17px;height:17px;display:grid;place-items:center;border-radius:5px;border:1px solid #33496b;color:#8fb7e8;font:italic 700 11px/1 Georgia,serif;flex-shrink:0}
-.info:hover{color:#fff}.info.on{background:#ffde8f;color:#0b1526;border-color:transparent}
 .star{all:unset;cursor:pointer;width:16px;text-align:center;color:#4a6fa5;font-size:14px;line-height:1}.star:hover{color:#ffde8f}.star.on{color:#ffde8f}
 .kit .k-debuff{background:#2a2148;color:#cbb3ff}.kit .k-selfharm{background:#3d2226;color:#ff9c9c}
 .muted{margin-left:auto;color:#6f8fb8;font-size:11.5px}
 .row{display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:8px;padding:5px 10px}
-.row:hover,.trade:hover{background:#17263f}
+.row:hover{background:#17263f}
 .pt{width:32px;height:32px;border-radius:7px;background:#0b1526;border:1px solid #2a3d5c;object-fit:cover;flex-shrink:0}
 .mid{min-width:0}
 .nm{display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden}
@@ -64,11 +64,6 @@ const CSS = `
 .right{display:flex;gap:4px;align-items:center}
 .pill{padding:1px 7px;border-radius:6px;font-size:11.5px;font-weight:700;background:#1b2a44;color:#8fb7e8;white-space:nowrap}
 .pill.ok{background:#1d3a2a;color:#9fd6a8}.pill.bad{background:#3d2226;color:#ff9c9c}.pill.warn{background:#3a3016;color:#ffde8f}.pill.mute{color:#6f8fb8}
-.trade{display:grid;grid-template-columns:20px minmax(0,1fr) 10px minmax(0,1fr) auto;align-items:center;gap:6px;padding:6px 10px;border-left:3px solid transparent}
-.trade.is-ok{border-left-color:#5f9e6a}.trade.is-warn{border-left-color:#b69c62}
-.slot{color:#6f8fb8;font-size:11px;font-weight:700}
-.side{display:flex;align-items:center;gap:5px;min-width:0}.side .pt{width:28px;height:28px}.side .nm{flex:1}
-.arrow{color:#6f8fb8;text-align:center}
 .empty{padding:14px 12px;color:#6f8fb8}.bad{color:#ff9c9c}
 table{width:100%;border-collapse:collapse}th,td{text-align:right;padding:5px 10px;border-bottom:1px solid #1d2c47}
 th{color:#6f8fb8;font-weight:600;font-size:11px}td:first-child,th:first-child{text-align:left}
@@ -82,7 +77,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .panel.h .tabs{grid-column:1/-1;border-left:0;border-top:1px solid #243552}.panel.h .tab{flex:1 0 auto}}
 .panel.h .body{grid-column:1/-1;border-top:1px solid #243552}
 .panel.h .body{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));align-content:start;column-gap:4px}
-.panel.h .body>.bar-row,.panel.h .body>.empty,.panel.h .body>table,.panel.h .body>.verdict,.panel.h .body>.sec{grid-column:1/-1}
+.panel.h .body>.bar-row,.panel.h .body>.empty,.panel.h .body>table,.panel.h .body>.verdict,.panel.h .body>.sec,.panel.h .body>.sect,.panel.h .body>.grid,.panel.h .body>.tgrid,.panel.h .body>.toast{grid-column:1/-1}
 .panel.h .tab{flex:0 0 auto;padding:7px 14px}
 .verdict{margin:8px 10px;padding:8px 10px;border-radius:8px;background:#3a3016;color:#ffde8f;font-weight:600}
 .kv{display:flex;justify-content:space-between;gap:10px;padding:4px 10px;border-bottom:1px solid #1d2c47}
@@ -96,22 +91,54 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .tier{min-width:26px;text-align:center;padding:1px 6px;border-radius:6px;font-size:11.5px;font-weight:800;background:#1b2a44;color:#8fb7e8}
 .tier.t-sp{background:#ffde8f;color:#0b1526}.tier.t-s{background:#f0a35e;color:#0b1526}.tier.t-a{background:#1d3a2a;color:#9fd6a8}
 .tier.t-b{background:#1b2a44;color:#8fb7e8}.tier.t-c,.tier.t-x{background:transparent;color:#6f8fb8;border:1px solid #2a3d5c}
-.line2{display:flex;align-items:center;gap:6px;margin-top:3px;min-width:0;overflow:hidden}
-.line2 .kit{flex-wrap:wrap;flex:1 1 0;min-width:0;height:14px;overflow:hidden}
-.ptw{width:32px;height:32px}.ptw.down img{filter:grayscale(1) brightness(.6)}
-.hpw{display:inline-flex;align-items:center;gap:4px;flex-shrink:0;font-size:10.5px;font-weight:700;color:#9fd6a8}
-.hpw .hpb{width:40px;height:5px;border-radius:3px;background:#0b1526;overflow:hidden;box-shadow:inset 0 0 0 1px #243552}.hpw .hpb i{display:block;height:100%;background:#9fd6a8}
-.hpw.half{color:#ffde8f}.hpw.half .hpb i{background:#ffde8f}.hpw.low{color:#ff9c9c}.hpw.low .hpb i{background:#ff9c9c}.hpw.down{color:#6f8fb8}
-.strip{display:inline-flex;gap:2px;flex-shrink:0}.strip i{width:9px;height:9px;border-radius:2px;background:#4a6fa5}
+.strip{display:flex;gap:1px;height:4px;margin:3px 5px 0}.strip i{flex:1;height:4px;border-radius:1px;background:#4a6fa5}
 .strip i.t-sp{background:#ffde8f}.strip i.t-s{background:#f0a35e}.strip i.t-a{background:#5f9e6a}.strip i.t-c{background:transparent;box-shadow:inset 0 0 0 1px #3a5480}
-.rare{color:#ff9c9c;font-size:11px;font-weight:700}
+.top .gold{color:#ffde8f;font-weight:800;font-size:12px;background:#3a3016;padding:1px 8px;border-radius:99px;white-space:nowrap}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:5px;padding:4px 10px 6px}
+.tile{position:relative;display:flex;flex-direction:column;background:#132238;border:1px solid #22375a;border-top:2px solid var(--ro,#33496b);border-radius:9px;overflow:hidden}
+.tile:hover{background:#182c49;border-color:#3a5480;border-top-color:var(--ro,#33496b)}
+.tile.wish{border-color:#b69c62;border-top-color:var(--ro,#33496b);box-shadow:0 0 0 1px #b69c6255,0 0 10px #ffde8f22}
+.tile.sel{outline:2px solid #ffde8f;outline-offset:-1px}
+.pic{position:relative;height:54px;display:grid;place-items:center;background:radial-gradient(circle at 50% 64%,var(--el,#6488b86b) 0,transparent 66%)}
+.pic .pt{width:46px;height:46px;border:0;border-radius:0;background:transparent;object-fit:contain;filter:drop-shadow(0 2px 2px #000a)}
+.tile.down .pic .pt{filter:grayscale(1) brightness(.5)}
+.pic .tl{position:absolute;top:3px;left:3px;display:flex;gap:2px;align-items:center}
+.pic .tier{min-width:0;margin:0;padding:0 4px;font-size:10px;line-height:14px;border-radius:4px}
+.pic .harm{color:#ff9c9c;font-size:11px;font-weight:900;line-height:14px;text-shadow:0 1px 2px #000}
+.pic .mv{background:#f0a35e;color:#0b1526;font-size:10px;font-weight:900;line-height:14px;padding:0 3px;border-radius:4px}
+.pic .star{position:absolute;top:1px;right:3px}
+.pic .lv{position:absolute;bottom:4px;left:3px;font-size:9.5px;font-weight:800;line-height:13px;background:#0b1526d9;color:#e6f2ff;padding:0 4px;border-radius:4px}
+.pic .lv.rare{color:#ff9c9c}
+.pic .cnt{position:absolute;bottom:4px;right:3px;font-size:10px;font-weight:900;line-height:13px;background:#ffde8f;color:#0b1526;padding:0 4px;border-radius:4px}
+.hps{position:absolute;left:4px;right:4px;bottom:0;display:flex;gap:1px;height:3px}
+.hps i{flex:1;border-radius:2px;background:linear-gradient(90deg,#9fd6a8 var(--p,100%),#0b1526 var(--p,100%))}
+.hps i.mid{background:linear-gradient(90deg,#ffde8f var(--p,100%),#0b1526 var(--p,100%))}.hps i.low{background:linear-gradient(90deg,#ff9c9c var(--p,100%),#0b1526 var(--p,100%))}
+.hps i.down{background:#0b1526;box-shadow:inset 0 0 0 1px #5c2f35}
+.tn{font-size:10px;font-weight:700;letter-spacing:-.35px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:2px 2px 3px;color:#dbe8f7}
+.tn .trf{color:#ffde8f;font-size:10px;font-weight:900;margin-right:2px}
+.acts{display:flex;border-top:1px solid #22375a;margin-top:auto}.acts>*+*{border-left:1px solid #22375a}
+.acts .act,.acts .b{all:unset;box-sizing:border-box;flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:1px;height:21px;padding:0 2px;font:800 11px/1 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;white-space:nowrap;overflow:hidden;background:#1b2a44;color:#8fb7e8}
+.acts .act{cursor:pointer}.acts .act:hover{filter:brightness(1.25)}.acts .act:disabled{opacity:.5;cursor:default}
+.acts .act.ok{background:#1d3a2a;color:#9fd6a8}.acts .act.bad,.acts .b.bad{background:#2c1d24;color:#ff9c9c}.acts .act.tr{background:#3a3016;color:#ffde8f}
+.acts .b.warn{background:#2b2616;color:#e8cf8a}.acts .b{font-size:10px}.acts .b.max{background:transparent;color:#4a6fa5}
+.acts.split .act{font-size:10px;letter-spacing:-.3px}.acts .act .pt{width:13px;height:13px;border:0;border-radius:0;background:transparent}
+.sect{display:flex;align-items:center;gap:6px;padding:8px 10px 1px;font-size:10.5px;font-weight:800;letter-spacing:.6px;color:#c7d8ea}
+.sect i{width:3px;height:12px;border-radius:2px;background:var(--c,#33496b)}
+.sect .n{margin-left:auto;font-size:10.5px;font-weight:700;color:#6f8fb8}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;padding:6px 10px}
+.tcard{display:flex;flex-direction:column;background:#132238;border:1px solid #22375a;border-radius:10px;overflow:hidden}
+.tcard.is-ok{border-color:#2f5c40}.tcard.wish{border-color:#b69c62}
+.th{padding:3px 8px 0;font-size:10px;font-weight:800;letter-spacing:.5px;color:#6f8fb8}
+.pair{display:grid;grid-template-columns:1fr 14px 1fr;align-items:center;padding:0 4px}
+.pair .ar{color:#ffde8f;text-align:center;font-weight:900}
+.pair .pic{height:50px;border-radius:8px}.pair .pic .pt{width:44px;height:44px}
+.nm2{display:grid;grid-template-columns:1fr 1fr;gap:14px;text-align:center;padding:2px 4px 4px}
+.nm2 span{font-size:10.5px;font-weight:700;color:#dbe8f7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nm2 .get{color:#ffde8f}
 .tier.sm{min-width:0;padding:0 4px;font-size:10px;line-height:14px;margin-left:4px;vertical-align:1px}
 .kit{display:inline-flex;gap:3px;flex-shrink:0}.kit b{font-size:9.5px;font-weight:800;letter-spacing:.2px;padding:0 4px;border-radius:4px;line-height:14px;background:#1b2a44;color:#8fb7e8}
 .kit .k-atk{background:#3d2226;color:#ff9c9c}.kit .k-tank{background:#1b2d4a;color:#9fe3ff}.kit .k-buff{background:#3a2f10;color:#ffde8f}
 .kit .k-cc{background:#16324a;color:#9fe3ff}.kit .k-heal{background:#1d3a2a;color:#9fd6a8}.kit .k-evade{background:#2a2148;color:#cbb3ff}
 .kit .k-taunt,.kit .k-boss{background:#3d2226;color:#ffb4aa}.kit .k-aoe{background:#3a3016;color:#f0a35e}
-.legend{display:flex;flex-wrap:nowrap;white-space:nowrap;align-items:center;gap:3px 7px;padding:2px 10px 5px;font-size:10.5px;color:#6f8fb8}
-.legend span{display:inline-flex;align-items:center;gap:3px}.legend .strip i{width:8px;height:8px}
 .toast{margin:6px 10px;padding:6px 10px;border-radius:8px;background:#3d2226;color:#ff9c9c;font-size:12px}
 [hidden]{display:none!important}
 `;
@@ -303,11 +330,9 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   };
   const row = (id, sub, right, { cls = '', tip, portrait } = {}) => h('div', { class: `row ${cls}`, title: tip },
     portrait ?? img(id), h('div', { class: 'mid' }, title(id), sub ? h('div', { class: 'sub' }, sub) : null), h('div', { class: 'right' }, right));
-  const unitPortrait = u => h('div', { class: `ptw${u.active ? '' : ' down'}` }, img(u.stage));
-  const hpBar = u => {
-    const pct = u.maxHp ? Math.max(0, Math.min(100, Math.round((u.hp / u.maxHp) * 100))) : 100;
-    return h('span', { class: `hpw${!u.active ? ' down' : pct < 35 ? ' low' : pct < 70 ? ' half' : ''}`, title: u.active ? `${fmt(u.hp)} / ${fmt(u.maxHp)} HP` : 'Gục — trở lại đợt sau' },
-      h('span', { class: 'hpb' }, h('i', { style: `width:${u.active ? pct : 0}%` })), u.active ? short(u.hp) : 'gục');
+  const tint = el => {
+    const c = db?.el[el]?.c;
+    return Array.isArray(c) ? `rgb(${[0, 1, 2].map(i => Math.max(0, Math.min(255, c[i] | 0))).join(' ')} / .42)` : '#6488b86b';
   };
   const statsTip = id => {
     const u = U(id) ?? {};
@@ -347,9 +372,15 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     toast = found ? '' : FAIL[g ? 'entity' : isWeb() ? 'hook' : 'game'];
     dirty = true; render(true);
   }
-  const pickable = (el, key) => {
+  const openable = (el, key, stage, idOf = () => null) => {
     el.classList.add('pick');
-    el.addEventListener('click', e => { if (!e.target.closest('a,.act,.star,.info')) selectInGame(typeof key === 'function' ? key() : key, e); });
+    el.addEventListener('click', e => {
+      if (e.target.closest('.act,.star')) return;
+      const target = typeof key === 'function' ? key() : key;
+      info = { stage, id: idOf(target) };
+      if (realClick(e)) selectInGame(target, e);
+      else { dirty = true; render(true); }
+    });
     return el;
   };
 
@@ -399,12 +430,12 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const blocked = blockReason();
     sig.push(`${kind}:${key}:${arg ?? ''}`);
     return h('button', {
-      class: `act ${cls}`, text, tabindex: '-1', disabled: !!blocked, title: blocked ? FAIL[blocked] : tip,
+      class: `act do-${kind} ${cls}`, tabindex: '-1', disabled: !!blocked, title: blocked ? FAIL[blocked] : tip,
       onClick: e => runAction(e, kind, key, arg, expect),
-    });
+    }, text);
   };
 
-  const ROWS = [['TANK', 'k-tank', 'Hàng đầu: máu / giáp dày'], ['CẬN', 'k-atk', 'Hàng 2: đấu sĩ cận chiến / phép tầm ngắn'], ['XA', 'k-cc', 'Hàng 3: sát thương tay dài (tầm > 300)'], ['HEAL', 'k-heal', 'Hàng cuối: hồi máu / hào quang — đứng sau cùng cho an toàn']];
+  const ROWS = [['TANK', '#7fd4ff', 'Hàng đầu: máu / giáp dày'], ['CẬN', '#ff8f8f', 'Hàng 2: đấu sĩ cận chiến / phép tầm ngắn'], ['XA', '#9fd6a8', 'Hàng 3: sát thương tay dài (tầm > 300)'], ['HỖ TRỢ', '#ffd36b', 'Hàng cuối: hồi máu / hào quang — đứng sau cùng cho an toàn']];
   const ACK_WAIT = 1500;
   const wait = ms => new Promise(r => setTimeout(r, ms));
   async function waitAck(seq) {
@@ -471,26 +502,24 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       : `Đã dời ${nameOf(stage)} → hàng ${ROWS[m.row][0]}.${plan.moves.length > 1 ? ` Còn ${plan.moves.length - 1} con lệch — bấm tiếp.` : ' Đội đã đúng hàng.'}`;
     dirty = true; render(true);
   }
-  function arrangeBar() {
-    const mine = myUnits(state).filter(u => u.active);
-    const count = [0, 0, 0, 0];
-    for (const u of mine) count[formationRow(U(u.stage))]++;
-    const blocked = blockReason() ?? (state.summary?.phase !== 'planning' ? 'wave' : null);
-    const g = blocked ? null : findGame();
-    const plan = g ? arrangePlan(g) : null;
+  function teamBar(mine, plan, blocked) {
     const next = plan?.moves[0];
     const held = plan ? [...plan.status.values()].filter(v => v === 'new').length : 0;
-    const nextStage = next ? myUnits(state).find(u => `u${u.id}` === next.key)?.stage : null;
+    const nextStage = next ? mine.find(u => `u${u.id}` === next.key)?.stage : null;
     return h('div', { class: 'bar-row' },
       h('button', {
-        class: `chip ${next ? 'on' : ''}`, tabindex: '-1', disabled: arranging || !!blocked || !mine.length || (plan && !next),
-        text: arranging ? 'Đang dời…' : next ? `Xếp đội · ${plan.moves.length} con lệch` : plan ? 'Đội đã đúng hàng' : 'Xếp đội',
-        title: blocked ? FAIL[blocked] : next ? `Bấm để dời ${nameOf(nextStage)} sang hàng ${ROWS[next.row][0]}. Mỗi lần bấm dời 1 con; con đã đứng đúng hàng không bị đụng tới.`
-          : 'Hàng từ phía quái vào: TANK → CẬN → XA → HEAL/BUFF sau cùng.',
+        class: `chip sm ${next ? 'on' : ''}`, tabindex: '-1', disabled: arranging || !!blocked || !mine.some(u => u.active) || (plan && !next),
+        text: arranging ? 'Đang dời…' : next ? `Xếp đội ↕${plan.moves.length}` : plan ? '✓ Đúng hàng' : 'Xếp đội',
+        title: blocked ? FAIL[blocked] : next ? `Bấm để dời ${nameOf(nextStage)} sang hàng ${ROWS[next.row][0]}. Mỗi lần bấm dời 1 con (ô có dấu ↕); con đã đứng đúng hàng không bị đụng tới.`
+          : 'Hàng từ phía quái vào: TANK → CẬN → XA → HỖ TRỢ sau cùng.',
         onClick: arrange,
       }),
-      h('span', { class: 'kit' }, ROWS.map(([t, c, tip], i) => count[i] ? h('b', { class: c, text: `${t} ${count[i]}`, title: tip }) : null)),
-      held ? h('span', { class: 'muted', text: `${held} con mới — xếp từ round sau`, title: 'Pet vừa mua trong round này được để yên; sang round sau mới tính vào Xếp đội (trừ khi nó tiến hóa đổi hàng).' }) : null);
+      held ? h('span', { class: 'pill mute', text: `+${held} mới`, title: 'Pet vừa mua trong round này được để yên; sang round sau mới tính vào Xếp đội (trừ khi nó tiến hóa đổi hàng).' }) : null,
+      h('span', { class: 'sep' }),
+      Object.entries(TEAM_FILTER).map(([key, [text, test]]) => h('button', {
+        class: `chip sm ${teamFilter === key ? 'on' : ''}`, tabindex: '-1', disabled: key !== 'all' && !mine.some(test), text,
+        title: key === 'all' ? null : KIT[key]?.[1], onClick: () => { teamFilter = key; dirty = true; render(true); },
+      })));
   }
 
   const CAM_KEYS = { up: ['KeyW', 'w'], down: ['KeyS', 's'], left: ['KeyA', 'a'], right: ['KeyD', 'd'] };
@@ -558,27 +587,9 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     web.clickPrimary();
   };
 
-  function viewTrade() {
-    const list = tradeOptions(state, db);
-    if (!list.length) return empty('Chưa có trade offer (trade tắt hoặc đang chờ dữ liệu).');
-    return list.map(o => {
-      const status = o.ready.length ? act('Trade', 'trade', `u${o.ready[0].id}`, o.slot, { stage: o.give, get: o.get }, 'ok', `Đổi ${nameOf(o.give)} lấy ${nameOf(o.get)}`)
-        : o.evolve ? pill(`+${short(o.evolve.cost)}g`, state.gold >= o.evolve.cost ? 'warn' : 'bad',
-          `Nâng ${nameOf(o.evolve.unit.stage)} → ${o.evolve.steps.map(nameOf).join(' → ')}: ${fmt(o.evolve.cost)} vàng`)
-        : pill('Chưa có', 'mute');
-      const side = id => h('div', { class: 'side', title: statsTip(id) }, img(id, 28),
-        h('div', { class: 'mid' }, title(id, { noLevel: true }), h('div', { class: 'sub' }, U(id)?.l ? `Lv${U(id).l}` : '', tierPill(id, true))));
-      return pickable(h('div', { class: `trade ${o.ready.length ? 'is-ok' : o.evolve ? 'is-warn' : ''}`, title: 'Bấm để chọn slot này trong game' },
-        h('span', { class: 'slot', text: `S${o.slot}` }), side(o.give), h('span', { class: 'arrow', text: '→' }), side(o.get), h('span', { class: 'right' }, status, infoBtn(o.get))), `t${o.slot}`);
-    });
-  }
-
   const TIER_CLASS = { 'S+': 't-sp', S: 't-s', A: 't-a', B: 't-b', C: 't-c' };
   const powerOf = stage => U(stage)?.pw ?? -1;
   const levelOf = id => (U(id)?.l ? `Lv${U(id).l}` : nameOf(id));
-  const legend = () => h('div', { class: 'legend', title: 'Huy hiệu cạnh nút = hạng HIỆN TẠI (so với các con cùng tầm cấp). Dải ô màu = hạng từng cấp tiến hóa từ bây giờ tới đỉnh — ô cuối là dạng mạnh nhất.' },
-    h('span', { text: 'Hạng từng cấp →' }),
-    ['S+', 'S', 'A', 'B', 'C'].map(t => h('span', null, h('span', { class: 'strip' }, h('i', { class: TIER_CLASS[t] })), t)));
   const KIT = {
     atk: ['ATK', 'Gây sát thương là chính'], tank: ['TANK', 'Máu / giáp dày, chịu đòn'], buff: ['BUFF', 'Hào quang tăng sát thương / tốc đánh cả đội'],
     debuff: ['DEBUFF', 'Làm yếu quái: chậm, giảm tốc đánh, phá giáp'], selfharm: ['⚠ TỰ HẠI', 'Chí mạng / choáng dạng self dội vào chính con pet (issue #1)'],
@@ -591,11 +602,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const wished = stage => wish.has(famOf(stage));
   const byWish = (a, b) => Number(wished(b.stage)) - Number(wished(a.stage));
   let info = null;
-  const infoBtn = (stage, id = null) => {
-    const on = !!info && (id != null ? info.id === id : info.stage === stage && info.id == null);
-    return h('button', { class: `info ${on ? 'on' : ''}`, text: 'i', tabindex: '-1', title: 'Xem pet',
-      onClick: e => { e.stopPropagation(); info = on ? null : { stage, id }; dirty = true; render(true); } });
-  };
+  const isOpen = (stage, ids) => !!info && (ids && info.id != null ? ids.includes(info.id) : info.id == null && info.stage === stage);
   const starBtn = stage => {
     const on = wished(stage);
     return h('button', { class: `star ${on ? 'on' : ''}`, text: on ? '★' : '☆', tabindex: '-1',
@@ -615,8 +622,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   };
   function strip(stage) {
     const steps = [stage, ...(U(stage)?.pg ?? []).slice(1)].filter(id => U(id)?.st);
-    if (steps.length < 2) return null;
-    return h('span', { class: 'strip', title: `Hạng từng cấp (so với con cùng tầm cấp):\n${steps.map(id => `${levelOf(id)} ${U(id).st}`).join(' › ')}` },
+    if (!steps.length) return h('div', { class: 'strip' });
+    return h('div', { class: 'strip', title: `Hạng từng cấp (so với con cùng tầm cấp):\n${steps.map(id => `${levelOf(id)} ${U(id).st}`).join(' › ')}` },
       steps.map(id => h('i', { class: TIER_CLASS[U(id).st] })));
   }
 
@@ -635,8 +642,32 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   };
 
 
+  const ROLE_COLOR = { atk: '#ff8f8f', tank: '#7fd4ff', buff: '#ffd36b', debuff: '#b89cff' };
+  const roleColor = stage => ROLE_COLOR[U(stage)?.ro ?? kitOf(stage)[0]] ?? '#33496b';
+  const harm = stage => (U(stage)?.sd ? h('b', { class: 'harm', text: '⚠', title: `Tự hại (issue #1): mất ${fmt(Math.round(U(stage).sd))} máu/giây` }) : null);
+  const pic = (stage, tip, ...extra) => h('div', { class: 'pic', style: `--el:${tint(U(stage)?.el)}`, title: tip }, img(stage, 46), ...extra);
+  const lvTag = stage => (U(stage)?.l ? h('span', { class: 'lv', text: `Lv${U(stage).l}` }) : null);
+
+  function viewTrade() {
+    const list = tradeOptions(state, db);
+    if (!list.length) return empty('Chưa có trade offer (trade tắt hoặc đang chờ dữ liệu).');
+    const side = (id, slot) => openable(pic(id, statsTip(id), h('span', { class: 'tl' }, tierPill(id)), lvTag(id)), `t${slot}`, id);
+    return h('div', { class: 'tgrid' }, list.map(o => {
+      const status = o.ready.length ? act('⇄ Trade', 'trade', `u${o.ready[0].id}`, o.slot, { stage: o.give, get: o.get }, 'ok',
+        `Đổi ${nameOf(o.give)} lấy ${nameOf(o.get)}${o.ready.length > 1 ? ` · có ${o.ready.length} con` : ''}`)
+        : o.evolve ? h('span', { class: `b ${state.gold >= o.evolve.cost ? 'warn' : 'bad'}`, text: `cần ${levelOf(o.give)}`,
+          title: `Nâng ${nameOf(o.evolve.unit.stage)} → ${o.evolve.steps.map(nameOf).join(' → ')}: ${fmt(o.evolve.cost)} vàng` })
+        : h('span', { class: 'b max', text: '—', title: 'Chưa có con nào thuộc dòng này' });
+      return h('div', { class: `tcard${o.ready.length ? ' is-ok' : o.evolve ? ' is-warn' : ''}${wished(o.get) ? ' wish' : ''}` },
+        h('div', { class: 'th', text: `S${o.slot}` }),
+        h('div', { class: 'pair' }, side(o.give, o.slot), h('span', { class: 'ar', text: '→' }), side(o.get, o.slot)),
+        h('div', { class: 'nm2' }, h('span', { text: U(o.give)?.n ?? o.give }), h('span', { class: 'get', text: U(o.get)?.n ?? o.get })),
+        h('div', { class: 'acts' }, status));
+    }));
+  }
+
   let wildRole = 'all';
-  const ROLE_FILTER = { all: ['Tất cả', () => true], atk: ['ATK', k => k[0] === 'atk'], tank: ['TANK', k => k[0] === 'tank'], buff: ['BUFF', k => k[0] === 'buff'], debuff: ['DEBUFF', k => k[0] === 'debuff'] };
+  const ROLE_FILTER = { all: ['Tất cả', () => true], atk: ['ATK', kit => kit[0] === 'atk'], tank: ['TANK', kit => kit[0] === 'tank'], buff: ['BUFF', kit => kit[0] === 'buff'], debuff: ['DEBUFF', kit => kit[0] === 'debuff'] };
   function viewWild() {
     const groups = new Map();
     for (const w of state.wilds.values()) {
@@ -655,20 +686,23 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     };
     const order = sorters[wildSort];
     wilds.sort((a, b) => byWish(a, b) || order(a, b));
-    const sortBtn = (k, t) => h('button', { class: `chip sm ${wildSort === k ? 'on' : ''}`, text: t, onClick: () => { wildSort = k; dirty = true; render(true); } });
+    const sortBtn = (key, t) => h('button', { class: `chip sm ${wildSort === key ? 'on' : ''}`, text: t, onClick: () => { wildSort = key; dirty = true; render(true); } });
+    const tile = ({ stage, idList, count, u, peak, trades }) => openable(h('div', { class: `tile${wished(stage) ? ' wish' : ''}${isOpen(stage) ? ' sel' : ''}`, style: `--ro:${roleColor(stage)}` },
+      pic(stage, `Bắt ${Math.round((u.c ?? 0) * 100)}% · đỉnh ${short(peak)} DPS thật\n${statsTip(stage)}${count > 1 ? `\n${count} con — bấm tiếp để chọn con khác` : ''}`,
+        h('span', { class: 'tl' }, tierPill(stage), harm(stage)), starBtn(stage),
+        (u.c ?? 1) < 0.5 ? h('span', { class: 'lv rare', text: `${Math.round((u.c ?? 0) * 100)}%`, title: 'Tỉ lệ bắt thấp' }) : null,
+        count > 1 ? h('span', { class: 'cnt', text: `×${count}` }) : null),
+      strip(stage),
+      h('div', { class: 'tn', title: trades.length ? trades.map(t => `S${t.slot}: cần ${nameOf(t.give)} → nhận ${nameOf(t.get)}`).join('\n') : null },
+        trades.length ? h('b', { class: 'trf', text: '⇄' }) : null, u.n ?? stage),
+      h('div', { class: 'acts' }, act(`${short(u.b ?? 0)}g`, 'catch', `w${idList[0]}`, null, { stage }, (u.b ?? 0) <= state.gold ? 'ok' : 'bad', `Bắt 1 con ${nameOf(stage)}: ${fmt(u.b ?? 0)} vàng`))),
+    cycle(`w:${stage}`, idList.map(id => `w${id}`)), stage);
     return [
       h('div', { class: 'bar-row' }, sortBtn('value', 'Đáng bắt'), sortBtn('cheap', 'Rẻ'), sortBtn('catch', 'Dễ bắt'),
-        h('span', { class: 'muted', text: `${state.wilds.size} con` })),
-      h('div', { class: 'bar-row' }, Object.entries(ROLE_FILTER).map(([k, [text]]) => h('button', { class: `chip sm ${wildRole === k ? 'on' : ''}`, text,
-        onClick: () => { wildRole = k; dirty = true; render(true); } }))),
-      wilds.length ? legend() : null,
-      wilds.length ? wilds.map(({ stage, idList, count, u, peak, trades }) => pickable(row(stage,
-        h('div', { class: 'line2' }, strip(stage), kitChips(stage), (u.c ?? 1) < 0.5 ? h('span', { class: 'rare', text: `${Math.round((u.c ?? 0) * 100)}%`, title: 'Tỉ lệ bắt thấp' }) : null),
-        [starBtn(stage), tierPill(stage), count > 1 ? pill(`×${count}`, 'mute') : null,
-          trades.length ? pill('Trade', 'warn', trades.map(t => `S${t.slot}: cần ${nameOf(t.give)} → nhận ${nameOf(t.get)}`).join('\n')) : null,
-          act(`Bắt ${short(u.b ?? 0)}g`, 'catch', `w${idList[0]}`, null, { stage }, (u.b ?? 0) <= state.gold ? 'ok' : 'bad', `Bắt 1 con ${nameOf(stage)}`), infoBtn(stage)],
-        { tip: `Bắt ${Math.round((u.c ?? 0) * 100)}% · đỉnh ${short(peak)} DPS thật\n${statsTip(stage)}\nBấm để chọn trong game${count > 1 ? ' (bấm tiếp để đổi con)' : ''}` }), cycle(`w:${stage}`, idList.map(id => `w${id}`))))
-        : empty(state.wilds.size ? 'Không có con nào đúng vai trò này.' : 'Bãi đang trống.'),
+        h('span', { class: 'muted', text: String(state.wilds.size) })),
+      h('div', { class: 'bar-row' }, Object.entries(ROLE_FILTER).map(([key, [text]]) => h('button', { class: `chip sm ${wildRole === key ? 'on' : ''}`, text,
+        onClick: () => { wildRole = key; dirty = true; render(true); } }))),
+      wilds.length ? h('div', { class: 'grid' }, wilds.map(tile)) : empty(state.wilds.size ? 'Không có con nào đúng vai trò này.' : 'Bãi đang trống.'),
     ];
   }
 
@@ -680,35 +714,64 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     buff: ['BUFF', u => kitOf(u.stage)[0] === 'buff'],
     debuff: ['DEBUFF', u => kitOf(u.stage)[0] === 'debuff'],
   };
+  function teamTile(stage, list, plan, wanted) {
+    const u = U(stage) ?? {};
+    const alive = list.filter(x => x.active);
+    const lead = alive[0] ?? list[0];
+    const ids = list.map(x => x.id);
+    const evo = u.e ?? [];
+    const trades = alive.length ? (wanted.get(stage) ?? []).slice(0, 1) : [];
+    const moving = !!plan?.moves.some(m => list.some(x => `u${x.id}` === m.key));
+    const buttons = [
+      ...trades.map(o => act(`⇄S${o.slot}`, 'trade', `u${lead.id}`, o.slot, { stage, get: o.get }, 'tr', `Trade slot ${o.slot}: đổi lấy ${nameOf(o.get)}`)),
+      ...evo.map(([to, cost]) => {
+        const trap = u.tp?.[to];
+        const drop = `${fmt(u.ed ?? u.dps)} → ${fmt(U(to)?.ed ?? U(to)?.dps)} DPS thật`;
+        const warn = trap === 2 ? `\n⚠ BẪY: ${drop}, lên tiếp cũng không hồi lại — nên dừng ở đây` : trap === 1 ? `\n⚠ Tạm tụt: ${drop}, các cấp sau mới mạnh hơn` : '';
+        return act([evo.length > 1 ? img(to, 13) : '↑', short(cost), trap ? '⚠' : ''], 'evolve', `u${lead.id}`, to, { stage },
+          trap === 2 || cost > state.gold ? 'bad' : 'ok', `Tiến hóa ${list.length > 1 ? '1 con ' : ''}lên ${nameOf(to)}: ${fmt(cost)} vàng${warn}`);
+      }),
+    ];
+    if (!evo.length) buttons.push(h('span', { class: 'b max', text: 'MAX', title: 'Dạng cuối' }));
+    const hp = h('div', { class: 'hps' }, list.map(x => {
+      const pct = x.maxHp ? Math.max(0, Math.min(100, Math.round((x.hp / x.maxHp) * 100))) : 100;
+      return h('i', { class: !x.active ? 'down' : pct < 35 ? 'low' : pct < 70 ? 'mid' : null, style: x.active ? `--p:${pct}%` : null });
+    }));
+    const down = list.length - alive.length;
+    const tip = `${statsTip(stage)}${down ? `\n${down} con gục — trở lại đợt sau` : ''}${list.length > 1 ? `\n${list.length} con — bấm tiếp để chọn con khác` : ''}`;
+    return openable(h('div', { class: `tile${wished(stage) ? ' wish' : ''}${alive.length ? '' : ' down'}${isOpen(stage, ids) ? ' sel' : ''}`, style: `--ro:${roleColor(stage)}` },
+      pic(stage, tip, h('span', { class: 'tl' }, tierPill(stage), harm(stage), moving ? h('b', { class: 'mv', text: '↕', title: 'Xếp đội sẽ dời con này' }) : null),
+        starBtn(stage), lvTag(stage), list.length > 1 ? h('span', { class: 'cnt', text: `×${list.length}` }) : null, hp),
+      strip(stage),
+      h('div', { class: 'tn', text: u.n ?? stage }),
+      h('div', { class: `acts${buttons.length > 1 ? ' split' : ''}` }, buttons)),
+    cycle(`u:${stage}`, list.map(x => `u${x.id}`)), stage, key => Number(key.slice(1)));
+  }
   function viewTeam() {
     const mine = myUnits(state);
     if (!mine.length) return empty('Chưa có lính (hoặc đang chờ dữ liệu).');
     const wanted = new Map();
     for (const o of state.offers.values()) wanted.set(o.give, [...(wanted.get(o.give) ?? []), o]);
-    const shown = mine.filter(u => TEAM_FILTER[teamFilter][1](u, wanted)).sort((a, b) => byWish(a, b) || a.id - b.id);
-    return [arrangeBar(),
-      h('div', { class: 'bar-row' }, Object.entries(TEAM_FILTER).map(([k, [text, test]]) => {
-        const n = k === 'all' ? mine.length : mine.filter(u => test(u, wanted)).length;
-        return h('button', { class: `chip sm ${teamFilter === k ? 'on' : ''}`, tabindex: '-1', disabled: k !== 'all' && !n, text: k === 'all' ? text : `${text} ${n}`,
-          title: k === 'all' ? null : KIT[k]?.[1], onClick: () => { teamFilter = k; dirty = true; render(true); } });
-      })),
-      shown.length ? null : empty('Không có con nào thuộc nhóm này.'),
-      ...shown.map(u => {
-      const evo = U(u.stage)?.e ?? [];
-      const trades = wanted.get(u.stage) ?? [];
-      return pickable(row(u.stage,
-        h('div', { class: 'line2' }, hpBar(u), strip(u.stage), kitChips(u.stage)),
-        [starBtn(u.stage), tierPill(u.stage),
-          trades.length ? act(`⇄S${trades[0].slot}`, 'trade', `u${u.id}`, trades[0].slot, { stage: u.stage, get: trades[0].get }, 'ok', `Trade slot ${trades[0].slot}: đổi lấy ${nameOf(trades[0].get)}`) : null,
-          evo.length ? evo.map(([to, cost]) => {
-            const trap = U(u.stage)?.tp?.[to];
-            const drop = `${fmt(U(u.stage)?.ed ?? U(u.stage)?.dps)} → ${fmt(U(to)?.ed ?? U(to)?.dps)} DPS thật`;
-            const warn = trap === 2 ? `\n⚠ BẪY: ${drop}, lên tiếp cũng không hồi lại — nên dừng ở đây` : trap === 1 ? `\n⚠ Tạm tụt: ${drop}, các cấp sau mới mạnh hơn` : '';
-            return act(`↑${evo.length > 1 ? `${U(to)?.n ?? ''} ` : ''}${short(cost)}g${trap ? ' ⚠' : ''}`, 'evolve', `u${u.id}`, to, { stage: u.stage },
-              trap === 2 || cost > state.gold ? 'bad' : 'ok', `Tiến hóa lên ${nameOf(to)}: ${fmt(cost)} vàng${warn}`);
-          }) : pill('Max', 'mute', 'Dạng cuối'), infoBtn(u.stage, u.id)],
-        { portrait: unitPortrait(u), tip: `${statsTip(u.stage)}\nBán: ${fmt(Math.floor(u.book * (db.sell ?? 0)))} vàng\nBấm để chọn trong game` }), `u${u.id}`);
-    })];
+    const blocked = blockReason() ?? (state.summary?.phase !== 'planning' ? 'wave' : null);
+    const g = blocked ? null : findGame();
+    const plan = g ? arrangePlan(g) : null;
+    const test = TEAM_FILTER[teamFilter][1];
+    const first = new Map(), stacks = new Map();
+    for (const u of [...mine].sort((a, b) => a.id - b.id)) {
+      if (!first.has(famOf(u.stage))) first.set(famOf(u.stage), u.id);
+      if (!test(u)) continue;
+      if (!stacks.has(u.stage)) stacks.set(u.stage, []);
+      stacks.get(u.stage).push(u);
+    }
+    const rank = stage => [first.get(famOf(stage)) ?? 0, U(stage)?.l ?? 0];
+    const order = ([a], [b]) => { const x = rank(a), y = rank(b); return x[0] - y[0] || x[1] - y[1] || (a < b ? -1 : a > b ? 1 : 0); };
+    const groups = [['★', '#ffde8f', 'Wishlist — ưu tiên nâng'], ...ROWS].map(([name, color, tip]) => ({ name, color, tip, list: [] }));
+    for (const entry of stacks) groups.at(wished(entry[0]) ? 0 : formationRow(U(entry[0])) + 1).list.push(entry);
+    return [teamBar(mine, plan, blocked),
+      stacks.size ? groups.filter(gr => gr.list.length).map(gr => [
+        h('div', { class: 'sect', style: `--c:${gr.color}`, title: gr.tip }, h('i'), gr.name, h('span', { class: 'n', text: String(gr.list.reduce((n, [, l]) => n + l.length, 0)) })),
+        h('div', { class: 'grid' }, gr.list.sort(order).map(([stage, l]) => teamTile(stage, l, plan, wanted))),
+      ]) : empty('Không có con nào thuộc nhóm này.')];
   }
 
   function viewInfo() {
@@ -876,7 +939,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   let keepInfo = false;
   root.addEventListener('pointerdown', e => {
     const path = e.composedPath();
-    keepInfo = path.includes(drawer) || path.some(n => n?.classList?.contains?.('info'));
+    keepInfo = path.includes(drawer) || path.some(n => n?.classList?.contains?.('pick'));
     if (!keepInfo && info) { info = null; dirty = true; render(true); }
   });
   const outsideClose = e => { if (info && !e.composedPath().includes(host)) { info = null; dirty = true; render(true); } };
@@ -918,6 +981,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
           : 'Bản web: đang mở lại trận trong khung để móc hàm game.')
         : 'Bản Cocos (cutd.site): bấm dòng/nút → tool gọi thẳng hàm của game.' }),
       h('span', { class: 'grow' }),
+      state.haveKeyframe ? h('span', { class: 'gold', text: `${short(state.gold)}g`, title: 'Vàng hiện có' }) : null,
       h('button', { class: 'x', text: layout === 'h' ? '▯' : '▭', title: layout === 'h' ? 'Chuyển sang dọc' : 'Chuyển sang ngang', onClick: () => setLayout(layout === 'h' ? 'v' : 'h') }),
       h('button', { class: 'x', text: '–', title: 'Thu nhỏ', onClick: () => toggle() }),
       h('button', { class: 'x', text: '×', title: 'Tắt tool', onClick: () => destroy() }));
