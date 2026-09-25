@@ -16,14 +16,14 @@ const NS = '__cutdHelper';
 const CSS = `
 :host{all:initial}
 *{box-sizing:border-box;margin:0;font:12.5px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-.panel{width:min(380px,calc(100vw - 24px));max-height:calc(100vh - 24px);display:flex;flex-direction:column;background:#0f1a2df5;color:#e6f2ff;border:1px solid #33496b;border-radius:12px;box-shadow:0 10px 30px #000a;overflow:hidden}
+.panel{position:relative;width:min(380px,calc((100vw - 24px) / var(--z,1)));max-height:calc((100vh - 24px) / var(--z,1));display:flex;flex-direction:column;background:#0f1a2df5;color:#e6f2ff;border:1px solid #33496b;border-radius:12px;box-shadow:0 10px 30px #000a;overflow:hidden}
 .top{display:flex;align-items:center;gap:6px;padding:6px 6px 6px 12px;cursor:move;user-select:none}
 .top b{color:#ffde8f;font-weight:700;letter-spacing:.2px}
 .grow{flex:1}
 .x{all:unset;cursor:pointer;width:22px;height:22px;display:grid;place-items:center;border-radius:6px;color:#8fb7e8;font-size:15px}
 .x:hover{background:#243552;color:#fff}
 .tabs{display:flex;border-bottom:1px solid #243552}
-.tab{all:unset;cursor:pointer;flex:1;text-align:center;padding:7px 0;color:#8fb7e8;font-weight:600;border-bottom:2px solid transparent}
+.tab{all:unset;cursor:pointer;flex:1;text-align:center;padding:7px 0;color:#8fb7e8;font-weight:600;border-bottom:2px solid transparent;white-space:nowrap}
 .tab small{color:#6f8fb8;font-size:10.5px}
 .tab:hover{color:#fff}.tab.on{color:#ffde8f;border-bottom-color:#ffde8f}.tab.on small{color:#ffde8f}
 .body{overflow:auto;padding:4px 0 6px}
@@ -34,8 +34,8 @@ const CSS = `
 .chip.on{background:#ffde8f;color:#0b1526;border-color:transparent}
 .chip.sm{padding:1px 8px;font-size:11px}.chip:disabled{opacity:.35;cursor:default}
 .wrap{display:flex;gap:8px;align-items:flex-start}.wrap.h{flex-direction:column-reverse}
-.drawer{width:270px;max-height:calc(100vh - 24px);overflow-y:auto;background:#0f1a2df5;color:#e6f2ff;border:1px solid #33496b;border-radius:12px;box-shadow:0 10px 30px #000a;padding:12px;scrollbar-width:thin}
-.wrap.h .drawer{max-height:45vh}
+.drawer{width:270px;max-height:calc((100vh - 24px) / var(--z,1));overflow-y:auto;background:#0f1a2df5;color:#e6f2ff;border:1px solid #33496b;border-radius:12px;box-shadow:0 10px 30px #000a;padding:12px;scrollbar-width:thin}
+.wrap.h .drawer{max-height:calc(45vh / var(--z,1))}
 .dh{display:grid;grid-template-columns:64px 1fr;gap:10px;align-items:center}.dh .pt{width:64px;height:64px;border:0;background:transparent;object-fit:contain}
 .dh b{font-size:16px;font-weight:800}.dl{display:flex;align-items:center;gap:6px;margin-top:5px}
 .role{font-size:10px;font-weight:800;padding:1px 5px;border-radius:4px}.k-atk.role{background:#3d2226;color:#ff9c9c}.k-tank.role{background:#1b2d4a;color:#9fe3ff}.k-buff.role{background:#3a2f10;color:#ffde8f}.k-debuff.role{background:#2a2148;color:#cbb3ff}
@@ -71,7 +71,7 @@ table{width:100%;border-collapse:collapse}th,td{text-align:right;padding:5px 10p
 th{color:#6f8fb8;font-weight:600;font-size:11px}td:first-child,th:first-child{text-align:left}
 tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .mini{all:unset;cursor:pointer;padding:5px 11px;border-radius:9px;background:#0f1a2d;color:#ffde8f;border:1px solid #b69c62;font-weight:700;box-shadow:0 4px 14px #0008}
-.panel.h{width:min(1180px,calc(100vw - 24px));max-height:min(320px,50vh);display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+.panel.h{width:min(1180px,calc((100vw - 24px) / var(--z,1)));max-height:min(320px,calc(50vh / var(--z,1)));display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
 .panel.h .top{grid-column:1;padding-right:4px}.panel.h .top .grow{flex:0 0 6px}
 .panel.h .tabs{grid-column:2;border:0;border-left:1px solid #243552;overflow-x:auto;scrollbar-width:none}
 .panel.h .tabs::-webkit-scrollbar{display:none}
@@ -79,7 +79,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .panel.h .tabs{grid-column:1/-1;border-left:0;border-top:1px solid #243552}.panel.h .tab{flex:1 0 auto}}
 .panel.h .body{grid-column:1/-1;border-top:1px solid #243552}
 .panel.h .body{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));align-content:start;column-gap:4px}
-.panel.h .body>.bar-row,.panel.h .body>.empty,.panel.h .body>table,.panel.h .body>.verdict,.panel.h .body>.sec,.panel.h .body>.sect,.panel.h .body>.grid,.panel.h .body>.tgrid,.panel.h .body>.toast{grid-column:1/-1}
+.panel.h .body>.bar-row,.panel.h .body>.empty,.panel.h .body>table,.panel.h .body>.verdict,.panel.h .body>.sec,.panel.h .body>.sect,.panel.h .body>.grid,.panel.h .body>.tgrid,.panel.h .body>.msgs{grid-column:1/-1}
 .panel.h .tab{flex:0 0 auto;padding:7px 14px}
 .verdict{margin:8px 10px;padding:8px 10px;border-radius:8px;background:#3a3016;color:#ffde8f;font-weight:600}
 .kv{display:flex;justify-content:space-between;gap:10px;padding:4px 10px;border-bottom:1px solid #1d2c47}
@@ -96,13 +96,13 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .strip{display:flex;gap:1px;height:4px;margin:3px 5px 0}.strip i{flex:1;height:4px;border-radius:1px;background:#4a6fa5}
 .strip i.t-sp{background:#ffde8f}.strip i.t-s{background:#f0a35e}.strip i.t-a{background:#5f9e6a}.strip i.t-c{background:transparent;box-shadow:inset 0 0 0 1px #3a5480}
 .top .gold{color:#ffde8f;font-weight:800;font-size:12px;background:#3a3016;padding:1px 8px;border-radius:99px;white-space:nowrap}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:5px;padding:4px 10px 6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:5px;padding:4px 10px 6px}
 .tile{position:relative;display:flex;flex-direction:column;background:#132238;border:1px solid #22375a;border-top:2px solid var(--ro,#33496b);border-radius:9px;overflow:hidden}
 .tile:hover{background:#182c49;border-color:#3a5480;border-top-color:var(--ro,#33496b)}
 .tile.wish{border-color:#b69c62;border-top-color:var(--ro,#33496b);box-shadow:0 0 0 1px #b69c6255,0 0 10px #ffde8f22}
 .tile.sel{outline:2px solid #ffde8f;outline-offset:-1px}
-.pic{position:relative;height:54px;display:grid;place-items:center;background:radial-gradient(circle at 50% 64%,var(--el,#6488b86b) 0,transparent 66%)}
-.pic .pt{width:46px;height:46px;border:0;border-radius:0;background:transparent;object-fit:contain}
+.pic{position:relative;height:58px;display:grid;place-items:center;background:radial-gradient(circle at 50% 64%,var(--el,#6488b86b) 0,transparent 66%)}
+.pic .pt{width:50px;height:50px;border:0;border-radius:0;background:transparent;object-fit:contain}
 .tile.down .pic .pt{filter:grayscale(1) brightness(.5)}
 .pic .tl{position:absolute;top:3px;left:3px;display:flex;gap:2px;align-items:center}
 .pic .tier{min-width:0;margin:0;padding:0 4px;font-size:10px;line-height:14px;border-radius:4px}
@@ -152,7 +152,19 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .kit .k-atk{background:#3d2226;color:#ff9c9c}.kit .k-tank{background:#1b2d4a;color:#9fe3ff}.kit .k-buff{background:#3a2f10;color:#ffde8f}
 .kit .k-cc{background:#16324a;color:#9fe3ff}.kit .k-heal{background:#1d3a2a;color:#9fd6a8}.kit .k-evade{background:#2a2148;color:#cbb3ff}
 .kit .k-taunt,.kit .k-boss{background:#3d2226;color:#ffb4aa}.kit .k-aoe{background:#3a3016;color:#f0a35e}
-.toast{margin:6px 10px;padding:6px 10px;border-radius:8px;background:#3d2226;color:#ff9c9c;font-size:12px}.toast.info{background:#15243b;color:#aec4d3;font-size:11.5px}
+.msgs{position:sticky;bottom:6px;z-index:3;display:grid;gap:4px;margin:6px 10px 0}
+.toast{padding:6px 10px;border-radius:8px;background:#3d2226;color:#ff9c9c;font-size:12px;box-shadow:0 4px 14px #000b}.toast.info{background:#15243b;color:#aec4d3;font-size:11.5px}
+.tab .ws{display:inline-block;margin-left:3px;padding:0 5px;border-radius:99px;background:#ffde8f;color:#0b1526;font-size:10px;font-weight:900;line-height:14px}
+.tile.wide{grid-column:span 2}
+.pic.wide{height:auto;min-height:64px;display:grid;grid-template-columns:52px minmax(0,1fr);align-items:center;gap:7px;padding:5px 8px 7px 6px;place-items:initial}
+.pic.wide>.pt{width:50px;height:50px;justify-self:center}
+.wi{min-width:0;display:flex;flex-direction:column;gap:1px;padding-right:14px}
+.wi .tn{padding:0;text-align:left;font-size:11.5px;letter-spacing:0}
+.wi small{font-size:10px;color:#aec4d3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wi small.go{color:#ffde8f;font-weight:700}.wi small .rare{color:#ff9c9c;font-weight:800}
+.acts .act.up{background:#ffde8f;color:#0b1526}
+.acts .act.up.run{background:repeating-linear-gradient(-45deg,#ffde8f 0 6px,#e9c878 6px 12px);opacity:1;cursor:wait}
+.acts .act.up.off{background:#2b2616;color:#8a7a52;opacity:1}
 [hidden]{display:none!important}
 `;
 
@@ -398,7 +410,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   };
   const empty = t => h('p', { class: 'empty', text: t });
 
-  let toast = '', note = '', noteTimer = 0;
+  let toast = '', note = '', noteTimer = 0, shownToast = '', toastTimer = 0;
+  const TOAST_MS = 8000;
   function notice(text) {
     note = text;
     clearTimeout(noteTimer);
@@ -422,6 +435,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     rule: 'Không hợp lệ (sai nhánh / sai slot / con đã đổi / chưa đủ vàng / đang trong đợt) — thử lại sau khi panel cập nhật.',
     data: 'Chưa tải xong dữ liệu của game — đợi 1–2 giây.',
     other: 'Đang xem căn cứ của người khác — về nhà mình để thao tác.',
+    gold: 'Chưa đủ vàng.',
+    locked: 'Game khoá lệnh trong đợt — chờ lúc chuẩn bị.',
     wave: 'Chỉ xếp được lúc chuẩn bị (game khoá lệnh trong đợt).',
     hook: 'Bản web chưa móc được hàm game — tool tự móc sau vài giây trong trận (hoặc bấm "Móc").',
   };
@@ -467,7 +482,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   function runAction(e, kind, key, arg, expect) {
     e.stopPropagation();
     e.currentTarget.blur();
-    if (!realClick(e)) return;
+    if (!realClick(e) || boosting) return;
     const t = performance.now();
     const hold = rateWait();
     if (hold > 0) {
@@ -485,8 +500,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     if (!fail && !ent) fail = 'entity';
     if (!fail && ent.contentId !== expect.stage) fail = 'rule';
     if (!fail) {
-      if (kind === 'catch' && key[0] === 'w') fail = catchWild(g, ent);
-      else if (kind === 'evolve' && key[0] === 'u' && typeof arg === 'string' && (gameCat.get(ent.contentId)?.e ?? []).some(([to]) => to === arg)) fail = evolveCreature(g, ent, arg);
+      if (kind === 'catch' && key[0] === 'w') fail = catchWild(g, ent).fail ?? null;
+      else if (kind === 'evolve' && key[0] === 'u' && typeof arg === 'string' && (gameCat.get(ent.contentId)?.e ?? []).some(([to]) => to === arg)) fail = evolveCreature(g, ent, arg).fail ?? null;
       else if (kind === 'trade' && key[0] === 'u' && Number.isInteger(arg) && state.offers.get(arg)?.give === ent.contentId && state.offers.get(arg)?.get === expect.get) fail = tradePet(g, ent, arg);
       else fail = 'rule';
     }
@@ -496,7 +511,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const blocked = blockReason();
     sig.push(`${kind}:${key}:${arg ?? ''}`);
     return h('button', {
-      class: `act do-${kind} ${cls}`, tabindex: '-1', disabled: !!blocked, title: blocked ? FAIL[blocked] : tip,
+      class: `act do-${kind} ${cls}`, tabindex: '-1', disabled: !!blocked || !!boosting, title: blocked ? FAIL[blocked] : tip,
       onClick: e => runAction(e, kind, key, arg, expect),
     }, text);
   };
@@ -532,7 +547,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   async function arrange(e) {
     e.stopPropagation();
     e.currentTarget.blur();
-    if (!realClick(e) || arranging) return;
+    if (!realClick(e) || arranging || boosting) return;
     const hold = rateWait();
     if (hold > 0) {
       if (hold > RATE_GAP) { toast = `Game giới hạn 2 lệnh/giây — chờ ${Math.ceil(hold / 1000)} giây rồi bấm tiếp.`; dirty = true; render(true); }
@@ -571,6 +586,80 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     toast = [done.length ? `Đã dời ${done.join(', ')}.` : '', why, done.length && !why ? (left > 0 ? `Còn ${left} con lệch — bấm tiếp.` : 'Đội đã đúng hàng.') : ''].filter(Boolean).join(' ');
     dirty = true; render(true);
   }
+  let boosting = null;
+  const until = async (test, ms) => {
+    for (let t = 0; t < ms && !dead; t += 50) { if (test()) return true; await wait(50); }
+    return !dead && !!test();
+  };
+  const paced = async () => {
+    for (let n = 0; n < 200 && !dead; n++) { const hold = rateWait(); if (hold <= 0) return true; await wait(Math.min(hold, 400)); }
+    return false;
+  };
+  const refused = ack => (!ack ? 'Game chưa xác nhận lệnh.' : `Game từ chối: ${ack.reason.replace(/_/g, ' ') || 'không rõ'}.`);
+  async function catchFirst(g, key, stage) {
+    const ent = findEntity(g, key)?.ent;
+    if (!ent || ent.contentId !== stage) return { why: FAIL.entity };
+    const before = new Set(myUnits(state).map(x => x.id)), wid = Number(key.slice(1));
+    lastAction = performance.now();
+    const r = catchWild(g, ent);
+    if (r.fail || !Number.isInteger(r.seq)) return { why: FAIL[r.fail ?? 'rule'] };
+    const ack = await waitAck(r.seq);
+    if (!ack?.ok) return { why: refused(ack) };
+    let got = null;
+    const fresh = () => (got = myUnits(state).find(x => !before.has(x.id) && x.stage === stage) ?? null);
+    await until(() => fresh() || !state.wilds.has(wid), 4000);
+    if (!got) await until(fresh, 1000);
+    return got ? { key: `u${got.id}` } : { why: 'Bắt trượt — pet chạy mất, game không trừ vàng.' };
+  }
+  async function boost(e, kind, key, stage) {
+    e.stopPropagation();
+    e.currentTarget.blur();
+    if (!realClick(e) || boosting || arranging || !wished(stage)) return;
+    let fail = blockReason();
+    const g = fail ? null : findGame();
+    if (!fail && !g) fail = 'game';
+    if (!fail && state.summary?.phase !== 'planning') fail = 'locked';
+    const price = kind === 'catch' ? (U(stage)?.b ?? 0) : 0;
+    const plan = fail ? null : maxPlan(stage, state.gold - price);
+    if (!fail && (!plan?.steps.length || state.gold < price)) fail = 'gold';
+    if (fail) { toast = FAIL[fail]; dirty = true; render(true); return; }
+    boosting = { key, stage, done: 0, total: plan.steps.length + (kind === 'catch' ? 1 : 0) };
+    dirty = true; render(true);
+    let cur = stage, spent = 0, why = '';
+    try {
+      if (kind === 'catch') {
+        if (!(await paced())) return;
+        const got = await catchFirst(g, key, stage);
+        if (got.why) { why = got.why; return; }
+        boosting.key = got.key; boosting.done++; spent += price;
+        dirty = true; render(true);
+      }
+      for (const [to, cost] of plan.steps) {
+        if (!(await paced())) return;
+        if (state.summary?.phase !== 'planning') { why = FAIL.locked; break; }
+        if (!wished(cur)) { why = 'Đã bỏ ★ — dừng.'; break; }
+        if (cost > state.gold) { why = 'Hết vàng — dừng.'; break; }
+        const ent = findEntity(g, boosting.key)?.ent;
+        if (!ent || ent.contentId !== cur) { why = FAIL.entity; break; }
+        if (!(gameCat.get(cur)?.e ?? []).some(([next]) => next === to)) { why = FAIL.rule; break; }
+        lastAction = performance.now();
+        const r = evolveCreature(g, ent, to);
+        if (r.fail || !Number.isInteger(r.seq)) { why = FAIL[r.fail ?? 'rule']; break; }
+        const ack = await waitAck(r.seq);
+        if (!ack?.ok) { why = refused(ack); break; }
+        await until(() => findEntity(g, boosting.key)?.ent?.contentId === to, 2000);
+        cur = to; spent += cost; boosting.stage = to; boosting.done++;
+        dirty = true; render(true);
+      }
+    } finally {
+      boosting = null;
+      if (!dead) {
+        const done = cur !== stage ? `⇑ ${nameOf(stage)} → ${nameOf(cur)} · ${fmt(spent)} vàng.` : spent ? `Đã bắt ${nameOf(stage)}.` : '';
+        toast = [done, why].filter(Boolean).join(' ');
+        dirty = true; render(true);
+      }
+    }
+  }
   function teamBar(mine, plan, blocked) {
     const next = plan?.moves[0];
     const held = plan ? [...plan.status.values()].filter(v => v === 'new').length : 0;
@@ -578,7 +667,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const nextStage = next ? mine.find(u => `u${u.id}` === next.key)?.stage : null;
     return h('div', { class: 'bar-row' },
       h('button', {
-        class: `chip sm ${next ? 'on' : ''}`, tabindex: '-1', disabled: arranging || !!blocked || !mine.some(u => u.active) || (plan && !next),
+        class: `chip sm ${next ? 'on' : ''}`, tabindex: '-1', disabled: arranging || !!boosting || !!blocked || !mine.some(u => u.active) || (plan && !next),
         text: arranging ? 'Đang dời…' : next ? `Xếp đội ↕${plan.moves.length}` : lost ? 'Xếp đội ?' : plan ? '✓ Đúng hàng' : 'Xếp đội',
         title: blocked ? FAIL[blocked] : !next && lost ? `Chưa đọc được vị trí ${lost} con trong game — đợi 1–2 giây rồi xem lại.` : next ? `Bấm để dời ${nameOf(nextStage)} ${next.from} → ${next.to} (hàng ${ROWS[next.row][0]})${plan.moves.length > 1 ? ' và 1 con nữa' : ''}. Mỗi lần bấm dời tối đa ${PER_CLICK} con (ô có dấu ↕); con đứng đúng hàng không bị đụng tới, con đứng chồng lên con khác thì được tách ra.\nÔ theo lưới hiện trên sân lúc chuẩn bị: cột A–G từ trái sang, hàng 1–8 từ phía quái vào.`
           : 'Hàng từ phía quái vào: TANK → CẬN → XA → HỖ TRỢ sau cùng. Ô theo lưới hiện trên sân lúc chuẩn bị: cột A–G từ trái sang, hàng 1–8 từ phía quái vào.',
@@ -667,7 +756,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     boss: ['BOSS', 'Sát thương theo % máu / giá trị — diệt boss'], aoe: ['AOE', 'Sát thương lan'],
   };
   const ROLE_NAME = { atk: 'ATK', tank: 'TANK', buff: 'BUFF', debuff: 'DEBUFF' };
-  const wish = new Set(), wishSeen = new Set();
+  const wish = new Set();
   const famOf = stage => { const f = U(stage)?.f; return typeof f === 'string' && SAFE_ID.test(f) ? f : stage; };
   const wished = stage => wish.has(famOf(stage));
   const byWish = (a, b) => Number(wished(b.stage)) - Number(wished(a.stage));
@@ -676,7 +765,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const starBtn = stage => {
     const on = wished(stage);
     return h('button', { class: `star ${on ? 'on' : ''}`, text: on ? '★' : '☆', tabindex: '-1',
-      title: on ? 'Bỏ khỏi wishlist' : 'Thêm vào wishlist: dòng này luôn nằm đầu tab Wild (ưu tiên mua) và tab Đội (ưu tiên nâng); ra ở bãi là báo',
+      title: on ? 'Bỏ khỏi wishlist' : 'Thêm vào wishlist: dòng này nằm đầu tab Wild, Đội, Trade và có nút ⇑ nâng max; ra ở bãi hay có kèo trade thì tab hiện ★',
       onClick: e => { e.stopPropagation(); if (on) wish.delete(famOf(stage)); else wish.add(famOf(stage)); dirty = true; render(true); } });
   };
   const kitOf = stage => (Array.isArray(U(stage)?.kt) ? U(stage).kt : []).filter(k => typeof k === 'string' && Object.hasOwn(KIT, k));
@@ -715,14 +804,52 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const ROLE_COLOR = { atk: '#ff8f8f', tank: '#7fd4ff', buff: '#ffd36b', debuff: '#b89cff' };
   const roleColor = stage => ROLE_COLOR[U(stage)?.ro ?? kitOf(stage)[0]] ?? '#33496b';
   const harm = stage => (U(stage)?.sd ? h('b', { class: 'harm', text: '⚠', title: `Tự hại (issue #1): mất ${fmt(Math.round(U(stage).sd))} máu/giây` }) : null);
-  const pic = (stage, tip, ...extra) => h('div', { class: 'pic', style: `--el:${tint(U(stage)?.el)}`, title: tip }, img(stage, 46), ...extra);
+  const pic = (stage, tip, ...extra) => h('div', { class: 'pic', style: `--el:${tint(U(stage)?.el)}`, title: tip }, img(stage, 50), ...extra);
   const lvTag = stage => (U(stage)?.l ? h('span', { class: 'lv', text: `Lv${U(stage).l}` }) : null);
+  const widePic = (stage, tip, lines, ...extra) => h('div', { class: 'pic wide', style: `--el:${tint(U(stage)?.el)}`, title: tip }, img(stage, 50), h('div', { class: 'wi' }, lines), ...extra);
+  function maxPlan(stage, budget) {
+    const path = U(stage)?.pg;
+    if (!Array.isArray(path) || path.length < 2 || path[0] !== stage) return null;
+    const steps = [];
+    let spent = 0, need = 0;
+    for (let i = 1; i < path.length && steps.length < 12; i++) {
+      const cost = (U(path[i - 1])?.e ?? []).find(([to]) => to === path[i])?.[1];
+      if (!Number.isFinite(cost) || cost < 0) break;
+      if (spent + cost > budget) { need = cost; break; }
+      spent += cost;
+      steps.push([path[i], cost]);
+    }
+    return { steps, spent, need, peak: path.at(-1) };
+  }
+  const goLine = plan => {
+    const last = plan?.steps.at(-1)?.[0];
+    if (last) return `⇑ ${U(last)?.n ?? nameOf(last)}${last === plan.peak ? ' (đỉnh)' : ''}`;
+    return plan?.need ? `Cần ${short(plan.need)} vàng` : 'Đã là dạng mạnh nhất';
+  };
+  function boostBtn(kind, key, stage, plan, price, running) {
+    sig.push(`up:${key}:${plan.steps.length}`);
+    if (running) return h('button', { class: 'act up run', tabindex: '-1', disabled: true, text: `⇑ ${boosting.done}/${boosting.total}`, title: 'Đang nâng — chờ game xác nhận từng bước' });
+    const last = plan.steps.at(-1)?.[0];
+    if (!last || state.gold < price) {
+      return h('button', { class: 'act up off', tabindex: '-1', disabled: true, text: `⇑ ${levelOf(plan.peak)}`,
+        title: `Chưa đủ vàng: cần ${fmt(state.gold < price ? price : plan.need)} vàng cho ${state.gold < price ? 'lệnh bắt' : 'bước đầu'}` });
+    }
+    const blocked = blockReason();
+    const total = price + plan.spent;
+    return h('button', {
+      class: 'act up', tabindex: '-1', disabled: !!blocked || !!boosting || arranging, text: `⇑ ${levelOf(last)} · ${short(total)}`,
+      title: blocked ? FAIL[blocked] : `${kind === 'catch' ? 'Bắt rồi nâng' : 'Nâng'} ${nameOf(stage)} → ${nameOf(last)}: ${kind === 'catch' ? '1 lệnh bắt + ' : ''}${plan.steps.length} lệnh nâng · ${fmt(total)} vàng`
+        + `${last === plan.peak ? '' : `\nĐỉnh dòng là ${nameOf(plan.peak)} — thiếu vàng cho phần còn lại`}`
+        + `\n1 cú bấm gửi nhiều lệnh: mỗi lệnh cách 0,8 giây, chờ game xác nhận từng bước, lỗi là dừng${kind === 'catch' ? '; bắt trượt thì dừng (game không trừ vàng)' : ''}.`,
+      onClick: e => boost(e, kind, key, stage),
+    });
+  }
 
   function viewTrade() {
     const list = tradeOptions(state, db);
     if (!list.length) return empty('Chưa có trade offer (trade tắt hoặc đang chờ dữ liệu).');
-    const side = (id, slot) => openable(pic(id, statsTip(id), h('span', { class: 'tl' }, tierPill(id)), lvTag(id)), `t${slot}`, id);
-    return h('div', { class: 'tgrid' }, list.map(o => {
+    const side = (id, slot, star) => openable(pic(id, statsTip(id), h('span', { class: 'tl' }, tierPill(id)), lvTag(id), star ? starBtn(id) : null), `t${slot}`, id);
+    return h('div', { class: 'tgrid' }, [...list].sort((a, b) => Number(wished(b.get)) - Number(wished(a.get))).map(o => {
       const status = o.ready.length ? act('⇄ Trade', 'trade', `u${o.ready[0].id}`, o.slot, { stage: o.give, get: o.get }, 'ok',
         `Đổi ${nameOf(o.give)} lấy ${nameOf(o.get)}${o.ready.length > 1 ? ` · có ${o.ready.length} con` : ''}`)
         : o.evolve ? h('span', { class: `b ${state.gold >= o.evolve.cost ? 'warn' : 'bad'}`, text: `cần ${levelOf(o.give)}`,
@@ -730,7 +857,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         : h('span', { class: 'b max', text: '—', title: 'Chưa có con nào thuộc dòng này' });
       return h('div', { class: `tcard${o.ready.length ? ' is-ok' : o.evolve ? ' is-warn' : ''}${wished(o.get) ? ' wish' : ''}` },
         h('div', { class: 'th', text: `S${o.slot}` }),
-        h('div', { class: 'pair' }, side(o.give, o.slot), h('span', { class: 'ar', text: '→' }), side(o.get, o.slot)),
+        h('div', { class: 'pair' }, side(o.give, o.slot), h('span', { class: 'ar', text: '→' }), side(o.get, o.slot, true)),
         h('div', { class: 'nm2' }, h('span', { text: U(o.give)?.n ?? o.give }), h('span', { class: 'get', text: U(o.get)?.n ?? o.get })),
         h('div', { class: 'acts' }, status));
     }));
@@ -757,16 +884,25 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const order = sorters[wildSort];
     wilds.sort((a, b) => byWish(a, b) || order(a, b));
     const sortBtn = (key, t) => h('button', { class: `chip sm ${wildSort === key ? 'on' : ''}`, text: t, onClick: () => { wildSort = key; dirty = true; render(true); } });
-    const tile = ({ stage, idList, count, u, peak, trades }) => openable(h('div', { class: `tile${wished(stage) ? ' wish' : ''}${isOpen(stage) ? ' sel' : ''}`, style: `--ro:${roleColor(stage)}` },
-      pic(stage, `Bắt ${Math.round((u.c ?? 0) * 100)}% · đỉnh ${short(peak)} DPS thật\n${statsTip(stage)}${count > 1 ? `\n${count} con — bấm tiếp để chọn con khác` : ''}`,
-        h('span', { class: 'tl' }, tierPill(stage), harm(stage)), starBtn(stage),
-        (u.c ?? 1) < 0.5 ? h('span', { class: 'lv rare', text: `${Math.round((u.c ?? 0) * 100)}%`, title: 'Tỉ lệ bắt thấp' }) : null,
-        count > 1 ? h('span', { class: 'cnt', text: `×${count}` }) : null),
-      strip(stage),
-      h('div', { class: 'tn', title: trades.length ? trades.map(t => `S${t.slot}: cần ${nameOf(t.give)} → nhận ${nameOf(t.get)}`).join('\n') : null },
-        trades.length ? h('b', { class: 'trf', text: '⇄' }) : null, u.n ?? stage),
-      h('div', { class: 'acts' }, act(`${short(u.b ?? 0)}g`, 'catch', `w${idList[0]}`, null, { stage }, (u.b ?? 0) <= state.gold ? 'ok' : 'bad', `Bắt 1 con ${nameOf(stage)}: ${fmt(u.b ?? 0)} vàng`))),
-    cycle(`w:${stage}`, idList.map(id => `w${id}`)), stage);
+    const tile = ({ stage, idList, count, u, peak, trades }) => {
+      const price = u.b ?? 0, key = `w${idList[0]}`, wide = wished(stage);
+      const tip = `Bắt ${Math.round((u.c ?? 0) * 100)}% · đỉnh ${short(peak)} DPS thật\n${statsTip(stage)}${count > 1 ? `\n${count} con — bấm tiếp để chọn con khác` : ''}`;
+      const buttons = [act(`${short(price)}g`, 'catch', key, null, { stage }, price <= state.gold ? 'ok' : 'bad', `Bắt 1 con ${nameOf(stage)}: ${fmt(price)} vàng`)];
+      const up = wide ? maxPlan(stage, state.gold - price) : null;
+      if (up) buttons.push(boostBtn('catch', key, stage, up, price, boosting?.key === key));
+      const cnt = count > 1 ? h('span', { class: 'cnt', text: `×${count}` }) : null;
+      const name = h('div', { class: 'tn', title: trades.length ? trades.map(t => `S${t.slot}: cần ${nameOf(t.give)} → nhận ${nameOf(t.get)}`).join('\n') : null },
+        trades.length ? h('b', { class: 'trf', text: '⇄' }) : null, u.n ?? stage);
+      const rate = `${Math.round((u.c ?? 0) * 100)}%`;
+      const face = wide
+        ? widePic(stage, tip, [name, h('small', null, `${levelOf(stage)} · bắt `, h('b', { class: (u.c ?? 1) < 0.5 ? 'rare' : null, text: rate })), h('small', { class: 'go', text: goLine(up) })],
+          h('span', { class: 'tl' }, tierPill(stage), harm(stage)), starBtn(stage), cnt)
+        : pic(stage, tip, h('span', { class: 'tl' }, tierPill(stage), harm(stage)), starBtn(stage),
+          (u.c ?? 1) < 0.5 ? h('span', { class: 'lv rare', text: rate, title: 'Tỉ lệ bắt thấp' }) : null, cnt);
+      return openable(h('div', { class: `tile${wide ? ' wish wide' : ''}${isOpen(stage) ? ' sel' : ''}`, style: `--ro:${roleColor(stage)}` },
+        face, strip(stage), wide ? null : name, h('div', { class: 'acts' }, buttons)),
+      cycle(`w:${stage}`, idList.map(id => `w${id}`)), stage);
+    };
     return [
       h('div', { class: 'bar-row' }, sortBtn('value', 'Đáng bắt'), sortBtn('cheap', 'Rẻ'), sortBtn('catch', 'Dễ bắt'),
         h('span', { class: 'muted', text: String(state.wilds.size) })),
@@ -794,6 +930,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const needs = offersForFamily(state, db, stage);
     const going = plan?.moves.filter(m => list.some(x => `u${x.id}` === m.key)) ?? [];
     const cells = list.map(x => plan?.cells.get(`u${x.id}`)).filter(Boolean);
+    const wide = wished(stage), up = wide && alive.length ? maxPlan(stage, state.gold) : null;
     const buttons = [
       ...evo.map(([to, cost]) => {
         const trap = u.tp?.[to];
@@ -805,19 +942,24 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     ];
     if (ready.length) buttons.unshift(h('span', { class: 'b tr', text: 'TRADE', title: `${ready.map(o => `S${o.slot}: đổi lấy ${nameOf(o.get)}`).join('\n')}\nBấm Trade ở tab Trade` }));
     else if (!evo.length) buttons.push(h('span', { class: 'b max', text: 'MAX', title: 'Dạng cuối' }));
+    if (up) buttons.push(boostBtn('evolve', `u${lead.id}`, stage, up, 0, !!boosting && list.some(x => `u${x.id}` === boosting.key)));
     const hp = h('div', { class: 'hps' }, list.map(x => {
       const pct = x.maxHp ? Math.max(0, Math.min(100, Math.round((x.hp / x.maxHp) * 10) * 10)) : 100;
       return h('i', { class: !x.active ? 'down' : pct < 35 ? 'low' : pct < 70 ? 'mid' : null, style: x.active ? `--p:${pct}%` : null });
     }));
     const down = list.length - alive.length;
     const tip = `${statsTip(stage)}${cells.length ? `\nĐứng ô ${cells.join(' · ')}` : ''}${down ? `\n${down} con gục — trở lại đợt sau` : ''}${list.length > 1 ? `\n${list.length} con — bấm tiếp để chọn con khác` : ''}`;
-    return openable(h('div', { class: `tile${wished(stage) ? ' wish' : ''}${alive.length ? '' : ' down'}${isOpen(stage, ids) ? ' sel' : ''}`, style: `--ro:${roleColor(stage)}` },
-      pic(stage, tip, h('span', { class: 'tl' }, tierPill(stage), harm(stage), going.length ? h('b', { class: 'mv', text: '↕', title: `Xếp đội sẽ dời ${going.map(m => `${m.from} → ${m.to}`).join(', ')}` }) : null),
-        starBtn(stage), lvTag(stage), list.length > 1 ? h('span', { class: 'cnt', text: `×${list.length}` }) : null, hp),
-      strip(stage),
-      h('div', { class: 'tn', title: needs.length ? needs.map(o => `S${o.slot}: cần ${nameOf(o.give)} → nhận ${nameOf(o.get)}`).join('\n') : null },
-        needs.length ? h('b', { class: 'trf', text: '⇄' }) : null, u.n ?? stage),
-      h('div', { class: `acts${buttons.length > 1 ? ' split' : ''}` }, buttons)),
+    const mark = h('span', { class: 'tl' }, tierPill(stage), harm(stage), going.length ? h('b', { class: 'mv', text: '↕', title: `Xếp đội sẽ dời ${going.map(m => `${m.from} → ${m.to}`).join(', ')}` }) : null);
+    const cnt = list.length > 1 ? h('span', { class: 'cnt', text: `×${list.length}` }) : null;
+    const name = h('div', { class: 'tn', title: needs.length ? needs.map(o => `S${o.slot}: cần ${nameOf(o.give)} → nhận ${nameOf(o.get)}`).join('\n') : null },
+      needs.length ? h('b', { class: 'trf', text: '⇄' }) : null, u.n ?? stage);
+    const face = wide
+      ? widePic(stage, tip, [name, h('small', { text: u.pg ? `${levelOf(stage)} · đỉnh ${levelOf(u.pg.at(-1))}` : `${levelOf(stage)} · dạng mạnh nhất` }),
+        h('small', { class: 'go', text: alive.length ? goLine(up) : 'Gục — đợt sau mới nâng' })], mark, starBtn(stage), cnt, hp)
+      : pic(stage, tip, mark, starBtn(stage), lvTag(stage), cnt, hp);
+    return openable(h('div', { class: `tile${wide ? ' wish wide' : ''}${alive.length ? '' : ' down'}${isOpen(stage, ids) ? ' sel' : ''}`, style: `--ro:${roleColor(stage)}` },
+      face, strip(stage), wide ? null : name,
+      h('div', { class: `acts${buttons.length > 1 && !wide ? ' split' : ''}` }, buttons)),
     cycle(`u:${stage}`, list.map(x => `u${x.id}`)), stage, key => Number(key.slice(1)));
   }
   function viewTeam() {
@@ -958,6 +1100,9 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   }
 
   let fpsCap = 0, rafSaved = {};
+  const SIZES = [['Nhỏ', 1], ['Vừa', 1.25], ['Lớn', 1.45]];
+  let uiScale = 1.25;
+  function applyScale() { wrap.style.zoom = String(uiScale); wrap.style.setProperty('--z', String(uiScale)); }
   function setCap(fps) {
     if (rafSaved.win && rafSaved.win !== realm.win) { capFrames(rafSaved.win, 0, rafSaved); rafSaved = {}; }
     fpsCap = fps;
@@ -972,6 +1117,11 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   function viewLite() {
     const cur = readLite(realm.win);
     return [
+      h('div', { class: 'sect', style: '--c:#8fb7e8' }, h('i'), 'CỠ TOOL', h('span', { class: 'n', text: 'áp dụng ngay' })),
+      h('div', { class: 'bar-row' }, SIZES.map(([t, z]) => h('button', {
+        class: `chip sm ${uiScale === z ? 'on' : ''}`, tabindex: '-1', text: t,
+        onClick: () => { uiScale = z; applyScale(); dirty = true; render(true); },
+      }))),
       h('div', { class: 'sect', style: '--c:#9fd6a8' }, h('i'), 'KHUNG HÌNH', h('span', { class: 'n', text: 'áp dụng ngay' })),
       h('div', { class: 'bar-row' }, FPS_CAPS.map(fps => h('button', {
         class: `chip sm ${fpsCap === fps ? 'on' : ''}`, tabindex: '-1', text: fps ? `${fps} FPS` : 'Không giới hạn',
@@ -1020,6 +1170,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const drawer = h('div', { class: 'drawer' });
   drawer.hidden = true;
   const wrap = h('div', { class: 'wrap' }, panel, drawer);
+  applyScale();
   root.append(wrap);
   let keepInfo = false;
   root.addEventListener('pointerdown', e => {
@@ -1050,11 +1201,10 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const scroll = bodyEl?.scrollTop ?? 0;
     sig.length = 0;
     picks.length = 0;
-    for (const id of wishSeen) if (!state.wilds.has(id)) wishSeen.delete(id);
-    for (const w of state.wilds.values()) {
-      if (wishSeen.has(w.id) || !wished(w.stage)) continue;
-      wishSeen.add(w.id);
-      toast = `★ ${nameOf(w.stage)} (wishlist) vừa ra ở bãi — tab Wild để bắt.`;
+    if (toast !== shownToast) {
+      shownToast = toast;
+      clearTimeout(toastTimer);
+      if (toast) toastTimer = setTimeout(() => { toast = ''; dirty = true; render(true); }, TOAST_MS);
     }
     const status = !db ? 'Đang tải dữ liệu wiki…'
       : !socket && !state.messages ? 'Đang chờ dữ liệu trận… (vào phòng chơi)'
@@ -1078,8 +1228,10 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       drag = { dx: e.clientX - r.left, dy: e.clientY - r.top };
     });
     const count = { trade: state.offers.size, wild: state.wilds.size, team: myUnits(state).length, wave: nextWaveForBase(state).length };
+    const starred = { trade: [...state.offers.values()].filter(o => wished(o.get)).length, wild: [...state.wilds.values()].filter(x => wished(x.stage)).length };
     const tabs = h('div', { class: 'tabs' }, TABS.map(([k, t]) => h('button', { class: `tab ${tab === k ? 'on' : ''}`, onClick: () => { tab = k; dirty = true; render(true); if (bodyEl) bodyEl.scrollTop = 0; } },
-      t, count[k] ? h('small', { text: ` ${count[k]}` }) : null)));
+      t, starred[k] ? h('span', { class: 'ws', text: `★${starred[k]}`, title: `${k === 'wild' ? 'Pet ★ đang ở bãi' : 'Kèo trade ra pet ★'} · tổng ${count[k]}` })
+        : count[k] ? h('small', { text: ` ${count[k]}` }) : null)));
     let content;
     try {
       content = status && tab !== 'lite' ? empty(status) : ({
@@ -1088,8 +1240,9 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     } catch (err) {
       content = h('p', { class: 'empty bad', text: `Lỗi hiển thị: ${err?.message ?? err}` });
     }
-    const body = h('div', { class: 'body' }, toast ? h('p', { class: 'toast', text: toast }) : null, note ? h('p', { class: 'toast info', text: note }) : null, content);
-    const shape = `${tab}|${wildSort}|${wildRole}|${teamFilter}|${toast ? 1 : 0}${note ? 1 : 0}|${status ?? ''}|${sig.join(',')}`;
+    const msgs = toast || note ? h('div', { class: 'msgs' }, toast ? h('p', { class: 'toast', text: toast }) : null, note ? h('p', { class: 'toast info', text: note }) : null) : null;
+    const body = h('div', { class: 'body' }, content, msgs);
+    const shape = `${tab}|${wildSort}|${wildRole}|${teamFilter}|${status ?? ''}|${sig.join(',')}`;
     if (shape !== lastLayout) { lastLayout = shape; layoutAt = performance.now(); }
     const bind = `${shape}|${picks.join(';')}`;
     panel.className = `panel ${layout}`;
@@ -1181,6 +1334,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     clearTimeout(pending);
     clearTimeout(autoTimer);
     clearTimeout(noteTimer);
+    clearTimeout(toastTimer);
     window.removeEventListener('pointermove', onMove);
     window.removeEventListener('pointerup', onUp);
     window.removeEventListener('pointerdown', outsideClose, true);

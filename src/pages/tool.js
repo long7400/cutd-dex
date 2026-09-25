@@ -88,7 +88,7 @@ node scripts/build-tool.mjs --out</code></pre>
       <section class="safe">
         <h2>An <em>toàn</em></h2>
         <ul>
-          <li><b>Chỉ làm khi mày bấm.</b> 1 cú bấm = 1 lệnh của chính game (Bắt / Tiến hóa / Trade); riêng Xếp đội 1 cú bấm dời tối đa 2 con, con thứ 2 chỉ đi sau khi game xác nhận con đầu. Không tự mua, không đọc cookie hay phiên đăng nhập. Bộ nhớ trình duyệt: chỉ đọc 5 cài đặt đồ hoạ của game ở tab ⚙︎ và chỉ ghi khi mày bấm "Bật đồ hoạ nhẹ" / "Khôi phục".</li>
+          <li><b>Chỉ làm khi mày bấm.</b> 1 cú bấm = 1 lệnh của chính game (Bắt / Tiến hóa / Trade); riêng Xếp đội 1 cú bấm dời tối đa 2 con, và nút ⇑ của pet gắn ★ nâng liền nhiều cấp; mỗi lệnh sau chỉ đi khi game đã xác nhận lệnh trước, cách nhau ≥ 0,8 giây. Không tự bắt, không tự mua, không đọc cookie hay phiên đăng nhập. Bộ nhớ trình duyệt: chỉ đọc 5 cài đặt đồ hoạ của game ở tab ⚙︎ và chỉ ghi khi mày bấm "Bật đồ hoạ nhẹ" / "Khôi phục".</li>
           <li><b>Code nằm trọn trong bookmark.</b> Không nạp script từ đâu khác; file dữ liệu wiki chỉ được đọc như chữ.</li>
         </ul>
         <p class="mono hash">v${tool.version} · SHA-256 <span data-sha>${tool.sha256}</span>${tool.commit ? html` · build từ commit <a class="rootlink" href="${`${REPO}/tree/${tool.commit}/tool`}" target="_blank" rel="noopener noreferrer">${tool.commit.slice(0, 7)}</a>` : html` · <a class="rootlink" href="${SOURCE}" target="_blank" rel="noopener noreferrer">mã nguồn</a>`}</p>

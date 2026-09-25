@@ -89,16 +89,14 @@ export function selectEntity(g, id) {
 const mine = (g, ent) => typeof g.session.canCommand !== 'function' || g.session.canCommand(ent) === true;
 
 export function catchWild(g, ent) {
-  if (typeof g.session.catchWild !== 'function') return 'fn';
-  g.session.catchWild(ent);
-  return null;
+  if (typeof g.session.catchWild !== 'function') return { fail: 'fn' };
+  return { seq: g.session.catchWild(ent) };
 }
 
 export function evolveCreature(g, ent, nextStageId) {
-  if (typeof g.session.evolveCreature !== 'function') return 'fn';
-  if (!mine(g, ent)) return 'other';
-  g.session.evolveCreature(ent, nextStageId);
-  return null;
+  if (typeof g.session.evolveCreature !== 'function') return { fail: 'fn' };
+  if (!mine(g, ent)) return { fail: 'other' };
+  return { seq: g.session.evolveCreature(ent, nextStageId) };
 }
 
 export function tradePet(g, ent, offerSlot) {

@@ -666,6 +666,179 @@ test('bookmarklet: Xếp đội nhớ đội hình — pet Lv1 vừa mua để y
   w.__cutdHelper.destroy();
 });
 
+const upLine = () => {
+  for (const [id, u] of Object.entries(overlay.u)) {
+    if (!u.k || !Array.isArray(u.pg) || u.pg.length < 4 || u.pg[0] !== id) continue;
+    const costs = u.pg.slice(1).map((to, i) => (overlay.u[u.pg[i]].e ?? []).find(([x]) => x === to)?.[1]);
+    if (costs.every(c => Number.isFinite(c) && c > 0)) return { path: u.pg, costs, price: u.b ?? 0 };
+  }
+  return null;
+};
+
+function webGame(w, code, entities) {
+  w.document.getElementById('GameCanvas').remove();
+  w.eval(code);
+  w.__entities = new Map(entities);
+  w.eval(`
+    window.__moves = [];
+    window.Session = class { constructor(store) { this.nextSequence = 1; this.store = store; }
+      dispatch(c) { const s = this.nextSequence; this.nextSequence += 1; window.__moves.push(c); return s; }
+      moveCreature(e, to) { return this.dispatch(['move', e.id, to.x, to.y]); }
+      catchWild(e) { return this.dispatch(['catch', e.id]); }
+      evolveCreature(e, to) { const s = this.dispatch(['evolve', e.id, to]); e.contentId = to; return s; }
+      tradePet() {} }
+    window.Interaction = class { constructor() { this._selectedEntityId = null; } selectEntity() {} tapGround() {} clearSelection() {} }
+    const at = (x, y) => ({ x: 1376 + x, y });
+    window.__session = new Session({ entities: window.__entities, ground: { arena: { originX: 1376 + 192, originY: 96, width: 832, height: 1120 }, path: [at(96, 656), at(1120, 656)] } });
+    window.__interaction = new Interaction();
+  `);
+}
+const ent = (key, kind, wireId, contentId) => [key, { id: key, kind, wireId, contentId, fromPos: { x: 1800, y: 500 }, toPos: { x: 1800, y: 500 } }];
+const baseWith = gold => ({ base_id: 7, lives: 30, gold, lumber: 0, alive: true, research: [] });
+
+test('bookmarklet: ★ wishlist — tab Wild / Trade hiện số ★ (không chen dòng thông báo), gắn ★ ngay trên thẻ trade, con ★ thành thẻ rộng; cỡ tool Nhỏ / Vừa / Lớn', async t => {
+  const { w, log, code, FakeWS } = setupDom();
+  t.after(() => w.close());
+  w.eval(code);
+  const ws = new FakeWS();
+  ws.addEventListener('message', e => e.data);
+  const emit = m => ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
+  emit(summary);
+  await tick(0);
+  emit(keyframe([{ id: 1, stage_id: scenario.c, owner_id: 11, health: 10, max_health: 10, active: true }]));
+  await tick(1200);
+  const root = log.roots[0];
+  const tabOf = k => [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith(k));
+  assert.equal(root.querySelectorAll('.tab .ws').length, 0, 'chưa ★ thì không có số ★');
+  tabOf('Trade').click();
+  const star = root.querySelector('.tcard .pair > :last-child .star');
+  assert.ok(star, 'thẻ trade có ☆ ở con nhận về');
+  star.click();
+  await tick(0);
+  assert.match(tabOf('Trade').textContent, /★2$/, '2 kèo đều ra pet cùng dòng ★');
+  assert.match(tabOf('Wild').textContent, /★1$/, 'bãi có 1 con cùng dòng');
+  assert.equal(root.querySelector('.toast'), null, 'không chen dòng thông báo làm danh sách nhảy');
+  assert.ok([...root.querySelectorAll('.tcard')].every(c => c.classList.contains('wish')));
+  tabOf('Wild').click();
+  assert.ok(root.querySelector('.grid .tile.wide .pic.wide .wi .tn'), 'con ★ ở bãi thành thẻ rộng, tên nằm cạnh ảnh');
+  tabOf('Đội').click();
+  assert.ok(root.querySelector('.grid .tile.wide'), 'con ★ trong đội cũng thành thẻ rộng');
+  tabOf('⚙').click();
+  const chip = text => [...root.querySelectorAll('.chip')].find(b => b.textContent === text);
+  const wrap = root.querySelector('.wrap');
+  assert.ok(chip('Vừa').classList.contains('on'), 'mặc định cỡ Vừa');
+  assert.equal(wrap.style.getPropertyValue('--z'), '1.25');
+  chip('Lớn').click();
+  assert.equal(wrap.style.getPropertyValue('--z'), '1.45');
+  assert.ok(chip('Lớn').classList.contains('on'));
+  chip('Nhỏ').click();
+  assert.equal(wrap.style.getPropertyValue('--z'), '1');
+  w.__cutdHelper.destroy();
+});
+
+test('bookmarklet: ⇑ nâng max con ★ ở tab Đội — 1 cú bấm, từng lệnh chờ game xác nhận, cách ≥ 0,8 giây, dừng khi game từ chối; con không ★ không có nút', async t => {
+  const line = upLine();
+  assert.ok(line, 'có dòng tiến hóa ≥ 3 bậc để thử');
+  const { path, costs } = line;
+  const gold = costs[0] + costs[1] + costs[2];
+  const { w, log, code, FakeWS } = setupDom('https://m.cutd.site/?room=805A6070');
+  t.after(() => w.close());
+  webGame(w, code, [ent('u1', 'creature', 1, path[0])]);
+  const ws = new FakeWS();
+  ws.addEventListener('message', e => e.data);
+  const emit = m => ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
+  const unit = stage => ({ id: 1, stage_id: stage, owner_id: 11, health: 10, max_health: 10, active: true });
+  emit(summary);
+  await tick(0);
+  emit(keyframe([unit(path[0])], { base: baseWith(gold), wilds: [], trade_offers: [] }));
+  await tick(1200);
+  const root = log.roots[0];
+  [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith('Đội')).click();
+  assert.equal(root.querySelectorAll('.act.up').length, 0, 'chưa ★ → không có nút ⇑');
+  root.querySelector('.tile .star').click();
+  const up = () => root.querySelector('.tile.wide .act.up');
+  assert.match(up().textContent, new RegExp(`^⇑ Lv${overlay.u[path[3]].l} · `), 'ghi sẵn cấp tới được với số vàng hiện có');
+  up().click();
+  await tick(50);
+  assert.equal(w.__moves.length, 0, 'click do script → bỏ qua');
+  const waitMoves = async n => { for (let i = 0; i < 60 && w.__moves.length < n; i++) await tick(50); return w.__moves.length; };
+  trustedClick(w, up());
+  assert.equal(await waitMoves(1), 1);
+  assert.deepEqual([...w.__moves[0]], ['evolve', 'u1', path[1]]);
+  assert.match(up().textContent, /^⇑ 0\/3$/, 'đang chạy: hiện tiến độ');
+  assert.ok(root.querySelector('.tile.wide .act.do-evolve').disabled, 'nút khác khoá trong lúc nâng');
+  let left = gold;
+  for (let i = 1; i <= 2; i++) {
+    const sentAt = Date.now();
+    left -= costs[i - 1];
+    emit({ type: 'command_ack', sequence: i, accepted: true, tick: 100 + i });
+    emit({ type: 'base_delta', tick: 100 + i, from_tick: 100, base: baseWith(left), units_upserted: [unit(path[i])], unit_ids_removed: [], creep_ids_removed: [], wild_ids_removed: [] });
+    assert.equal(await waitMoves(i + 1), i + 1, `lệnh ${i + 1} đi sau khi game xác nhận lệnh ${i}`);
+    assert.ok(Date.now() - sentAt >= 600, 'giữa 2 lệnh có khoảng nghỉ');
+    assert.deepEqual([...w.__moves[i]], ['evolve', 'u1', path[i + 1]]);
+  }
+  emit({ type: 'command_ack', sequence: 3, accepted: false, reason: 'not_enough_gold', tick: 104 });
+  await tick(300);
+  assert.match(root.querySelector('.toast').textContent, /^⇑ .+ → .+ · .+ vàng\. Game từ chối: not enough gold\.$/);
+  assert.equal(root.querySelector('.body').lastElementChild.className, 'msgs', 'thông báo nằm cuối, không đẩy danh sách xuống');
+  await tick(1200);
+  assert.equal(w.__moves.length, 3, 'bị từ chối → dừng hẳn');
+  assert.equal(log.sent, 0, 'tool không tự gửi socket');
+  w.__cutdHelper.destroy();
+});
+
+test('bookmarklet: ⇑ ở tab Wild — bắt rồi nâng luôn con vừa bắt; bắt trượt (pet chạy mất) thì dừng', async t => {
+  const { path, costs, price } = upLine();
+  const gold = price + costs[0] + costs[1];
+  const { w, log, code, FakeWS } = setupDom('https://m.cutd.site/?room=805A6070');
+  t.after(() => w.close());
+  webGame(w, code, [ent('w1', 'wild', 1, path[0]), ent('w2', 'wild', 2, path[0])]);
+  const ws = new FakeWS();
+  ws.addEventListener('message', e => e.data);
+  const emit = m => ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
+  const unit = (id, stage) => ({ id, stage_id: stage, owner_id: 11, health: 10, max_health: 10, active: true });
+  const delta = (gold2, extra) => ({ type: 'base_delta', tick: 120, from_tick: 100, base: baseWith(gold2), units_upserted: [], unit_ids_removed: [], creep_ids_removed: [], wild_ids_removed: [], ...extra });
+  emit(summary);
+  await tick(0);
+  emit(keyframe([], { base: baseWith(gold), wilds: [{ id: 1, stage_id: path[0], position: { x: 0, y: 0 } }, { id: 2, stage_id: path[0], position: { x: 0, y: 0 } }], trade_offers: [] }));
+  await tick(1200);
+  const root = log.roots[0];
+  [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith('Wild')).click();
+  root.querySelector('.tile .star').click();
+  const up = () => root.querySelector('.tile.wide .act.up');
+  assert.match(up().textContent, new RegExp(`^⇑ Lv${overlay.u[path[2]].l} · `));
+  const waitMoves = async n => { for (let i = 0; i < 60 && w.__moves.length < n; i++) await tick(50); return w.__moves.length; };
+  trustedClick(w, up());
+  assert.equal(await waitMoves(1), 1);
+  assert.deepEqual([...w.__moves[0]], ['catch', 'w1'], 'lệnh đầu là bắt');
+  emit({ type: 'command_ack', sequence: 1, accepted: true, tick: 121 });
+  w.__entities.set(...ent('u5', 'creature', 5, path[0]));
+  emit(delta(gold - price, { units_upserted: [unit(5, path[0])], wild_ids_removed: [1] }));
+  assert.equal(await waitMoves(2), 2);
+  assert.deepEqual([...w.__moves[1]], ['evolve', 'u5', path[1]], 'bắt được → nâng đúng con vừa bắt');
+  emit({ type: 'command_ack', sequence: 2, accepted: true, tick: 122 });
+  emit(delta(gold - price - costs[0], { units_upserted: [unit(5, path[1])] }));
+  assert.equal(await waitMoves(3), 3);
+  assert.deepEqual([...w.__moves[2]], ['evolve', 'u5', path[2]]);
+  emit({ type: 'command_ack', sequence: 3, accepted: true, tick: 123 });
+  emit(delta(gold - price - costs[0] - costs[1], { units_upserted: [unit(5, path[2])] }));
+  await tick(300);
+  assert.match(root.querySelector('.toast').textContent, /^⇑ .+ → .+ · .+ vàng\.$/);
+  emit(delta(5000));
+  await tick(1200);
+  trustedClick(w, up());
+  assert.equal(await waitMoves(4), 4);
+  assert.deepEqual([...w.__moves[3]], ['catch', 'w2']);
+  emit({ type: 'command_ack', sequence: 4, accepted: true, tick: 124 });
+  emit(delta(5000, { wild_ids_removed: [2] }));
+  await tick(1500);
+  assert.match(root.querySelector('.toast').textContent, /Bắt trượt/);
+  await tick(1000);
+  assert.equal(w.__moves.length, 4, 'bắt trượt → không nâng gì');
+  assert.equal(log.sent, 0);
+  w.__cutdHelper.destroy();
+});
+
 test('bookmarklet: bản web chạy trong khung → game gốc phía sau bị cắt đồ hoạ (trả RAM/GPU) + chỉ còn 1 khung/giây', async t => {
   const { ResourceLoader } = await import('jsdom');
   class Pages extends ResourceLoader { fetch(url, opts) { return opts?.element?.localName === 'iframe' ? Promise.resolve(Buffer.from('<!doctype html><html><body></body></html>')) : null; } }
