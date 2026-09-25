@@ -661,7 +661,7 @@ test('bookmarklet: Xếp đội nhớ đội hình — pet Lv1 vừa mua để y
   emit({ ...summary, phase: 'planning', tick: 400 });
   await tick(1200);
   assert.match(btn().textContent, /↕2/, 'sang round sau → tính cả con mới');
-  assert.match(root.querySelector('.toast')?.textContent ?? '', /Round mới: 2 con/);
+  assert.equal(root.querySelector('.toast'), null, 'sang round không tự hiện thông báo (không đẩy danh sách nhảy lên xuống), số con cần dời nằm trên nút');
   assert.equal(log.sent, 0);
   w.__cutdHelper.destroy();
 });

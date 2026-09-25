@@ -526,13 +526,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     lastWatch = t;
     const ready = !!state.haveKeyframe && (ownBase == null || state.baseId === ownBase);
     const g = ready ? findGame() : null;
-    const before = mem.planning, booted = mem.booted;
-    const changed = observe(mem, { phase, ready, units: ready ? snapUnits(g) : [] }, t);
-    if (booted && changed.length) toast = `${changed.map(u => nameOf(u.stage)).join(', ')} đổi vai trò → hàng ${ROWS[changed[0].row][0]} — bấm Xếp đội để dời.`;
-    if (mem.planning !== before && g && !blockReason()) {
-      const n = arrangePlan(g)?.moves.length ?? 0;
-      if (n) toast = `Round mới: ${n} con cần vào vị trí — bấm Xếp đội (mỗi lần bấm dời ${PER_CLICK} con).`;
-    }
+    observe(mem, { phase, ready, units: ready ? snapUnits(g) : [] }, t);
   }
   let arranging = false;
   async function arrange(e) {
