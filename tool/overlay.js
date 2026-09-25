@@ -603,13 +603,15 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   async function boost(e, kind, key, stage) {
     e.stopPropagation();
     e.currentTarget.blur();
-    if (!realClick(e) || boosting || arranging || !wished(stage)) return;
+    const unitId = kind === 'evolve' ? Number(key.slice(1)) : null;
+    const still = () => (kind === 'evolve' ? pinned.has(unitId) : wished(stage));
+    if (!realClick(e) || boosting || arranging || !still()) return;
     let fail = blockReason();
     const g = fail ? null : findGame();
     if (!fail && !g) fail = 'game';
     if (!fail && state.summary?.phase !== 'planning') fail = 'locked';
     const price = kind === 'catch' ? (U(stage)?.b ?? 0) : 0;
-    const plan = fail ? null : planFor(stage, state.gold - price);
+    const plan = fail ? null : kind === 'evolve' ? teamPlan(stage, state.gold) : planFor(stage, state.gold - price);
     if (!fail && (!plan?.steps.length || state.gold < price)) fail = 'gold';
     if (fail) { toast = FAIL[fail]; dirty = true; render(true); return; }
     boosting = { key, stage, done: 0, total: plan.steps.length + (kind === 'catch' ? 1 : 0) };
@@ -626,7 +628,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       for (const [to, cost] of plan.steps) {
         if (!(await paced())) return;
         if (state.summary?.phase !== 'planning') { why = FAIL.locked; break; }
-        if (!wished(cur)) { why = 'Đã bỏ ★ — dừng.'; break; }
+        if (!still()) { why = 'Đã bỏ ★ — dừng.'; break; }
         if (cost > state.gold) { why = 'Hết vàng — dừng.'; break; }
         const ent = findEntity(g, boosting.key)?.ent;
         if (!ent || ent.contentId !== cur) { why = FAIL.entity; break; }
@@ -760,8 +762,15 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     return h('button', { class: `star ${own ? 'on' : link ? 'link' : ''}`, text: own || link ? '★' : '☆', tabindex: '-1',
       title: own ? 'Bỏ khỏi wishlist'
         : link ? `Tự ★ theo kèo trade S${link.slot}: đưa ${nameOf(link.give)} lấy ${nameOf(link.get)} — nút ⇑ chỉ nâng tới đúng ${nameOf(link.give)}. Bấm để giữ ★ cả khi hết kèo`
-        : 'Thêm vào wishlist: dòng này nằm đầu tab Wild, Đội, Trade và có nút ⇑ nâng max; ra ở bãi hay có kèo trade thì tab hiện ★. ★ con nhận ở kèo trade thì con phải đưa cũng tự ★',
+        : 'Thêm vào wishlist cả dòng: nằm đầu tab Wild và Trade, ở bãi có nút ⇑ bắt rồi nâng; ra ở bãi hay có kèo trade thì tab hiện ★. ★ con nhận ở kèo trade thì con phải đưa cũng tự ★. Không kéo con nào trong đội lên — ở tab Đội dùng ★ ghim từng con',
       onClick: e => { e.stopPropagation(); if (own) wish.delete(famOf(stage)); else wish.add(famOf(stage)); dirty = true; render(true); } });
+  };
+  const pinned = new Set();
+  const unitStar = (unit, size) => {
+    const on = pinned.has(unit.id);
+    return h('button', { class: `star ${on ? 'on' : ''}`, text: on ? '★' : '☆', tabindex: '-1',
+      title: on ? 'Bỏ ghim' : `Ghim ${size > 1 ? '1 con' : 'con này'} lên đầu tab Đội để nâng (có nút ⇑). Chỉ riêng con này — không dính ★ ở Wild / Trade`,
+      onClick: e => { e.stopPropagation(); if (on) pinned.delete(unit.id); else pinned.add(unit.id); dirty = true; render(true); } });
   };
   const auraNow = stage => (U(stage)?.r ?? []).includes('aura');
   const auraAhead = stage => {
@@ -856,6 +865,10 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     }
     return { steps, spent, need, peak: link.give, link };
   }
+  const teamPlan = (stage, budget) => {
+    const link = linkOf(stage);
+    return (link ? tradePlan(stage, link, budget) : null) ?? maxPlan(stage, budget);
+  };
   const planFor = (stage, budget) => {
     const link = linkOf(stage);
     const route = link ? tradePlan(stage, link, budget) : null;
@@ -952,7 +965,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     buff: ['BUFF', u => kitOf(u.stage)[0] === 'buff'],
     debuff: ['DEBUFF', u => kitOf(u.stage)[0] === 'debuff'],
   };
-  function teamTile(stage, list, plan, wanted) {
+  function teamTile(stage, list, plan, wanted, pin = false) {
     const u = U(stage) ?? {};
     const alive = list.filter(x => x.active);
     const lead = alive[0] ?? list[0];
@@ -962,7 +975,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const needs = offersForFamily(state, db, stage);
     const going = plan?.moves.filter(m => list.some(x => `u${x.id}` === m.key)) ?? [];
     const cells = list.map(x => plan?.cells.get(`u${x.id}`)).filter(Boolean);
-    const wide = wished(stage), up = wide && alive.length ? planFor(stage, state.gold) : null;
+    const wide = pin, up = wide && alive.length ? teamPlan(stage, state.gold) : null;
     const buttons = [
       ...evo.map(([to, cost]) => {
         const trap = u.tp?.[to];
@@ -987,12 +1000,12 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       needs.length ? h('b', { class: 'trf', text: '⇄' }) : null, u.n ?? stage);
     const face = wide
       ? widePic(stage, tip, [name, h('small', { text: u.pg ? `${levelOf(stage)} · đỉnh ${levelOf(u.pg.at(-1))}` : `${levelOf(stage)} · dạng mạnh nhất` }),
-        h('small', { class: 'go', text: alive.length ? goLine(up) : 'Gục — đợt sau mới nâng' })], mark, starBtn(stage), cnt, hp)
-      : pic(stage, tip, mark, starBtn(stage), lvTag(stage), cnt, hp);
+        h('small', { class: 'go', text: alive.length ? goLine(up) : 'Gục — đợt sau mới nâng' })], mark, unitStar(lead, list.length), cnt, hp)
+      : pic(stage, tip, mark, unitStar(lead, list.length), lvTag(stage), cnt, hp);
     return openable(h('div', { class: `tile${wide ? ' wish wide' : ''}${alive.length ? '' : ' down'}${isOpen(stage, ids) ? ' sel' : ''}`, style: `--ro:${roleColor(stage)}` },
       face, strip(stage), wide ? null : name,
       h('div', { class: `acts${buttons.length > 1 && !wide ? ' split' : ''}` }, buttons)),
-    cycle(`u:${stage}`, list.map(x => `u${x.id}`)), stage, key => Number(key.slice(1)));
+    cycle(`u:${stage}${pin ? `:${lead.id}` : ''}`, list.map(x => `u${x.id}`)), stage, key => Number(key.slice(1)));
   }
   function viewTeam() {
     const mine = myUnits(state);
@@ -1003,21 +1016,24 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const g = blocked ? null : findGame();
     const plan = g ? arrangePlan(g) : null;
     const test = TEAM_FILTER[teamFilter][1];
-    const first = new Map(), stacks = new Map();
+    for (const id of pinned) if (!mine.some(u => u.id === id)) pinned.delete(id);
+    const first = new Map(), stacks = new Map(), pins = [];
     for (const u of [...mine].sort((a, b) => a.id - b.id)) {
       if (!first.has(famOf(u.stage))) first.set(famOf(u.stage), u.id);
       if (!test(u)) continue;
+      if (pinned.has(u.id)) { pins.push([u.stage, [u]]); continue; }
       if (!stacks.has(u.stage)) stacks.set(u.stage, []);
       stacks.get(u.stage).push(u);
     }
     const rank = stage => [first.get(famOf(stage)) ?? 0, U(stage)?.l ?? 0];
     const order = ([a], [b]) => { const x = rank(a), y = rank(b); return x[0] - y[0] || x[1] - y[1] || (a < b ? -1 : a > b ? 1 : 0); };
-    const groups = [['★', '#ffde8f', 'Wishlist — ưu tiên nâng'], ...ROWS].map(([name, color, tip]) => ({ name, color, tip, list: [] }));
-    for (const entry of stacks) groups.at(wished(entry[0]) ? 0 : formationRow(U(entry[0])) + 1).list.push(entry);
+    const groups = [['★', '#ffde8f', 'Con đã ghim — ưu tiên nâng'], ...ROWS].map(([name, color, tip]) => ({ name, color, tip, list: [] }));
+    groups[0].list.push(...pins);
+    for (const entry of stacks) groups.at(formationRow(U(entry[0])) + 1).list.push(entry);
     return [teamBar(mine, plan, blocked),
-      stacks.size ? groups.filter(gr => gr.list.length).map(gr => [
+      stacks.size || pins.length ? groups.filter(gr => gr.list.length).map(gr => [
         h('div', { class: 'sect', style: `--c:${gr.color}`, title: gr.tip }, h('i'), gr.name, h('span', { class: 'n', text: String(gr.list.reduce((n, [, l]) => n + l.length, 0)) })),
-        h('div', { class: 'grid' }, gr.list.sort(order).map(([stage, l]) => teamTile(stage, l, plan, wanted))),
+        h('div', { class: 'grid' }, gr.list.sort(order).map(([stage, l]) => teamTile(stage, l, plan, wanted, gr === groups[0]))),
       ]) : empty('Không có con nào thuộc nhóm này.')];
   }
 

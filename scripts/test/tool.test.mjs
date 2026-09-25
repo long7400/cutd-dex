@@ -721,7 +721,9 @@ test('bookmarklet: ★ wishlist — tab Wild / Trade hiện số ★ (không che
   tabOf('Wild').click();
   assert.ok(root.querySelector('.grid .tile.wide .pic.wide .wi .tn'), 'con ★ ở bãi thành thẻ rộng, tên nằm cạnh ảnh');
   tabOf('Đội').click();
-  assert.ok(root.querySelector('.grid .tile.wide'), 'con ★ trong đội cũng thành thẻ rộng');
+  assert.equal(root.querySelector('.grid .tile.wide'), null, '★ ở Wild / Trade không kéo con nào trong đội lên');
+  root.querySelector('.grid .tile .star').click();
+  assert.ok(root.querySelector('.grid .tile.wide'), 'ghim ở tab Đội → thẻ rộng trên đầu');
   tabOf('⚙').click();
   const chip = text => [...root.querySelectorAll('.chip')].find(b => b.textContent === text);
   const wrap = root.querySelector('.wrap');
@@ -868,8 +870,10 @@ test('bookmarklet: ★ con nhận ở kèo trade → con phải đưa cũng tự
   assert.match(giveStar().title, /Tự ★ theo kèo trade S1/);
   assert.equal(tabOf('Wild').textContent, 'Wild★', 'con cùng dòng ở bãi cũng tính là ★');
   tabOf('Đội').click();
+  assert.equal(root.querySelector('.tile.wide'), null, 'đội không tự ghim theo ★ ở Trade');
+  root.querySelector('.grid .tile .star').click();
   const up = root.querySelector('.tile.wide .act.up');
-  assert.ok(up, 'con cùng dòng trong đội thành thẻ ★ có ⇑');
+  assert.ok(up, 'ghim con trong đội → có ⇑');
   assert.match(up.textContent, new RegExp(`^⇑ Lv${overlay.u[need].l} · `), `⇑ dừng ở ${overlay.u[need].n} Lv${overlay.u[need].l} — đúng cấp kèo cần, không lên đỉnh dòng`);
   assert.match(up.title, /để trade S1/);
   tabOf('Wild').click();
@@ -879,6 +883,40 @@ test('bookmarklet: ★ con nhận ở kèo trade → con phải đưa cũng tự
   await tick(0);
   assert.equal(giveStar().textContent, '☆', 'bỏ ★ con nhận → con phải đưa hết ★');
   assert.equal(root.querySelectorAll('.tab .ws').length, 0);
+  w.__cutdHelper.destroy();
+});
+
+test('bookmarklet: ★ ở tab Đội ghim từng con — 2 con giống nhau, ghim A thì chỉ A lên đầu, B ở lại chỗ cũ; không đụng ★ ở Wild / Trade', async t => {
+  const { w, log, code, FakeWS } = setupDom();
+  t.after(() => w.close());
+  w.eval(code);
+  const ws = new FakeWS();
+  ws.addEventListener('message', e => e.data);
+  const emit = m => ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
+  const unit = id => ({ id, stage_id: scenario.a, owner_id: 11, health: 10, max_health: 10, active: true });
+  emit(summary);
+  await tick(0);
+  emit(keyframe([unit(1), unit(2)]));
+  await tick(1200);
+  const root = log.roots[0];
+  const tabOf = k => [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith(k));
+  tabOf('Đội').click();
+  const tiles = () => [...root.querySelectorAll('.grid .tile')];
+  assert.equal(tiles().length, 1);
+  assert.equal(tiles()[0].querySelector('.cnt')?.textContent, '×2', '2 con giống nhau gộp 1 ô');
+  tiles()[0].querySelector('.star').click();
+  assert.equal(tiles().length, 2, 'ghim 1 con → tách ra');
+  assert.ok(tiles()[0].classList.contains('wide'), 'con được ghim lên đầu, thẻ rộng');
+  assert.equal(tiles()[0].querySelector('.cnt'), null, 'thẻ ghim chỉ có 1 con');
+  assert.ok(!tiles()[1].classList.contains('wide') && tiles()[1].querySelector('.cnt') === null, 'con còn lại vẫn ở chỗ cũ, không ghim');
+  assert.match(root.querySelector('.sect').textContent, /★/);
+  assert.equal(root.querySelectorAll('.tab .ws').length, 0, 'ghim ở Đội không bật ★ ở Wild / Trade');
+  tabOf('Wild').click();
+  assert.equal(root.querySelector('.tile .star.on'), null, 'con cùng dòng ở bãi không bị ★ theo');
+  tabOf('Đội').click();
+  tiles()[0].querySelector('.star').click();
+  assert.equal(tiles().length, 1, 'bỏ ghim → gộp lại');
+  assert.equal(tiles()[0].querySelector('.cnt')?.textContent, '×2');
   w.__cutdHelper.destroy();
 });
 
