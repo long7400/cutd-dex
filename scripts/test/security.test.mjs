@@ -87,12 +87,12 @@ test('wiki build có CSP, không script inline', () => {
   for (const d of ['frame-src', 'child-src', 'worker-src', 'object-src']) assert.match(cfg, new RegExp(`"${d} 'none'"`), d);
   assert.doesNotMatch(cfg, /unsafe-eval|strict-dynamic|\s\*[\s;"`]/);
   assert.match(cfg, /`script-src \$\{HOME\}assets\/`,/, 'script-src chỉ đúng thư mục assets, không unsafe-inline');
-  assert.match(cfg, /`media-src \$\{HOME\}video\/`,/, 'media-src chỉ đúng thư mục video');
+  assert.match(cfg, /"media-src 'none'"/, 'không có video / audio');
   if (existsSync(join(ROOT, 'dist/index.html'))) {
     const csp = readFileSync(join(ROOT, 'dist/index.html'), 'utf8').match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? '';
     assert.match(csp, /script-src https:\/\/long7400\.github\.io\/cutd-dex\/assets\/(;|$)|script-src http:\/\/localhost:\d+\/assets\//);
     assert.match(csp, /frame-src 'none'/);
-    assert.match(csp, /media-src (https:\/\/long7400\.github\.io\/cutd-dex|http:\/\/localhost:\d+)\/video\/;/);
+    assert.match(csp, /media-src 'none'/);
   }
   for (const f of ['index.html', 'src/main.js', 'src/ui.js']) assert.doesNotMatch(readFileSync(join(ROOT, f), 'utf8'), /\son[a-z]+="/, f);
 });

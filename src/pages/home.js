@@ -2,16 +2,13 @@ import './home.css';
 import { html, toString, num } from '../lib/html.js';
 import { db, portrait, label } from '../db.js';
 import { evoLines, HERO_TEAM, HERO_CREEPS, COURT } from '../lib/showcase.js';
-import tool from '../data/tool.json';
 import { PLAY, DOWN, BOOK } from '../lib/icons.js';
 import { EL } from '../ui.js';
-import { videoMarkup, mountVideo } from './home/video.js';
 
 const GAME_URL = 'https://m.cutd.site/';
 const cls = t => ({ 'S+': 't-sp', S: 't-s', A: 't-a', B: 't-b', C: 't-c' })[t] ?? 't-c';
 const TC = { 'S+': '#ffde8f', S: '#ff9f43', A: '#9af0ce', B: '#9fbcd9', C: '#aec4d3' };
 const art = name => `art/${name}.glb`;
-const bookmarklet = () => `javascript:${encodeURIComponent(tool.code)}`;
 
 
 function waves() {
@@ -87,11 +84,6 @@ export default {
         </div>`)}</div>
       </section>
 
-      <section class="h-band h-tool h-wrap" id="helper">
-        <h2>Trợ lý <em>ngay trong trận.</em></h2>
-        ${videoMarkup(bookmarklet())}
-      </section>
-
       <section class="h-final" style="background-image:url(art/finale.webp)">
         <div>
           <h2>Vào trận.</h2>
@@ -162,6 +154,5 @@ export default {
       }
     }
 
-    mountVideo($('#helper'), cleanups);
   },
 };

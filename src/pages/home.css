@@ -83,8 +83,6 @@
 .h-mrow .avoid { font: 700 13px Barlow, sans-serif; color: var(--sub); }
 .h-mrow .avoid b { display: block; font: 800 12px 'JetBrains Mono', monospace; color: #ff8c98; }
 
-.h-tool { background: linear-gradient(180deg, var(--bg), #0a1422); }
-.h-tool h2 { margin-bottom: 26px; }
 
 .h-final { position: relative; min-height: 88svh; display: grid; place-items: center; text-align: center; background: var(--bg) center / cover; overflow: hidden; }
 .h-final::before { content: ''; position: absolute; inset: 0; background: radial-gradient(60% 55% at 50% 50%, rgba(13, 26, 43, .2), rgba(13, 26, 43, .75)); }

@@ -1,3 +1,0 @@
-.h-video { border-radius: 16px; overflow: hidden; box-shadow: 0 0 0 1.5px var(--line), 0 30px 60px rgba(0, 0, 0, .35); background: #0a1422; }
-.h-video video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: #0a1422; }
-.h-caption { margin-top: 14px; display: flex; justify-content: flex-end; }

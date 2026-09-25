@@ -2,7 +2,6 @@ import { html } from '../lib/html.js';
 import tool from '../data/tool.json';
 import { DOWN, COPY } from '../lib/icons.js';
 import { pageHead, footer } from '../ui.js';
-import { videoMarkup, mountVideo } from './home/video.js';
 
 const REPO = 'https://github.com/long7400/cutd-dex';
 const SOURCE = `${REPO}/tree/main/tool`;
@@ -79,12 +78,6 @@ node scripts/build-tool.mjs --out</code></pre>
         </details>
       </section>
 
-      <section class="tool-demo" id="helper">
-        <h2>Làm được <em>gì</em></h2>
-        ${videoMarkup()}
-        <p class="more-feat">Thêm: đợt tới khắc đòn gì · phòng đối thủ · phím <b>F</b> bấm nút chính · giữ <b>Option</b> + kéo để xoay camera.</p>
-      </section>
-
       <section class="safe">
         <h2>An <em>toàn</em></h2>
         <ul>
@@ -99,7 +92,6 @@ node scripts/build-tool.mjs --out</code></pre>
   mount(root) {
     const cleanups = [];
     this.unmount = () => { cleanups.splice(0).forEach(fn => { try { fn(); } catch { } }); };
-    mountVideo(root.querySelector('.tool-demo'), cleanups);
     const say = t => { root.querySelector('[data-copied]').textContent = t; };
     const copy = (text, ok) => navigator.clipboard?.writeText(text).then(() => say(ok), () => say('Trình duyệt chặn chép — kéo nút vàng lên thanh bookmark.'));
     root.addEventListener('click', e => {

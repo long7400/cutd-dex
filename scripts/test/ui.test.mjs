@@ -113,11 +113,7 @@ test('nav gộp mục: 6 mục chính, tab con đúng mục, trang pet có hạn
   assert.ok(!$('.subnav'), 'trang chi tiết không có tab con');
   await go('#/tool');
   assert.match($('.install .bm').getAttribute('href'), /^javascript:/);
-  const demo = $('.tool-demo .h-video video');
-  assert.equal(demo?.getAttribute('src'), 'video/cutd-helper.mp4', 'có video demo');
-  assert.equal(demo.getAttribute('poster'), 'video/cutd-helper.webp');
-  for (const a of ['muted', 'loop', 'playsinline', 'controls']) assert.ok(demo.hasAttribute(a), a);
-  assert.equal(demo.getAttribute('preload'), 'none', 'chỉ tải khi cuộn tới');
+  assert.ok(!$('.tool-demo') && !$('video'), 'không còn mục demo / video');
   assert.ok(!$('.codebox'), 'bỏ phần chữ thừa');
 });
 
@@ -162,7 +158,7 @@ test('trang chủ: đủ các màn, không thanh nav chung, nút đúng đích, 
   assert.ok($$('.h-mrow .pp').length >= 4, 'có gợi ý pet khắc');
   assert.ok($('.home.no-gl'), 'không WebGL → dùng ảnh thay thế');
   assert.match($('.h-pedimg').getAttribute('src'), /^portraits\/.+\.webp$/);
-  assert.match($('.h-caption .h-btn').getAttribute('href'), /^javascript:/, 'nút bookmarklet thật');
+  assert.ok(!$('#helper') && !$('video'), 'trang chủ không còn mục demo / video');
   $$('.h-forms .form')[2].click();
   assert.match($('.h-stat .nm').textContent, /Charizard/);
   await go('#/pets');
