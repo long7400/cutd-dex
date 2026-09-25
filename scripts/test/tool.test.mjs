@@ -582,7 +582,7 @@ test('bookmarklet: Xếp đội — mỗi lần bấm dời tối đa 2 con lệ
   assert.deepEqual([...w.__moves[1]], ['move', 'u2', 1376 + 368, 656], 'tank lên hàng đầu, giữa đường quái; con cận chiến không bị dời');
   emit({ type: 'command_ack', sequence: 2, accepted: false, reason: 'orders_closed', tick: 102 });
   await tick(200);
-  assert.match(root.querySelector('.toast').textContent, /Đã dời .+ [A-G]\d → [A-G]\d \(HỖ TRỢ\)\. Game từ chối: orders closed/);
+  assert.equal(root.querySelector('.toast').textContent, 'Game từ chối: orders closed.', 'dời được thì im lặng, chỉ báo khi game từ chối');
   trustedClick(w, btn());
   await tick(50);
   assert.equal(w.__moves.length, 2, 'không còn con lệch → bấm không gửi gì');
@@ -778,7 +778,7 @@ test('bookmarklet: ⇑ nâng max con ★ ở tab Đội — 1 cú bấm, từng 
   }
   emit({ type: 'command_ack', sequence: 3, accepted: false, reason: 'not_enough_gold', tick: 104 });
   await tick(300);
-  assert.match(root.querySelector('.toast').textContent, /^⇑ .+ → .+ · .+ vàng\. Game từ chối: not enough gold\.$/);
+  assert.equal(root.querySelector('.toast').textContent, 'Game từ chối: not enough gold.', 'chỉ báo lý do dừng');
   assert.equal(root.querySelector('.body').lastElementChild.className, 'msgs', 'thông báo nằm cuối, không đẩy danh sách xuống');
   await tick(1200);
   assert.equal(w.__moves.length, 3, 'bị từ chối → dừng hẳn');
@@ -822,7 +822,7 @@ test('bookmarklet: ⇑ ở tab Wild — bắt rồi nâng luôn con vừa bắt;
   emit({ type: 'command_ack', sequence: 3, accepted: true, tick: 123 });
   emit(delta(gold - price - costs[0] - costs[1], { units_upserted: [unit(5, path[2])] }));
   await tick(300);
-  assert.match(root.querySelector('.toast').textContent, /^⇑ .+ → .+ · .+ vàng\.$/);
+  assert.equal(root.querySelector('.toast'), null, 'nâng xong thì im lặng, không hiện thông báo');
   emit(delta(5000));
   await tick(1200);
   trustedClick(w, up());

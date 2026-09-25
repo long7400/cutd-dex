@@ -548,7 +548,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     if (!fail) watchRoster(true);
     const plan = fail ? null : arrangePlan(g);
     if (!fail && !plan) fail = 'fn';
-    if (fail || !plan.moves.length) { toast = fail ? FAIL[fail] : 'Đội đã đúng hàng — không cần dời con nào.'; dirty = true; render(true); return; }
+    if (fail || !plan.moves.length) { toast = fail ? FAIL[fail] : ''; dirty = true; render(true); return; }
     arranging = true;
     const done = [];
     let why = '';
@@ -567,11 +567,10 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       const ack = r.fail ? null : await waitAck(r.seq);
       onAck(mem, m.key, !!ack?.ok);
       if (!ack?.ok) { why = r.fail ? FAIL[r.fail] : !ack ? 'Game chưa xác nhận lệnh.' : `Game từ chối: ${ack.reason.replace(/_/g, ' ') || 'không rõ'}.`; break; }
-      done.push(`${nameOf(stage)} ${m.from} → ${m.to} (${ROWS[m.row][0]})`);
+      done.push(m.key);
     }
     arranging = false;
-    const left = plan.moves.length - done.length;
-    toast = [done.length ? `Đã dời ${done.join(', ')}.` : '', why, done.length && !why ? (left > 0 ? `Còn ${left} con lệch — bấm tiếp.` : 'Đội đã đúng hàng.') : ''].filter(Boolean).join(' ');
+    toast = why;
     dirty = true; render(true);
   }
   let boosting = null;
@@ -613,13 +612,13 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     if (fail) { toast = FAIL[fail]; dirty = true; render(true); return; }
     boosting = { key, stage, done: 0, total: plan.steps.length + (kind === 'catch' ? 1 : 0) };
     dirty = true; render(true);
-    let cur = stage, spent = 0, why = '';
+    let cur = stage, why = '';
     try {
       if (kind === 'catch') {
         if (!(await paced())) return;
         const got = await catchFirst(g, key, stage);
         if (got.why) { why = got.why; return; }
-        boosting.key = got.key; boosting.done++; spent += price;
+        boosting.key = got.key; boosting.done++;
         dirty = true; render(true);
       }
       for (const [to, cost] of plan.steps) {
@@ -636,14 +635,13 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         const ack = await waitAck(r.seq);
         if (!ack?.ok) { why = refused(ack); break; }
         await until(() => findEntity(g, boosting.key)?.ent?.contentId === to, 2000);
-        cur = to; spent += cost; boosting.stage = to; boosting.done++;
+        cur = to; boosting.stage = to; boosting.done++;
         dirty = true; render(true);
       }
     } finally {
       boosting = null;
       if (!dead) {
-        const done = cur !== stage ? `⇑ ${nameOf(stage)} → ${nameOf(cur)} · ${fmt(spent)} vàng.` : spent ? `Đã bắt ${nameOf(stage)}.` : '';
-        toast = [done, why].filter(Boolean).join(' ');
+        toast = why;
         dirty = true; render(true);
       }
     }
