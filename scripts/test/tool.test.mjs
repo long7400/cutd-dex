@@ -206,7 +206,7 @@ test('bookmarklet: không chạy ngoài trang game', t => {
   assert.ok(!tool.code.includes('__CUTD_DATA_URL__'));
 });
 
-test('bookmarklet: bấm ở sảnh → bỏ qua socket sảnh, bám đúng socket trận; ngang/dọc; không còn tab Đo tải', async t => {
+test('bookmarklet: bấm ở sảnh → bỏ qua socket sảnh, bám đúng socket trận; không còn tab Đo tải, không còn chế độ ngang, tab không ghi số', async t => {
   const { w, log, code, FakeWS } = setupDom();
   t.after(() => w.close());
   const original = Object.getOwnPropertyDescriptor(w.MessageEvent.prototype, 'data');
@@ -231,12 +231,9 @@ test('bookmarklet: bấm ở sảnh → bỏ qua socket sảnh, bám đúng sock
   const root = log.roots[0];
   const btn = title => [...root.querySelectorAll('button')].find(b => b.title === title || b.textContent.startsWith(title));
   assert.ok(!btn('Đo tải'), 'bỏ tab Đo tải');
-  assert.deepEqual([...root.querySelectorAll('.tab')].map(b => b.textContent.replace(/\s*\d+$/, '')), ['Trade', 'Wild', 'Đội', 'Chiến', 'Đợt', 'Phòng', '⚙︎']);
-
-  btn('Chuyển sang ngang').click();
-  assert.ok(root.querySelector('.panel').classList.contains('h'));
-  btn('Chuyển sang dọc').click();
-  assert.ok(root.querySelector('.panel').classList.contains('v'));
+  assert.deepEqual([...root.querySelectorAll('.tab')].map(b => b.textContent), ['Trade', 'Wild', 'Đội', 'Chiến', 'Đợt', 'Phòng', '⚙︎']);
+  assert.ok(!btn('Chuyển sang ngang'), 'bỏ chế độ màn hình ngang');
+  assert.equal(root.querySelector('.panel').className, 'panel');
   assert.equal(log.sent, 0);
 });
 
@@ -502,7 +499,7 @@ test('bookmarklet: bản web — dán từ sảnh → móc session/interaction l
   assert.equal(w.__calls.length, n + 1, 'panel vừa vẽ lại nhưng thứ tự y nguyên → bấm vẫn ăn');
   await tick(850);
   n = w.__calls.length;
-  [...root.querySelectorAll('.chip')].find(b => b.textContent === 'Rẻ').click();
+  [...root.querySelectorAll('.chip')].find(b => b.textContent === { atk: 'ATK', tank: 'TANK', buff: 'BUFF', debuff: 'DEBUFF' }[overlay.u[scenario.a].kt?.[0]]).click();
   press();
   assert.equal(w.__calls.length, n, 'danh sách vừa đổi thật → chặn cú bấm');
   assert.match(root.querySelector('.toast').textContent, /vừa đổi chỗ/);
@@ -715,8 +712,10 @@ test('bookmarklet: ★ wishlist — tab Wild / Trade hiện số ★ (không che
   assert.ok(star, 'thẻ trade có ☆ ở con nhận về');
   star.click();
   await tick(0);
-  assert.match(tabOf('Trade').textContent, /★2$/, '2 kèo đều ra pet cùng dòng ★');
-  assert.match(tabOf('Wild').textContent, /★1$/, 'bãi có 1 con cùng dòng');
+  assert.equal(tabOf('Trade').textContent, 'Trade★', 'kèo trade ra pet ★ → tab chỉ hiện dấu ★, không số');
+  assert.match(tabOf('Trade').querySelector('.ws').title, /: 2$/);
+  assert.equal(tabOf('Wild').textContent, 'Wild★', 'bãi có con cùng dòng ★');
+  assert.equal(tabOf('Đội').textContent, 'Đội', 'không ghi số');
   assert.equal(root.querySelector('.toast'), null, 'không chen dòng thông báo làm danh sách nhảy');
   assert.ok([...root.querySelectorAll('.tcard')].every(c => c.classList.contains('wish')));
   tabOf('Wild').click();

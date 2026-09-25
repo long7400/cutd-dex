@@ -24,7 +24,6 @@ const CSS = `
 .x:hover{background:#243552;color:#fff}
 .tabs{display:flex;border-bottom:1px solid #243552}
 .tab{all:unset;cursor:pointer;flex:1;text-align:center;padding:7px 0;color:#8fb7e8;font-weight:600;border-bottom:2px solid transparent;white-space:nowrap}
-.tab small{color:#6f8fb8;font-size:10.5px}
 .tab:hover{color:#fff}.tab.on{color:#ffde8f;border-bottom-color:#ffde8f}.tab.on small{color:#ffde8f}
 .body{overflow:auto;padding:4px 0 6px}
 .bar-row{display:flex;flex-wrap:wrap;align-items:center;gap:5px;padding:6px 10px 4px}
@@ -33,9 +32,8 @@ const CSS = `
 .chip{all:unset;cursor:pointer;padding:2px 9px;border-radius:99px;border:1px solid #33496b;color:#8fb7e8;font-weight:600;font-size:11.5px}
 .chip.on{background:#ffde8f;color:#0b1526;border-color:transparent}
 .chip.sm{padding:1px 8px;font-size:11px}.chip:disabled{opacity:.35;cursor:default}
-.wrap{display:flex;gap:8px;align-items:flex-start}.wrap.h{flex-direction:column-reverse}
+.wrap{display:flex;gap:8px;align-items:flex-start}
 .drawer{width:270px;max-height:calc((100vh - 24px) / var(--z,1));overflow-y:auto;background:#0f1a2df5;color:#e6f2ff;border:1px solid #33496b;border-radius:12px;box-shadow:0 10px 30px #000a;padding:12px;scrollbar-width:thin}
-.wrap.h .drawer{max-height:calc(45vh / var(--z,1))}
 .dh{display:grid;grid-template-columns:64px 1fr;gap:10px;align-items:center}.dh .pt{width:64px;height:64px;border:0;background:transparent;object-fit:contain}
 .dh b{font-size:16px;font-weight:800}.dl{display:flex;align-items:center;gap:6px;margin-top:5px}
 .role{font-size:10px;font-weight:800;padding:1px 5px;border-radius:4px}.k-atk.role{background:#3d2226;color:#ff9c9c}.k-tank.role{background:#1b2d4a;color:#9fe3ff}.k-buff.role{background:#3a2f10;color:#ffde8f}.k-debuff.role{background:#2a2148;color:#cbb3ff}
@@ -71,16 +69,6 @@ table{width:100%;border-collapse:collapse}th,td{text-align:right;padding:5px 10p
 th{color:#6f8fb8;font-weight:600;font-size:11px}td:first-child,th:first-child{text-align:left}
 tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .mini{all:unset;cursor:pointer;padding:5px 11px;border-radius:9px;background:#0f1a2d;color:#ffde8f;border:1px solid #b69c62;font-weight:700;box-shadow:0 4px 14px #0008}
-.panel.h{width:min(1180px,calc((100vw - 24px) / var(--z,1)));max-height:min(320px,calc(50vh / var(--z,1)));display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
-.panel.h .top{grid-column:1;padding-right:4px}.panel.h .top .grow{flex:0 0 6px}
-.panel.h .tabs{grid-column:2;border:0;border-left:1px solid #243552;overflow-x:auto;scrollbar-width:none}
-.panel.h .tabs::-webkit-scrollbar{display:none}
-@media (max-width:700px){.panel.h{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr)}
-.panel.h .tabs{grid-column:1/-1;border-left:0;border-top:1px solid #243552}.panel.h .tab{flex:1 0 auto}}
-.panel.h .body{grid-column:1/-1;border-top:1px solid #243552}
-.panel.h .body{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));align-content:start;column-gap:4px}
-.panel.h .body>.bar-row,.panel.h .body>.empty,.panel.h .body>table,.panel.h .body>.verdict,.panel.h .body>.sec,.panel.h .body>.sect,.panel.h .body>.grid,.panel.h .body>.tgrid,.panel.h .body>.msgs{grid-column:1/-1}
-.panel.h .tab{flex:0 0 auto;padding:7px 14px}
 .verdict{margin:8px 10px;padding:8px 10px;border-radius:8px;background:#3a3016;color:#ffde8f;font-weight:600}
 .kv{display:flex;justify-content:space-between;gap:10px;padding:4px 10px;border-bottom:1px solid #1d2c47}
 .kv span{color:#8fb7e8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.kv b{white-space:nowrap}
@@ -154,7 +142,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .kit .k-taunt,.kit .k-boss{background:#3d2226;color:#ffb4aa}.kit .k-aoe{background:#3a3016;color:#f0a35e}
 .msgs{position:sticky;bottom:6px;z-index:3;display:grid;gap:4px;margin:6px 10px 0}
 .toast{padding:6px 10px;border-radius:8px;background:#3d2226;color:#ff9c9c;font-size:12px;box-shadow:0 4px 14px #000b}.toast.info{background:#15243b;color:#aec4d3;font-size:11.5px}
-.tab .ws{display:inline-block;margin-left:3px;padding:0 5px;border-radius:99px;background:#ffde8f;color:#0b1526;font-size:10px;font-weight:900;line-height:14px}
+.tab .ws{margin-left:3px;color:#ffde8f;font-size:12px;font-weight:900}
 .tile.wide{grid-column:span 2}
 .pic.wide{height:auto;min-height:64px;display:grid;grid-template-columns:52px minmax(0,1fr);align-items:center;gap:7px;padding:5px 8px 7px 6px;place-items:initial}
 .pic.wide>.pt{width:50px;height:50px;justify-self:center}
@@ -183,7 +171,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 
   const SAFE_ID = /^[a-z0-9_-]+$/i;
   const state = createState();
-  let db = null, socket = null, dirty = true, tab = 'trade', wildSort = 'value', lastRender = 0, layoutAt = 0, lastLayout = '';
+  let db = null, socket = null, dirty = true, tab = 'trade', lastRender = 0, layoutAt = 0, lastLayout = '';
   const sig = [];
   let gameCat = new Map(), gameCatReady = false, ownBase = null;
 
@@ -876,14 +864,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       const u = U(stage) ?? {};
       return { stage, idList, count: idList.length, u, peak: u.pk?.[2] ?? u.ed ?? u.dps ?? 0, trades: offersForFamily(state, db, stage) };
     });
-    const sorters = {
-      value: (a, b) => powerOf(b.stage) - powerOf(a.stage) || (a.u.b ?? 0) - (b.u.b ?? 0),
-      cheap: (a, b) => (a.u.b ?? 0) - (b.u.b ?? 0),
-      catch: (a, b) => (b.u.c ?? 0) - (a.u.c ?? 0),
-    };
-    const order = sorters[wildSort];
-    wilds.sort((a, b) => byWish(a, b) || order(a, b));
-    const sortBtn = (key, t) => h('button', { class: `chip sm ${wildSort === key ? 'on' : ''}`, text: t, onClick: () => { wildSort = key; dirty = true; render(true); } });
+    wilds.sort((a, b) => byWish(a, b) || powerOf(b.stage) - powerOf(a.stage) || (a.u.b ?? 0) - (b.u.b ?? 0));
     const tile = ({ stage, idList, count, u, peak, trades }) => {
       const price = u.b ?? 0, key = `w${idList[0]}`, wide = wished(stage);
       const tip = `Bắt ${Math.round((u.c ?? 0) * 100)}% · đỉnh ${short(peak)} DPS thật\n${statsTip(stage)}${count > 1 ? `\n${count} con — bấm tiếp để chọn con khác` : ''}`;
@@ -904,8 +885,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       cycle(`w:${stage}`, idList.map(id => `w${id}`)), stage);
     };
     return [
-      h('div', { class: 'bar-row' }, sortBtn('value', 'Đáng bắt'), sortBtn('cheap', 'Rẻ'), sortBtn('catch', 'Dễ bắt'),
-        h('span', { class: 'muted', text: String(state.wilds.size) })),
       h('div', { class: 'bar-row' }, Object.entries(ROLE_FILTER).map(([key, [text]]) => h('button', { class: `chip sm ${wildRole === key ? 'on' : ''}`, text,
         onClick: () => { wildRole = key; dirty = true; render(true); } }))),
       wilds.length ? h('div', { class: 'grid' }, wilds.map(tile)) : empty(state.wilds.size ? 'Không có con nào đúng vai trò này.' : 'Bãi đang trống.'),
@@ -1185,12 +1164,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 
   let drag = null;
   const TABS = [['trade', 'Trade'], ['wild', 'Wild'], ['team', 'Đội'], ['combat', 'Chiến'], ['wave', 'Đợt'], ['players', 'Phòng'], ['lite', '⚙︎']];
-  let layout = 'v';
-  function setLayout(next) {
-    layout = next;
-    Object.assign(host.style, layout === 'h' ? { top: 'auto', bottom: '12px', left: '12px' } : { top: '12px', bottom: 'auto', left: '12px' });
-    dirty = true; render(true);
-  }
 
   let bodyEl = null, lastBind = '';
   function render(force = false) {
@@ -1219,7 +1192,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         : 'Bản Cocos (cutd.site): bấm dòng/nút → tool gọi thẳng hàm của game.' }),
       h('span', { class: 'grow' }),
       state.haveKeyframe ? h('span', { class: 'gold', text: `${fmt(state.gold)}g`, title: 'Vàng hiện có' }) : null,
-      h('button', { class: 'x', text: layout === 'h' ? '▯' : '▭', title: layout === 'h' ? 'Chuyển sang dọc' : 'Chuyển sang ngang', onClick: () => setLayout(layout === 'h' ? 'v' : 'h') }),
       h('button', { class: 'x', text: '–', title: 'Thu nhỏ', onClick: () => toggle() }),
       h('button', { class: 'x', text: '×', title: 'Tắt tool', onClick: () => destroy() }));
     header.addEventListener('pointerdown', e => {
@@ -1227,11 +1199,9 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       const r = host.getBoundingClientRect();
       drag = { dx: e.clientX - r.left, dy: e.clientY - r.top };
     });
-    const count = { trade: state.offers.size, wild: state.wilds.size, team: myUnits(state).length, wave: nextWaveForBase(state).length };
     const starred = { trade: [...state.offers.values()].filter(o => wished(o.get)).length, wild: [...state.wilds.values()].filter(x => wished(x.stage)).length };
     const tabs = h('div', { class: 'tabs' }, TABS.map(([k, t]) => h('button', { class: `tab ${tab === k ? 'on' : ''}`, onClick: () => { tab = k; dirty = true; render(true); if (bodyEl) bodyEl.scrollTop = 0; } },
-      t, starred[k] ? h('span', { class: 'ws', text: `★${starred[k]}`, title: `${k === 'wild' ? 'Pet ★ đang ở bãi' : 'Kèo trade ra pet ★'} · tổng ${count[k]}` })
-        : count[k] ? h('small', { text: ` ${count[k]}` }) : null)));
+      t, starred[k] ? h('span', { class: 'ws', text: '★', title: `${k === 'wild' ? 'Pet ★ đang ở bãi' : 'Kèo trade ra pet ★'}: ${starred[k]}` }) : null)));
     let content;
     try {
       content = status && tab !== 'lite' ? empty(status) : ({
@@ -1242,10 +1212,9 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     }
     const msgs = toast || note ? h('div', { class: 'msgs' }, toast ? h('p', { class: 'toast', text: toast }) : null, note ? h('p', { class: 'toast info', text: note }) : null) : null;
     const body = h('div', { class: 'body' }, content, msgs);
-    const shape = `${tab}|${wildSort}|${wildRole}|${teamFilter}|${status ?? ''}|${sig.join(',')}`;
+    const shape = `${tab}|${wildRole}|${teamFilter}|${status ?? ''}|${sig.join(',')}`;
     if (shape !== lastLayout) { lastLayout = shape; layoutAt = performance.now(); }
     const bind = `${shape}|${picks.join(';')}`;
-    panel.className = `panel ${layout}`;
     const [oldHead, oldTabs, oldBody] = [0, 1, 2].map(i => panel.children.item(i));
     if (!oldHead || !oldTabs || !oldBody) { panel.replaceChildren(header, tabs, body); bodyEl = body; }
     else {
@@ -1254,7 +1223,6 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       if (bind !== lastBind || !oldBody.isEqualNode(body)) { oldBody.replaceWith(body); bodyEl = body; body.scrollTop = scroll; }
     }
     lastBind = bind;
-    wrap.className = `wrap ${layout}`;
     let infoView = [];
     try { infoView = info ? viewInfo() : []; } catch { infoView = []; }
     drawer.hidden = panel.hidden || !infoView.length;
