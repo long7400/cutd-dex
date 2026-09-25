@@ -838,6 +838,92 @@ test('bookmarklet: ⇑ ở tab Wild — bắt rồi nâng luôn con vừa bắt;
   w.__cutdHelper.destroy();
 });
 
+test('bookmarklet: ★ con nhận ở kèo trade → con phải đưa cũng tự ★ (cả ở bãi, trong đội); nút ⇑ của nó chỉ nâng tới đúng cấp kèo cần, không lên quá', async t => {
+  const line = upLine();
+  const need = line.path[2];
+  const famOf = id => overlay.u[id].f ?? id;
+  const got = Object.keys(overlay.u).find(id => famOf(id) !== famOf(line.path[0]) && overlay.u[id].n && overlay.u[id].l);
+  const { w, log, code, FakeWS } = setupDom();
+  t.after(() => w.close());
+  w.eval(code);
+  const ws = new FakeWS();
+  ws.addEventListener('message', e => e.data);
+  const emit = m => ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
+  emit(summary);
+  await tick(0);
+  emit(keyframe([{ id: 1, stage_id: line.path[0], owner_id: 11, health: 10, max_health: 10, active: true }], {
+    base: baseWith(5000), wilds: [{ id: 1, stage_id: line.path[0], position: { x: 0, y: 0 } }],
+    trade_offers: [{ slot: 1, offered_stage_id: got, required_stage_id: need }],
+  }));
+  await tick(1200);
+  const root = log.roots[0];
+  const tabOf = k => [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith(k));
+  tabOf('Trade').click();
+  const giveStar = () => root.querySelector('.tcard .pair > :first-child .star');
+  assert.equal(giveStar().textContent, '☆');
+  root.querySelector('.tcard .pair > :last-child .star').click();
+  await tick(0);
+  assert.equal(giveStar().textContent, '★', 'con phải đưa tự có ★');
+  assert.ok(giveStar().classList.contains('link'), '★ theo kèo, khác màu ★ tự gắn');
+  assert.match(giveStar().title, /Tự ★ theo kèo trade S1/);
+  assert.equal(tabOf('Wild').textContent, 'Wild★', 'con cùng dòng ở bãi cũng tính là ★');
+  tabOf('Đội').click();
+  const up = root.querySelector('.tile.wide .act.up');
+  assert.ok(up, 'con cùng dòng trong đội thành thẻ ★ có ⇑');
+  assert.match(up.textContent, new RegExp(`^⇑ Lv${overlay.u[need].l} · `), `⇑ dừng ở ${overlay.u[need].n} Lv${overlay.u[need].l} — đúng cấp kèo cần, không lên đỉnh dòng`);
+  assert.match(up.title, /để trade S1/);
+  tabOf('Wild').click();
+  assert.match(root.querySelector('.tile.wide .act.up').textContent, new RegExp(`^⇑ Lv${overlay.u[need].l} · `), 'ở bãi: bắt rồi nâng tới đúng cấp kèo cần');
+  tabOf('Trade').click();
+  root.querySelector('.tcard .pair > :last-child .star').click();
+  await tick(0);
+  assert.equal(giveStar().textContent, '☆', 'bỏ ★ con nhận → con phải đưa hết ★');
+  assert.equal(root.querySelectorAll('.tab .ws').length, 0);
+  w.__cutdHelper.destroy();
+});
+
+test('bookmarklet: ✺ hào quang — lọc ✺ AURA ở tab Wild; dấu ✺ trên ô ở Wild / Đội / Trade (mờ = lên cấp sau mới có)', async t => {
+  const r = id => overlay.u[id]?.r ?? [];
+  const reaches = id => {
+    const seen = new Set([id]), queue = [id];
+    while (queue.length) for (const [to] of overlay.u[queue.shift()]?.e ?? []) { if (seen.has(to)) continue; if (r(to).includes('aura')) return true; seen.add(to); queue.push(to); }
+    return false;
+  };
+  const later = Object.keys(overlay.u).find(id => overlay.u[id].k && !r(id).includes('aura') && reaches(id));
+  const now = Object.keys(overlay.u).find(id => r(id).includes('aura'));
+  const plain = Object.keys(overlay.u).find(id => overlay.u[id].k && !r(id).includes('aura') && !reaches(id));
+  assert.ok(later && now && plain, 'có đủ 3 loại để thử');
+  const { w, log, code, FakeWS } = setupDom();
+  t.after(() => w.close());
+  w.eval(code);
+  const ws = new FakeWS();
+  ws.addEventListener('message', e => e.data);
+  const emit = m => ws.dispatchEvent(new w.MessageEvent('message', { data: JSON.stringify(m) }));
+  emit(summary);
+  await tick(0);
+  emit(keyframe([{ id: 1, stage_id: now, owner_id: 11, health: 10, max_health: 10, active: true }], {
+    wilds: [{ id: 1, stage_id: later, position: { x: 0, y: 0 } }, { id: 2, stage_id: plain, position: { x: 0, y: 0 } }],
+    trade_offers: [{ slot: 1, offered_stage_id: now, required_stage_id: plain }],
+  }));
+  await tick(1200);
+  const root = log.roots[0];
+  const tabOf = k => [...root.querySelectorAll('.tab')].find(b => b.textContent.startsWith(k));
+  tabOf('Wild').click();
+  const names = () => [...root.querySelectorAll('.grid .tile .tn')].map(x => x.textContent);
+  assert.equal(names().length, 2);
+  [...root.querySelectorAll('.chip')].find(b => b.textContent === '✺ AURA').click();
+  assert.deepEqual(names(), [overlay.u[later].n], 'lọc AURA chỉ còn con có hào quang (kể cả lên cấp sau mới có)');
+  const mark = root.querySelector('.grid .tile .aura');
+  assert.ok(mark.classList.contains('later'), 'chưa có ngay → ✺ mờ');
+  assert.match(mark.title, /mới có hào quang/);
+  tabOf('Đội').click();
+  assert.ok(root.querySelector('.grid .tile .aura:not(.later)'), 'đang có hào quang → ✺ sáng');
+  tabOf('Trade').click();
+  assert.ok(root.querySelector('.tcard .pair > :last-child .aura:not(.later)'), 'con nhận ở kèo trade có ✺');
+  assert.equal(root.querySelector('.tcard .pair > :first-child .aura'), null, 'con không có hào quang thì không có dấu');
+  w.__cutdHelper.destroy();
+});
+
 test('bookmarklet: bản web chạy trong khung → game gốc phía sau bị cắt đồ hoạ (trả RAM/GPU) + chỉ còn 1 khung/giây', async t => {
   const { ResourceLoader } = await import('jsdom');
   class Pages extends ResourceLoader { fetch(url, opts) { return opts?.element?.localName === 'iframe' ? Promise.resolve(Buffer.from('<!doctype html><html><body></body></html>')) : null; } }

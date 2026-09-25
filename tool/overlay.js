@@ -1,5 +1,5 @@
 import {
-  createState, applyMessage, isGameMessage, myUnits, tradeOptions, offersForFamily,
+  createState, applyMessage, isGameMessage, myUnits, tradeOptions, offersForFamily, evolvePath,
   bestAttacks, nextWaveForBase, buildGameCatalog, formationRow, acceptRows, createMemory, observe, onSent, onAck, planMoves,
 } from './logic.js';
 import * as web from './web-input.js';
@@ -151,6 +151,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
 .wi small{font-size:10px;color:#aec4d3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wi small.go{color:#ffde8f;font-weight:700}.wi small .rare{color:#ff9c9c;font-weight:800}
 .acts .act.up{background:#ffde8f;color:#0b1526}
+.star.link{color:#d9b86a}
+.pic .aura{color:#ffd36b;font-size:11px;font-weight:900;line-height:14px;text-shadow:0 1px 2px #000}.pic .aura.later{opacity:.5}
 .acts .act.up.run{background:repeating-linear-gradient(-45deg,#ffde8f 0 6px,#e9c878 6px 12px);opacity:1;cursor:wait}
 .acts .act.up.off{background:#2b2616;color:#8a7a52;opacity:1}
 [hidden]{display:none!important}
@@ -607,7 +609,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     if (!fail && !g) fail = 'game';
     if (!fail && state.summary?.phase !== 'planning') fail = 'locked';
     const price = kind === 'catch' ? (U(stage)?.b ?? 0) : 0;
-    const plan = fail ? null : maxPlan(stage, state.gold - price);
+    const plan = fail ? null : planFor(stage, state.gold - price);
     if (!fail && (!plan?.steps.length || state.gold < price)) fail = 'gold';
     if (fail) { toast = FAIL[fail]; dirty = true; render(true); return; }
     boosting = { key, stage, done: 0, total: plan.steps.length + (kind === 'catch' ? 1 : 0) };
@@ -744,15 +746,47 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   const ROLE_NAME = { atk: 'ATK', tank: 'TANK', buff: 'BUFF', debuff: 'DEBUFF' };
   const wish = new Set();
   const famOf = stage => { const f = U(stage)?.f; return typeof f === 'string' && SAFE_ID.test(f) ? f : stage; };
-  const wished = stage => wish.has(famOf(stage));
+  const linkOf = stage => {
+    const f = famOf(stage);
+    for (const o of state.offers.values()) if (o.give && o.get && famOf(o.give) === f && famOf(o.get) !== f && wish.has(famOf(o.get))) return o;
+    return null;
+  };
+  const wished = stage => wish.has(famOf(stage)) || !!linkOf(stage);
   const byWish = (a, b) => Number(wished(b.stage)) - Number(wished(a.stage));
   let info = null;
   const isOpen = (stage, ids) => !!info && (ids && info.id != null ? ids.includes(info.id) : info.id == null && info.stage === stage);
   const starBtn = stage => {
-    const on = wished(stage);
-    return h('button', { class: `star ${on ? 'on' : ''}`, text: on ? '★' : '☆', tabindex: '-1',
-      title: on ? 'Bỏ khỏi wishlist' : 'Thêm vào wishlist: dòng này nằm đầu tab Wild, Đội, Trade và có nút ⇑ nâng max; ra ở bãi hay có kèo trade thì tab hiện ★',
-      onClick: e => { e.stopPropagation(); if (on) wish.delete(famOf(stage)); else wish.add(famOf(stage)); dirty = true; render(true); } });
+    const own = wish.has(famOf(stage)), link = own ? null : linkOf(stage);
+    return h('button', { class: `star ${own ? 'on' : link ? 'link' : ''}`, text: own || link ? '★' : '☆', tabindex: '-1',
+      title: own ? 'Bỏ khỏi wishlist'
+        : link ? `Tự ★ theo kèo trade S${link.slot}: đưa ${nameOf(link.give)} lấy ${nameOf(link.get)} — nút ⇑ chỉ nâng tới đúng ${nameOf(link.give)}. Bấm để giữ ★ cả khi hết kèo`
+        : 'Thêm vào wishlist: dòng này nằm đầu tab Wild, Đội, Trade và có nút ⇑ nâng max; ra ở bãi hay có kèo trade thì tab hiện ★. ★ con nhận ở kèo trade thì con phải đưa cũng tự ★',
+      onClick: e => { e.stopPropagation(); if (own) wish.delete(famOf(stage)); else wish.add(famOf(stage)); dirty = true; render(true); } });
+  };
+  const auraNow = stage => (U(stage)?.r ?? []).includes('aura');
+  const auraAhead = stage => {
+    const seen = new Set([stage]);
+    let edge = [[stage, 0]];
+    for (let depth = 0; depth < 12 && edge.length; depth++) {
+      const next = [];
+      for (const [id, spent] of edge) {
+        for (const [to, cost] of U(id)?.e ?? []) {
+          if (seen.has(to) || !Number.isFinite(cost)) continue;
+          seen.add(to);
+          if (auraNow(to)) return [to, spent + cost];
+          next.push([to, spent + cost]);
+        }
+      }
+      edge = next;
+    }
+    return null;
+  };
+  const hasAura = stage => auraNow(stage) || !!auraAhead(stage);
+  const auraMark = stage => {
+    const skills = id => (U(id)?.s ?? []).join(', ');
+    if (auraNow(stage)) return h('b', { class: 'aura', text: '✺', title: `Hào quang đội · ${skills(stage)}` });
+    const at = auraAhead(stage);
+    return at ? h('b', { class: 'aura later', text: '✺', title: `Lên ${nameOf(at[0])} (${fmt(at[1])} vàng) mới có hào quang · ${skills(at[0])}` }) : null;
   };
   const kitOf = stage => (Array.isArray(U(stage)?.kt) ? U(stage).kt : []).filter(k => typeof k === 'string' && Object.hasOwn(KIT, k));
   const kitChips = stage => {
@@ -807,9 +841,29 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     }
     return { steps, spent, need, peak: path.at(-1) };
   }
+  function tradePlan(stage, link, budget) {
+    const route = evolvePath(db, stage, link.give);
+    if (!route?.steps.length) return null;
+    const steps = [];
+    let spent = 0, need = 0, at = stage;
+    for (const to of route.steps) {
+      const cost = (U(at)?.e ?? []).find(([x]) => x === to)?.[1];
+      if (!Number.isFinite(cost) || cost < 0) break;
+      if (spent + cost > budget) { need = cost; break; }
+      spent += cost;
+      steps.push([to, cost]);
+      at = to;
+    }
+    return { steps, spent, need, peak: link.give, link };
+  }
+  const planFor = (stage, budget) => {
+    const link = linkOf(stage);
+    const route = link ? tradePlan(stage, link, budget) : null;
+    return route ?? (wish.has(famOf(stage)) ? maxPlan(stage, budget) : null);
+  };
   const goLine = plan => {
     const last = plan?.steps.at(-1)?.[0];
-    if (last) return `⇑ ${U(last)?.n ?? nameOf(last)}${last === plan.peak ? ' (đỉnh)' : ''}`;
+    if (last) return `⇑ ${U(last)?.n ?? nameOf(last)}${plan.link ? (last === plan.peak ? ' (đủ trade)' : '') : last === plan.peak ? ' (đỉnh)' : ''}`;
     return plan?.need ? `Cần ${short(plan.need)} vàng` : 'Đã là dạng mạnh nhất';
   };
   function boostBtn(kind, key, stage, plan, price, running) {
@@ -825,7 +879,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     return h('button', {
       class: 'act up', tabindex: '-1', disabled: !!blocked || !!boosting || arranging, text: `⇑ ${levelOf(last)} · ${short(total)}`,
       title: blocked ? FAIL[blocked] : `${kind === 'catch' ? 'Bắt rồi nâng' : 'Nâng'} ${nameOf(stage)} → ${nameOf(last)}: ${kind === 'catch' ? '1 lệnh bắt + ' : ''}${plan.steps.length} lệnh nâng · ${fmt(total)} vàng`
-        + `${last === plan.peak ? '' : `\nĐỉnh dòng là ${nameOf(plan.peak)} — thiếu vàng cho phần còn lại`}`
+        + `${plan.link ? `\nDừng ở ${nameOf(plan.peak)} để trade S${plan.link.slot} lấy ${nameOf(plan.link.get)}` : ''}`
+        + `${last === plan.peak ? '' : `\n${plan.link ? 'Cần' : 'Đỉnh dòng là'} ${nameOf(plan.peak)} — thiếu vàng cho phần còn lại`}`
         + `\n1 cú bấm gửi nhiều lệnh: mỗi lệnh cách 0,8 giây, chờ game xác nhận từng bước, lỗi là dừng${kind === 'catch' ? '; bắt trượt thì dừng (game không trừ vàng)' : ''}.`,
       onClick: e => boost(e, kind, key, stage),
     });
@@ -834,7 +889,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
   function viewTrade() {
     const list = tradeOptions(state, db);
     if (!list.length) return empty('Chưa có trade offer (trade tắt hoặc đang chờ dữ liệu).');
-    const side = (id, slot, star) => openable(pic(id, statsTip(id), h('span', { class: 'tl' }, tierPill(id)), lvTag(id), star ? starBtn(id) : null), `t${slot}`, id);
+    const side = (id, slot, star) => openable(pic(id, statsTip(id), h('span', { class: 'tl' }, tierPill(id), auraMark(id)), lvTag(id), star ? starBtn(id) : null), `t${slot}`, id);
     return h('div', { class: 'tgrid' }, [...list].sort((a, b) => Number(wished(b.get)) - Number(wished(a.get))).map(o => {
       const status = o.ready.length ? act('⇄ Trade', 'trade', `u${o.ready[0].id}`, o.slot, { stage: o.give, get: o.get }, 'ok',
         `Đổi ${nameOf(o.give)} lấy ${nameOf(o.get)}${o.ready.length > 1 ? ` · có ${o.ready.length} con` : ''}`)
@@ -843,18 +898,18 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
         : h('span', { class: 'b max', text: '—', title: 'Chưa có con nào thuộc dòng này' });
       return h('div', { class: `tcard${o.ready.length ? ' is-ok' : o.evolve ? ' is-warn' : ''}${wished(o.get) ? ' wish' : ''}` },
         h('div', { class: 'th', text: `S${o.slot}` }),
-        h('div', { class: 'pair' }, side(o.give, o.slot), h('span', { class: 'ar', text: '→' }), side(o.get, o.slot, true)),
+        h('div', { class: 'pair' }, side(o.give, o.slot, true), h('span', { class: 'ar', text: '→' }), side(o.get, o.slot, true)),
         h('div', { class: 'nm2' }, h('span', { text: U(o.give)?.n ?? o.give }), h('span', { class: 'get', text: U(o.get)?.n ?? o.get })),
         h('div', { class: 'acts' }, status));
     }));
   }
 
   let wildRole = 'all';
-  const ROLE_FILTER = { all: ['Tất cả', () => true], atk: ['ATK', kit => kit[0] === 'atk'], tank: ['TANK', kit => kit[0] === 'tank'], buff: ['BUFF', kit => kit[0] === 'buff'], debuff: ['DEBUFF', kit => kit[0] === 'debuff'] };
+  const ROLE_FILTER = { all: ['Tất cả', () => true], atk: ['ATK', kit => kit[0] === 'atk'], tank: ['TANK', kit => kit[0] === 'tank'], buff: ['BUFF', kit => kit[0] === 'buff'], debuff: ['DEBUFF', kit => kit[0] === 'debuff'], aura: ['✺ AURA', (kit, stage) => hasAura(stage)] };
   function viewWild() {
     const groups = new Map();
     for (const w of state.wilds.values()) {
-      if (!ROLE_FILTER[wildRole][1](kitOf(w.stage))) continue;
+      if (!ROLE_FILTER[wildRole][1](kitOf(w.stage), w.stage)) continue;
       if (!groups.has(w.stage)) groups.set(w.stage, []);
       groups.get(w.stage).push(w.id);
     }
@@ -867,7 +922,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       const price = u.b ?? 0, key = `w${idList[0]}`, wide = wished(stage);
       const tip = `Bắt ${Math.round((u.c ?? 0) * 100)}% · đỉnh ${short(peak)} DPS thật\n${statsTip(stage)}${count > 1 ? `\n${count} con — bấm tiếp để chọn con khác` : ''}`;
       const buttons = [act(`${short(price)}g`, 'catch', key, null, { stage }, price <= state.gold ? 'ok' : 'bad', `Bắt 1 con ${nameOf(stage)}: ${fmt(price)} vàng`)];
-      const up = wide ? maxPlan(stage, state.gold - price) : null;
+      const up = wide ? planFor(stage, state.gold - price) : null;
       if (up) buttons.push(boostBtn('catch', key, stage, up, price, boosting?.key === key));
       const cnt = count > 1 ? h('span', { class: 'cnt', text: `×${count}` }) : null;
       const name = h('div', { class: 'tn', title: trades.length ? trades.map(t => `S${t.slot}: cần ${nameOf(t.give)} → nhận ${nameOf(t.get)}`).join('\n') : null },
@@ -875,8 +930,8 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
       const rate = `${Math.round((u.c ?? 0) * 100)}%`;
       const face = wide
         ? widePic(stage, tip, [name, h('small', null, `${levelOf(stage)} · bắt `, h('b', { class: (u.c ?? 1) < 0.5 ? 'rare' : null, text: rate })), h('small', { class: 'go', text: goLine(up) })],
-          h('span', { class: 'tl' }, tierPill(stage), harm(stage)), starBtn(stage), cnt)
-        : pic(stage, tip, h('span', { class: 'tl' }, tierPill(stage), harm(stage)), starBtn(stage),
+          h('span', { class: 'tl' }, tierPill(stage), auraMark(stage), harm(stage)), starBtn(stage), cnt)
+        : pic(stage, tip, h('span', { class: 'tl' }, tierPill(stage), auraMark(stage), harm(stage)), starBtn(stage),
           (u.c ?? 1) < 0.5 ? h('span', { class: 'lv rare', text: rate, title: 'Tỉ lệ bắt thấp' }) : null, cnt);
       return openable(h('div', { class: `tile${wide ? ' wish wide' : ''}${isOpen(stage) ? ' sel' : ''}`, style: `--ro:${roleColor(stage)}` },
         face, strip(stage), wide ? null : name, h('div', { class: 'acts' }, buttons)),
@@ -907,7 +962,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     const needs = offersForFamily(state, db, stage);
     const going = plan?.moves.filter(m => list.some(x => `u${x.id}` === m.key)) ?? [];
     const cells = list.map(x => plan?.cells.get(`u${x.id}`)).filter(Boolean);
-    const wide = wished(stage), up = wide && alive.length ? maxPlan(stage, state.gold) : null;
+    const wide = wished(stage), up = wide && alive.length ? planFor(stage, state.gold) : null;
     const buttons = [
       ...evo.map(([to, cost]) => {
         const trap = u.tp?.[to];
@@ -926,7 +981,7 @@ tr.me td{color:#ffde8f}tr.out td{color:#6f8fb8;text-decoration:line-through}
     }));
     const down = list.length - alive.length;
     const tip = `${statsTip(stage)}${cells.length ? `\nĐứng ô ${cells.join(' · ')}` : ''}${down ? `\n${down} con gục — trở lại đợt sau` : ''}${list.length > 1 ? `\n${list.length} con — bấm tiếp để chọn con khác` : ''}`;
-    const mark = h('span', { class: 'tl' }, tierPill(stage), harm(stage), going.length ? h('b', { class: 'mv', text: '↕', title: `Xếp đội sẽ dời ${going.map(m => `${m.from} → ${m.to}`).join(', ')}` }) : null);
+    const mark = h('span', { class: 'tl' }, tierPill(stage), auraMark(stage), harm(stage), going.length ? h('b', { class: 'mv', text: '↕', title: `Xếp đội sẽ dời ${going.map(m => `${m.from} → ${m.to}`).join(', ')}` }) : null);
     const cnt = list.length > 1 ? h('span', { class: 'cnt', text: `×${list.length}` }) : null;
     const name = h('div', { class: 'tn', title: needs.length ? needs.map(o => `S${o.slot}: cần ${nameOf(o.give)} → nhận ${nameOf(o.get)}`).join('\n') : null },
       needs.length ? h('b', { class: 'trf', text: '⇄' }) : null, u.n ?? stage);
