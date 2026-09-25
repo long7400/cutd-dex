@@ -113,7 +113,11 @@ test('nav gộp mục: 6 mục chính, tab con đúng mục, trang pet có hạn
   assert.ok(!$('.subnav'), 'trang chi tiết không có tab con');
   await go('#/tool');
   assert.match($('.install .bm').getAttribute('href'), /^javascript:/);
-  assert.ok($('.tool-demo .h-video'), 'có video demo');
+  const demo = $('.tool-demo .h-video video');
+  assert.equal(demo?.getAttribute('src'), 'video/cutd-helper.mp4', 'có video demo');
+  assert.equal(demo.getAttribute('poster'), 'video/cutd-helper.webp');
+  for (const a of ['muted', 'loop', 'playsinline', 'controls']) assert.ok(demo.hasAttribute(a), a);
+  assert.equal(demo.getAttribute('preload'), 'none', 'chỉ tải khi cuộn tới');
   assert.ok(!$('.codebox'), 'bỏ phần chữ thừa');
 });
 

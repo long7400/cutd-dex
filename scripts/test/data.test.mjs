@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readJSON } from '../lib/fsx.mjs';
@@ -47,6 +47,15 @@ test('mọi portrait và icon research đều có file trong public/', () => {
   assert.deepEqual(missing, []);
   for (const r of db.research) assert.ok(existsSync(join(ROOT, 'public/research', `${r.id}.webp`)), r.id);
   for (const [id, a] of Object.entries(db.abilities)) assert.ok(existsSync(join(ROOT, 'public/skills', `${a.icon}.webp`)), `${id} → ${a.icon}`);
+});
+
+test('video giới thiệu gọn, đúng định dạng', () => {
+  const mp4 = readFileSync(join(ROOT, 'public/video/cutd-helper.mp4'));
+  assert.equal(mp4.subarray(4, 8).toString('latin1'), 'ftyp');
+  assert.ok(mp4.length <= 8 * 1024 * 1024, `${mp4.length} byte`);
+  const webp = readFileSync(join(ROOT, 'public/video/cutd-helper.webp'));
+  assert.equal(webp.subarray(0, 4).toString('latin1') + webp.subarray(8, 12).toString('latin1'), 'RIFFWEBP');
+  assert.ok(webp.length <= 200 * 1024, `${webp.length} byte`);
 });
 
 test('hệ theo wild pool khớp research theo hệ cho gần như mọi pet', () => {

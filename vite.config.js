@@ -6,7 +6,7 @@ if (!/^(https:\/\/[a-z0-9.-]+|http:\/\/localhost:\d+)\/([\w.-]+\/)*$/.test(HOME)
 const CSP = [
   "default-src 'none'", `script-src ${HOME}assets/`, `style-src ${HOME}assets/ 'unsafe-inline'`, `img-src ${HOME} data: blob:`,
   `connect-src ${HOME} blob:`, `font-src ${HOME}assets/`, "object-src 'none'", "frame-src 'none'", "child-src 'none'", "worker-src 'none'",
-  "media-src 'none'", "manifest-src 'none'", "base-uri 'none'", "form-action 'none'",
+  `media-src ${HOME}video/`, "manifest-src 'none'", "base-uri 'none'", "form-action 'none'",
 ].join('; ');
 
 export default defineConfig(({ command }) => ({
