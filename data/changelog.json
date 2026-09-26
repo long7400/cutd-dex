@@ -1,5 +1,494 @@
 [
  {
+  "at": "2026-09-26T09:48:53.833Z",
+  "hash": "7ad25f25579156937b0eb955514dd1954c578a2d1458ff82b534e0ab77ea6148",
+  "prevHash": "6292a9c019e33ce323aaba67c566708b933fddb7f053d0edc89f0302b58d9a81",
+  "ruleset": "cutd-smart-duel-15",
+  "prevRuleset": "cutd-reference-12",
+  "summary": {
+   "unitsAdded": 0,
+   "unitsRemoved": 0,
+   "statChanges": 58,
+   "abilityChanges": 1165,
+   "modifierChanges": 207,
+   "sections": [
+    "waves",
+    "wild",
+    "research",
+    "rules",
+    "modes",
+    "damage",
+    "survival_roster"
+   ]
+  },
+  "items": [
+   {
+    "kind": "stat",
+    "id": "unit_h09f",
+    "name": "Arcanine level 40",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h09g",
+    "name": "Arcanine level 70",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h09h",
+    "name": "Arcanine level 100",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h09p",
+    "name": "Ponyta level 1",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h09q",
+    "name": "Ponyta level 20",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h09r",
+    "name": "Rapidash level 30",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h09s",
+    "name": "Rapidash level 60",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h09t",
+    "name": "Rapidash level 100",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0a0",
+    "name": "Fuecoco level 1",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0a1",
+    "name": "Fuecoco level 20",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0a2",
+    "name": "Crocalor level 40",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0a3",
+    "name": "Crocalor level 70",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0a4",
+    "name": "Crocalor level 85",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0aa",
+    "name": "Raboot level 1",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0ab",
+    "name": "Raboot level 20",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0ac",
+    "name": "Electabuzz level 30",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0ad",
+    "name": "Iron-Thorns level 40",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0ae",
+    "name": "Iron-Thorns level 70",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0af",
+    "name": "Iron-Thorns level 100",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0ag",
+    "name": "Voltorb level 1",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0ah",
+    "name": "Voltorb level 20",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0ai",
+    "name": "Electrode level 30",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0aj",
+    "name": "Electrode level 60",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0ak",
+    "name": "Electrode level 80",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0al",
+    "name": "Cleffa level 1",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0am",
+    "name": "Clefairy level 15",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0aq",
+    "name": "Toxel level 1",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0ar",
+    "name": "Toxel level 20",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0as",
+    "name": "Gouging-Fire level 25",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0at",
+    "name": "Gouging-Fire level 60",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0au",
+    "name": "Gouging-Fire level 80",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0ce",
+    "name": "Raikou level 1",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0cf",
+    "name": "Raikou level 25",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0cg",
+    "name": "Raikou level 50",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0ch",
+    "name": "Raikou level 75",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0ci",
+    "name": "Raikou level 100",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0cj",
+    "name": "Kyogre level 1",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0ck",
+    "name": "Kyogre level 25",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0cl",
+    "name": "Kyogre level 50",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0cm",
+    "name": "Kyogre level 75",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0cn",
+    "name": "Kyogre level 100",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0cu",
+    "name": "Entei level 1",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0cv",
+    "name": "Entei level 25",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0cw",
+    "name": "Entei level 50",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0cx",
+    "name": "Entei level 75",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0cy",
+    "name": "Entei level 100",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0dl",
+    "name": "Rhyperior level 100",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0ft",
+    "name": "Suicune level 75",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0fu",
+    "name": "Suicune level 100",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0fv",
+    "name": "Suicune level 50",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0fw",
+    "name": "Suicune level 1",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0fx",
+    "name": "Suicune level 25",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0i1",
+    "name": "Mega Blastoise level 100",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0i2",
+    "name": "Mega Blastoise level 75",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0i3",
+    "name": "Mega Blastoise level 50",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0ij",
+    "name": "Gouging-Fire level 100",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0ik",
+    "name": "Electrode level 100",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   },
+   {
+    "kind": "stat",
+    "id": "unit_h0iq",
+    "name": "Crocalor level 100",
+    "field": "attack_range",
+    "from": 90,
+    "to": 400
+   }
+  ]
+ },
+ {
   "at": "2026-09-23T12:18:26.323Z",
   "hash": "6292a9c019e33ce323aaba67c566708b933fddb7f053d0edc89f0302b58d9a81",
   "prevHash": "70bc0dd034a602cec2565a6d9b093d297da591cd44a0b52948da22167f230c54",

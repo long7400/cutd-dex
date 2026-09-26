@@ -1353,13 +1353,13 @@
    "lastModified": "Sun, 20 Sep 2026 03:34:17 GMT"
   }
  },
- "bundle": "/assets/index-BrA8TQnv.js",
+ "bundle": "/assets/index-DfYs3v3y.js",
  "catalog": {
-  "etag": "W/\"101037ec2f8fe8702b715427b444192bee23b034150a6ae630b9c9c6858ba42a\""
+  "etag": "W/\"82a44517ff135b8e185f0b8a31d1f3d68f2b674432febfb16f49ccc8d3bf549a\""
  },
- "catalogHash": "6292a9c019e33ce323aaba67c566708b933fddb7f053d0edc89f0302b58d9a81",
+ "catalogHash": "7ad25f25579156937b0eb955514dd1954c578a2d1458ff82b534e0ab77ea6148",
  "html": {
-  "etag": "W/\"6ab615da-1a1d\"",
-  "lastModified": "Fri, 25 Sep 2026 06:34:02 GMT"
+  "etag": "W/\"6ab77fae-1a1d\"",
+  "lastModified": "Sat, 26 Sep 2026 08:17:50 GMT"
  }
 }
